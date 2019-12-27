@@ -26,7 +26,26 @@ set shiftwidth=4
 set softtabstop=4
 set cursorline
 set showmatch
-let python_highlight_all = 1
+let python_highlight_all=1
 
 set background=dark
-set number
+set relativenumber
+
+" FINDING FILES
+" enable fuzzy file searching from
+" root project directory recursively
+set path+=**
+set wildmenu
+
+" TAG JUMPING
+" create the tags file
+command! MakeTags !ctags -R .
+
+" AUTOCOMPLETE
+" ^n show the autocomplete list
+" ^n to go the next item in the list
+" ^p to go back an item in teh l^n show the autocomplete list
+
+" SHORTCUT FOR NERDTREE
+let mapleader=","
+:nnoremap <leader>n :NERDTree<cr>
