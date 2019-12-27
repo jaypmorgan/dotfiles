@@ -12,9 +12,10 @@ Plugin 'VundleVim/Vundle.vim'
 Plugin 'JuliaEditorSupport/julia-vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'vim-scripts/indentpython.vim'
+Plugin 'sheerun/vim-polyglot' " syntax highlighting
 
-call vundle#end()            " required
-filetype plugin indent on    " required
+call vundle#end()             " required
+filetype plugin indent on     " required
 syntax on
 
 " python features
@@ -28,8 +29,10 @@ set cursorline
 set showmatch
 let python_highlight_all=1
 
+" COLORS
 set background=dark
-set relativenumber
+set number relativenumber   " hybrid numbers
+
 
 " FINDING FILES
 " enable fuzzy file searching from
