@@ -17,6 +17,7 @@ filetype plugin indent on     " required
 syntax on
 
 " python features
+set cc=100
 set encoding=utf-8
 set modeline
 set tabstop=4 
@@ -50,3 +51,6 @@ command! MakeTags !ctags -R .
 " SHORTCUT FOR NERDTREE
 let mapleader=","
 :nnoremap <leader>n :NERDTree<cr>
+
+" Vimteractive configuration
+let g:vimteractive_vertical = 1  " vertically split terminal
