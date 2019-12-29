@@ -51,6 +51,7 @@ command! MakeTags !ctags -R .
 " SHORTCUT FOR NERDTREE
 let mapleader=","
 :nnoremap <leader>n :NERDTree<cr>
+let g:NERDTreeWinPos = "right"
 
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
