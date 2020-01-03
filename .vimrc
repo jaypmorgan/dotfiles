@@ -55,3 +55,4 @@ let g:NERDTreeWinPos = "right"
 
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
+set backspace=indent,eol,start
