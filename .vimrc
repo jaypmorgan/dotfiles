@@ -12,6 +12,7 @@ Plugin 'vim-scripts/indentpython.vim'
 Plugin 'sheerun/vim-polyglot' " syntax highlighting
 Plugin 'williamjameshandley/vimteractive'
 Plugin 'vim-syntastic/syntastic'
+Plugin 'tpope/vim-commentary'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
