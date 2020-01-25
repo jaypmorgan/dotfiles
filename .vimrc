@@ -13,6 +13,7 @@ Plugin 'sheerun/vim-polyglot' " syntax highlighting
 Plugin 'williamjameshandley/vimteractive'
 Plugin 'vim-syntastic/syntastic'
 Plugin 'tpope/vim-commentary'
+Plugin 'challenger-deep-theme/vim'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -31,9 +32,15 @@ set showmatch
 let python_highlight_all=1
 
 " COLORS
+if &term =~# '^screen'
+    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+endif
 set background=dark
-set number relativenumber   " hybrid numbers
+set termguicolors
+colorscheme challenger_deep
 
+set number relativenumber   " hybrid numbers
 
 " FINDING FILES
 " enable fuzzy file searching from
@@ -69,3 +76,11 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_w = 1
 let g:syntastic_check_on_wq = 0
 set backspace=indent,eol,start
+
+set laststatus=2 " status bar
+set ttyfast      " speed up scrolling
+
+" display different types of whitespace
+set list
+set listchars=tab:›\ ,trail:•,extends:#,nbsp:.
+
