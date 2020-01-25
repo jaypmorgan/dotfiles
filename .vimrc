@@ -14,6 +14,7 @@ Plugin 'williamjameshandley/vimteractive'
 Plugin 'vim-syntastic/syntastic'
 Plugin 'tpope/vim-commentary'
 Plugin 'challenger-deep-theme/vim'
+Plugin 'davidhalter/jedi-vim'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -84,3 +85,5 @@ set ttyfast      " speed up scrolling
 set list
 set listchars=tab:›\ ,trail:•,extends:#,nbsp:.
 
+" block wise movements and block text objects in julia
+runtime macros/matchit.vim
