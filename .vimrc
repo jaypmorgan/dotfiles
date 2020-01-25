@@ -31,6 +31,8 @@ set softtabstop=4
 set cursorline
 set showmatch
 let python_highlight_all=1
+" jedi settings
+let g:jedi#popup_on_dot = 0
 
 " COLORS
 if &term =~# '^screen'
