@@ -15,6 +15,8 @@ Plugin 'vim-syntastic/syntastic'
 Plugin 'tpope/vim-commentary'
 Plugin 'challenger-deep-theme/vim'
 Plugin 'davidhalter/jedi-vim'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -31,6 +33,8 @@ set softtabstop=4
 set cursorline
 set showmatch
 let python_highlight_all=1
+" jedi settings
+let g:jedi#popup_on_dot = 0
 
 " COLORS
 if &term =~# '^screen'
@@ -60,7 +64,7 @@ command! MakeTags !ctags -R .
 
 " SHORTCUT FOR NERDTREE
 let mapleader=","
-:nnoremap <leader>n :NERDTree<cr>
+:nnoremap <leader>, :NERDTree<cr>
 let g:NERDTreeWinPos = "right"
 
 " Vimteractive configuration
