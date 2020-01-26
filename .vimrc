@@ -26,15 +26,14 @@ syntax on
 set cc=100
 set encoding=utf-8
 set modeline
-set tabstop=4 
-set expandtab 
-set shiftwidth=4 
+set tabstop=4
+set expandtab
+set shiftwidth=4
 set softtabstop=4
 set cursorline
 set showmatch
 let python_highlight_all=1
-" jedi settings
-let g:jedi#popup_on_dot = 0
+let g:jedi#popup_on_dot=0   " jedi settings
 
 " COLORS
 if &term =~# '^screen'
@@ -74,7 +73,7 @@ let g:vimteractive_vertical = 1  " vertically split terminal
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
-
+let g:syntastic_python_checkers=['python']
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
