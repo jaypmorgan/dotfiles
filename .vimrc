@@ -83,6 +83,7 @@ let g:syntastic_check_on_wq = 0
 set backspace=indent,eol,start
 
 set laststatus=2 " status bar
+let g:airline_theme='deus'
 set ttyfast      " speed up scrolling
 
 " display different types of whitespace
