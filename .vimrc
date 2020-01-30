@@ -69,7 +69,7 @@ let mapleader=","
 let g:NERDTreeWinPos = "right"
 
 " compile latex file into PDF
-nnoremap <F9> :!pdflatex '%:p' && rm *.{log,aux}<CR>
+nnoremap <F9> :!pdflatex '%:p' && rm *.{log,aux,dvi}<CR>
 
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
