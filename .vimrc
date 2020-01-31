@@ -55,6 +55,7 @@ set wildmenu
 " TAG JUMPING
 " create the tags file
 command! MakeTags !ctags -R .
+command! Q :q    " always hold shift accidently when trying to leave
 
 " AUTOCOMPLETE
 " ^n show the autocomplete list
@@ -63,8 +64,10 @@ command! MakeTags !ctags -R .
 
 " SHORTCUT FOR NERDTREE
 let mapleader=","
-:nnoremap <leader>, :NERDTree<cr>
+nnoremap <leader>, :NERDTree<CR>
+nnoremap <leader>. :NERDTreeClose<CR>
 let g:NERDTreeWinPos = "right"
+
 
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
