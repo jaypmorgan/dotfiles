@@ -17,6 +17,7 @@ Plugin 'challenger-deep-theme/vim'
 Plugin 'davidhalter/jedi-vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
+Plugin 'metakirby5/codi.vim'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -68,6 +69,8 @@ nnoremap <leader>, :NERDTree<CR>
 nnoremap <leader>. :NERDTreeClose<CR>
 let g:NERDTreeWinPos = "right"
 
+" compile latex file into PDF
+nnoremap <F9> :!pdflatex '%:p' && rm *.{log,aux,dvi}<CR>
 
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
