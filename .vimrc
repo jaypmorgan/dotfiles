@@ -56,6 +56,7 @@ set wildmenu
 " create the tags file
 command! MakeTags !ctags -R .
 command! Q :q    " always hold shift accidently when trying to leave
+nnoremap <F5> :!tectonic '%:p'<CR>
 
 " AUTOCOMPLETE
 " ^n show the autocomplete list
