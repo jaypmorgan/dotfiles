@@ -4,4 +4,6 @@ install:
 	source ~/.bashrc
 update:
 	@echo "updating"
+	git pull
 	bash update.sh
+	source ~/.bashrc
