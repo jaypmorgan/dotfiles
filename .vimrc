@@ -56,7 +56,6 @@ set wildmenu
 " create the tags file
 command! MakeTags !ctags -R .
 command! Q :q    " always hold shift accidently when trying to leave
-nnoremap <F5> :clear && !tectonic '%:p'<CR>
 
 " AUTOCOMPLETE
 " ^n show the autocomplete list
@@ -76,6 +75,7 @@ let g:NERDTreeWinPos = "right"
 nnoremap <leader>C :%s/\s*$//g<CR>
 nnoremap <leader>w :w<CR>
 nnoremap <leader>t :call OpenSmallTerminal()<CR>
+nnoremap <F5> :!clear && tectonic '%:p'<CR>
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
 
