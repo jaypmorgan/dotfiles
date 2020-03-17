@@ -42,7 +42,7 @@ if &term =~# '^screen'
 endif
 set background=dark
 set termguicolors
-colorscheme challenger_deep
+" colorscheme challenger_deep
 
 set number relativenumber   " hybrid numbers
 
