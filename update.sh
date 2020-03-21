@@ -1,6 +1,9 @@
 #!/bin/bash
 
-cp .vimrc ~/
-cp .tmux.conf ~/
-cp .bash_aliases ~/
-cp .emacs ~/
+FILES=(".vimrc"
+       ".tmux.conf"
+       ".bash_aliases"
+       ".emacs");
+for FILE in "${FILES[@]}"; do
+    cp $FILE "${HOME}/.";
+done

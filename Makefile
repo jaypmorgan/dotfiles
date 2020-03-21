@@ -6,7 +6,6 @@ update:
 	@echo "updating"
 	git pull
 	bash update.sh
-	source ~/.bashrc
 push:
 	@echo "pushing updates"
 	bash updateLocal.sh
