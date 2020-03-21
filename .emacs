@@ -33,6 +33,15 @@
 (unless (package-installed-p 'helm)
   (package-install 'helm))
 
+;; Terminal
+(defun ml/bash ()
+  "start a terminal emulator in a new window"
+  (interactive)
+  (split-window-sensibly)
+  (other-window 1)
+  (ansi-term (executable-find "bash")))
+(global-set-key (kbd "C-c t") #'ml/bash)
+
 ;; Enable Helm
 (require 'helm)
 (helm-mode 1)
