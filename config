@@ -179,7 +179,7 @@ exec i3-config-wizard
 exec_always --no-startup-id polybar example &
 exec --no-startup-id redshift
 exec --no-startup-id nm-applet
-exec --no-startup-id compton --active-opacity 0.9 --blur-background-fixed -i 0.5 &
+exec --no-startup-id killall compton; compton --blur-background-fixed -i 0.9 &
 
 # Set Display Resolution
 exec --no-startup-id xrandr --output eDP1 --mode 1920x1200
@@ -199,5 +199,10 @@ bindsym XF86AudioPause exec playerctl pause
 bindsym XF86AudioNext exec playerctl next
 bindsym XF86AudioPrev exec playerctl previous
 
-for_window [class=".*"] border pixel 0
+new_window 1pixel
+# smart_borders on
 gaps inner 10
+# class                 border  backgr. text    indicator child_border
+client.focused_inactive #0d1010 #212121 #d9d9d9 #0d1010 #063340
+client.unfocused        #0d1010 #212121 #d9d9d9 #424242 #063340
+client.focused          #7d32a8 #a641f2 #000000 #a641f2 #683d8a

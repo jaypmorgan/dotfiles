@@ -59,6 +59,15 @@
 ;; filter the list to find uninstalled packages
 ;; install only those that are not installed
 
+(unless (package-installed-p 'disable-mouse)
+  (package-install 'disable-mouse))
+(global-disable-mouse-mode)
+(mapc #'disable-mouse-in-keymap
+  (list evil-motion-state-map
+        evil-normal-state-map
+        evil-visual-state-map
+        evil-insert-state-map))
+
 ;; Display themes
 (unless (package-installed-p 'atom-one-dark-theme)
   (package-install 'atom-one-dark-theme))
