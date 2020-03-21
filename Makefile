@@ -7,3 +7,9 @@ update:
 	git pull
 	bash update.sh
 	source ~/.bashrc
+push:
+	@echo "pushing updates"
+	bash updateLocal.sh
+	git add .
+	git commit -m 'updated dotfiles'
+	git push -u origin master

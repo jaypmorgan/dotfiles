@@ -1,0 +1,6 @@
+#!/bin/bash
+
+FILES=[~/.vimrc, ~/.emacs];
+for FILE in $FILES; do
+
+done
