@@ -87,7 +87,7 @@
 (load-theme 'atom-one-dark t)
 (powerline-default-theme)
 
-(set-default-font "Source Code Pro-10")
+(set-default-font "Tamsyn-11")
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
@@ -104,3 +104,9 @@
 ;; Display line numbers
 (global-linum-mode 1)
 (setq display-line-numbers 'relative)
+
+;; Suppress the splash screen
+(setq-default inhibit-startup-screen t)
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+(setq initial-scratch-message "")
