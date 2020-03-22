@@ -2,9 +2,11 @@
 
 FILES=("${HOME}/.vimrc"
        "${HOME}/.emacs"
-       "${HOME}/.config/i3/config"
+       "${HOME}/.config/i3"
+       "${HOME}/.config/polybar"
+       "${HOME}/.config/rofi"
        "${HOME}/.bash_aliases");
 for FILE in "${FILES[@]}"; do
     echo "copying $FILE here";
-    cp $FILE .;
+    cp -r $FILE .;
 done
