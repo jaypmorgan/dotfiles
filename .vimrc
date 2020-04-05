@@ -89,11 +89,11 @@ let g:NERDTreeWinPos = "right"
 " remove all trailing spaces
 nnoremap <leader>C :%s/\s*$//g<CR>
 nnoremap <leader>w :w<CR>
-function OpenSmallTerminal()
+function OpenSmallTerminal2()
     :bel terminal
     :resize 20
 endfunction
-nnoremap <leader>t :call OpenSmallTerminal()<CR>
+nnoremap <leader>t :call OpenSmallTerminal2()<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 "" vim-fswitch
@@ -113,6 +113,7 @@ let g:vimteractive_vertical = 1  " vertically split terminal
 " YouCompleteMe
 hi Pmenu ctermbg=gray guibg=gray
 let g:ycm_confirm_extra_conf=0
+let g:ycm_show_diagnostics_ui=0
 
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
