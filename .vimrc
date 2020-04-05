@@ -1,5 +1,12 @@
+" VIMRC Config File
+" author: Jay Morgan
+
 set nocompatible              " be iMproved, required
 filetype off                  " required
+
+" execute local vimrc files
+set exrc
+set secure
 
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
@@ -18,12 +25,15 @@ Plugin 'davidhalter/jedi-vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 Plugin 'airblade/vim-gitgutter'
+Plugin 'vhdirk/vim-cmake'
+Plugin 'Yggdroot/indentLine'
+Plugin 'derekwyatt/vim-fswitch'
+Plugin 'jiangmiao/auto-pairs'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
 syntax on
 
-" python features
 set cc=100
 set encoding=utf-8
 set modeline
@@ -34,8 +44,6 @@ set softtabstop=4
 set cursorline
 hi CursorLine term=bold cterm=bold guibg=Grey30
 set showmatch
-let python_highlight_all=1
-let g:jedi#popup_on_dot=0   " jedi settings
 
 " COLORS
 if &term =~# '^screen'
@@ -54,30 +62,49 @@ set number relativenumber   " hybrid numbers
 set path+=**
 set wildmenu
 
-" TAG JUMPING
-" create the tags file
-command! MakeTags !ctags -R .
+""""""""""""""""""""""""""""
+"        COMMANDS          "
+""""""""""""""""""""""""""""
+
+command! MakeTags !ctags -R .  " create the tags file
 command! Q :q    " always hold shift accidently when trying to leave
+command! W :w    " when accidently holding shift
+command! EC :e ~/.vimrc
 
-" AUTOCOMPLETE
-" ^n show the autocomplete list
-" ^n to go the next item in the list
-" ^p to go back an item in teh l^n show the autocomplete list
+""""""""""""""""""""""""""""
+"        SHORTCUTS         "
+""""""""""""""""""""""""""""
 
-" SHORTCUT FOR NERDTREE
+"" Change the leader to a comma
+let mapleader=","
+
+"" NerdTree
+nnoremap <leader>, :NERDTree<CR>
+nnoremap <leader>. :NERDTreeClose<CR>
+let g:NERDTreeWinPos = "right"
+
+"" Misc
+" remove all trailing spaces
+nnoremap <leader>C :%s/\s*$//g<CR>
+nnoremap <leader>w :w<CR>
 function OpenSmallTerminal()
     :bel terminal
     :resize 20
 endfunction
-let mapleader=","
-nnoremap <leader>, :NERDTree<CR>
-nnoremap <leader>. :NERDTreeClose<CR>
-let g:NERDTreeWinPos = "right"
-" remove all trailing spaces in python
-nnoremap <leader>C :%s/\s*$//g<CR>
-nnoremap <leader>w :w<CR>
 nnoremap <leader>t :call OpenSmallTerminal()<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
+
+"" vim-fswitch
+nnoremap <leader>sw :FSHere<CR>
+
+"""""""""""""""""""""""""""
+"     PLUGIN SETTINGS     "
+"""""""""""""""""""""""""""
+
+" python settings
+let python_highlight_all=1
+let g:jedi#popup_on_dot=0
+
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
 
