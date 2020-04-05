@@ -9,6 +9,7 @@ set exrc
 set secure
 
 " set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/YouCompleteMe
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
@@ -29,6 +30,7 @@ Plugin 'vhdirk/vim-cmake'
 Plugin 'Yggdroot/indentLine'
 Plugin 'derekwyatt/vim-fswitch'
 Plugin 'jiangmiao/auto-pairs'
+Plugin 'rdnetto/YCM-Generator'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -107,6 +109,10 @@ let g:jedi#popup_on_dot=0
 
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
+
+" YouCompleteMe
+hi Pmenu ctermbg=gray guibg=gray
+let g:ycm_confirm_extra_conf=0
 
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
