@@ -17,6 +17,7 @@ Plugin 'challenger-deep-theme/vim'
 Plugin 'davidhalter/jedi-vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
+Plugin 'airblade/vim-gitgutter'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
