@@ -31,6 +31,7 @@ set expandtab
 set shiftwidth=4
 set softtabstop=4
 set cursorline
+hi CursorLine term=bold cterm=bold guibg=Grey30
 set showmatch
 let python_highlight_all=1
 let g:jedi#popup_on_dot=0   " jedi settings
