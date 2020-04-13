@@ -180,6 +180,9 @@ exec_always --no-startup-id polybar example &
 exec --no-startup-id redshift
 exec --no-startup-id nm-applet
 exec --no-startup-id killall compton; compton --blur-background-fixed -i 0.9 &
+exec --no-startup-id dropbox start
+exec --no-startup-id service bluetooth start
+exec --no-startup-id blueman-applet
 
 # Set Display Resolution
 exec --no-startup-id xrandr --output eDP1 --mode 1920x1200
@@ -205,4 +208,4 @@ gaps inner 10
 # class                 border  backgr. text    indicator child_border
 client.focused_inactive #0d1010 #212121 #d9d9d9 #0d1010 #063340
 client.unfocused        #0d1010 #212121 #d9d9d9 #424242 #063340
-client.focused          #7d32a8 #a641f2 #000000 #a641f2 #8c5dc9
+client.focused          #7d32a8 #a641f2 #000000 #a641f2 #5294e2

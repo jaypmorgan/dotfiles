@@ -30,7 +30,13 @@ Plugin 'vhdirk/vim-cmake'
 Plugin 'Yggdroot/indentLine'
 Plugin 'derekwyatt/vim-fswitch'
 Plugin 'jiangmiao/auto-pairs'
-Plugin 'rdnetto/YCM-Generator'
+Plugin 'jceb/vim-orgmode'
+Plugin 'tpope/vim-speeddating' " required for org-mode editing
+Plugin 'colepeters/spacemacs-theme.vim'
+Plugin 'sonph/onehalf', {'rtp': 'vim/'}
+Plugin 'majutsushi/tagbar'
+Plugin 'xavierd/clang_complete'
+Plugin 'Shougo/deoplete.nvim'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -46,17 +52,17 @@ set softtabstop=4
 set cursorline
 hi CursorLine term=bold cterm=bold guibg=Grey30
 set showmatch
+set number relativenumber   " hybrid numbers
 
 " COLORS
 if &term =~# '^screen'
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+    set termguicolors
 endif
 set background=dark
-set termguicolors
-" colorscheme challenger_deep
-
-set number relativenumber   " hybrid numbers
+colorscheme onehalfdark
+let g:airline_theme='onehalfdark'
 
 " FINDING FILES
 " enable fuzzy file searching from
@@ -67,8 +73,8 @@ set wildmenu
 """"""""""""""""""""""""""""
 "        COMMANDS          "
 """"""""""""""""""""""""""""
-
-command! MakeTags !ctags -R .  " create the tags file
+" create the tags file
+command! MakeTags !ctags -R .
 command! Q :q    " always hold shift accidently when trying to leave
 command! W :w    " when accidently holding shift
 command! EC :e ~/.vimrc
@@ -81,23 +87,25 @@ command! EC :e ~/.vimrc
 let mapleader=","
 
 "" NerdTree
-nnoremap <leader>, :NERDTree<CR>
-nnoremap <leader>. :NERDTreeClose<CR>
+nnoremap <leader>, :NERDTreeToggle<CR>
 let g:NERDTreeWinPos = "right"
 
 "" Misc
 " remove all trailing spaces
 nnoremap <leader>C :%s/\s*$//g<CR>
 nnoremap <leader>w :w<CR>
-function OpenSmallTerminal2()
+function OpenSmallTerminal()
     :bel terminal
     :resize 20
 endfunction
-nnoremap <leader>t :call OpenSmallTerminal2()<CR>
+nnoremap <leader>t :call OpenSmallTerminal()<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 "" vim-fswitch
 nnoremap <leader>sw :FSHere<CR>
+
+"" tagbar
+nnoremap <leader>; :TagbarToggle<CR>
 
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
@@ -110,10 +118,12 @@ let g:jedi#popup_on_dot=0
 " Vimteractive configuration
 let g:vimteractive_vertical = 1  " vertically split terminal
 
-" YouCompleteMe
-hi Pmenu ctermbg=gray guibg=gray
-let g:ycm_confirm_extra_conf=0
-let g:ycm_show_diagnostics_ui=0
+" " YouCompleteMe
+" hi Pmenu ctermbg=gray guibg=gray
+" let g:ycm_confirm_extra_conf=0
+" let g:ycm_show_diagnostics_ui=0
+" let g:ycm_server_python_interpreter='/usr/bin/python3'
+" let g:ycm_python_binary_path='/usr/bin/python3'
 
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
@@ -129,7 +139,7 @@ let g:syntastic_check_on_wq = 0
 set backspace=indent,eol,start
 
 set laststatus=2 " status bar
-let g:airline_theme='deus'
+" let g:airline_theme='deus'
 set ttyfast      " speed up scrolling
 
 " display different types of whitespace
@@ -138,3 +148,7 @@ set listchars=tab:›\ ,trail:•,extends:#,nbsp:.
 
 " block wise movements and block text objects in julia
 runtime macros/matchit.vim
+
+" deoplete.nvim
+let g:deoplete#sources#clang#libclang_path='/usr/lib/llvm-6.0/lib/libclang.so'
+let g:deoplete#sources#clang#clang_header='/usr/lib/llvm-6.0/lib/clang/'
