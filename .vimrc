@@ -37,6 +37,10 @@ Plugin 'sonph/onehalf', {'rtp': 'vim/'}
 Plugin 'majutsushi/tagbar'
 Plugin 'xavierd/clang_complete'
 Plugin 'Shougo/deoplete.nvim'
+Plugin 'Xuyuanp/nerdtree-git-plugin'
+Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
+Plugin 'ryanoasis/vim-devicons'
+Plugin 'christoomey/vim-tmux-navigator'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
