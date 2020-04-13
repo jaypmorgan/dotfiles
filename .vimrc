@@ -41,6 +41,7 @@ Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plugin 'ryanoasis/vim-devicons'
 Plugin 'christoomey/vim-tmux-navigator'
+Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 
 call vundle#end()             " required
 filetype plugin indent on     " required
