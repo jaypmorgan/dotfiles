@@ -6,7 +6,11 @@
 ;; Setup package.el to work with MELPA
 (require 'package)
 (add-to-list 'package-archives
-	     '("melpa" . "https://melpa.org/packages/"))
+        '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives 
+        '("org" . "http://orgmode.org/elpa/"))
+(add-to-list 'package-archives 
+        '("melpa-stable" . "http://stable.melpa.org/packages/"))
 (package-initialize)
 
 ;; Install function
@@ -17,7 +21,7 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra))
 
 ;; Iterate through the list of packages to be installed and call the check-and-install function for each package.
 (dolist (pkg local-packages)
@@ -34,7 +38,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages (quote (powerline helm evil))))
+ '(package-selected-packages (quote (markdown-mode powerline helm evil))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -55,23 +59,31 @@
 ;;--------------------
 ;; Terminal
 ;; I prefer the ansi-terminal rather than `shell'. Ansi-term, instead of shell, allows for normal history cycling out-of-the-box. Moreover, we can define a function to use ansi-term much like how shell operates.
+(define-key evil-motion-state-map " " nil)
+
 (defun ml/bash ()
   "start a terminal emulator in a new window"
   (interactive)
   (split-window-sensibly)
   (other-window 1)
   (ansi-term (executable-find "bash")))
-(global-set-key (kbd "C-c t") #'ml/bash)
+(define-key evil-motion-state-map (kbd "SPC t") #'ml/bash)
 
 ;; Helm shortcuts
+(defhydra hydra-helm (evil-motion-state-map "SPC f")
+  "Helm Files"
+  ("f" helm-find-files "Find Files")
+  ("r" helm-recentf "File Recent Files"))
 (global-set-key (kbd "M-x") 'helm-M-x)
-(global-set-key (kbd "C-x C-f") 'helm-find-files)
 
 ;; Projectile
-(global-set-key (kbd "C-c p") 'projectile-command-map)
+(define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
 
 ;; Dired
-(global-set-key (kbd "C-c d") 'dired)
+(define-key evil-motion-state-map (kbd "SPC d") 'dired)
+
+;; Magit
+(define-key evil-motion-state-map (kbd "SPC g") 'magit-status)
 
 ;; Disable mouse!!
 ;; While it may be nice to use the mouse, I find it more preferable to use emacs as a 'cmd-line' application, rather than graphical point-and-click. I use disable-mouse package to disable all mouse operations in evil mode.
@@ -92,7 +104,7 @@
 (load-theme 'atom-one-dark t)
 (powerline-default-theme)
 
-(set-default-font "Tamsyn-11")
+(set-default-font "Source Code Pro-10")
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
