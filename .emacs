@@ -21,7 +21,7 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse auto-complete))
 
 ;; Iterate through the list of packages to be installed and call the check-and-install function for each package.
 (dolist (pkg local-packages)
@@ -51,6 +51,9 @@
 (projectile-mode 1)
 (eyebrowse-mode 1)
 (which-key-mode 1)
+(ac-config-default)
+(with-eval-after-load 'auto-complete
+  (ac-flyspell-workaround))
 (which-key-setup-side-window-bottom)
 
 ;; LaTeX spelling
@@ -108,6 +111,10 @@
   ("9" eyebrowse-switch-to-window-config-9 "Workspace 9")
   )
 (define-key evil-motion-state-map (kbd "SPC TAB") 'hydra-eyebrowse/body)
+
+;; Buffer management
+(define-key evil-motion-state-map (kbd "SPC b") 'switch-to-buffer)
+
 
 ;; Disable mouse!!
 ;; While it may be nice to use the mouse, I find it more preferable to use emacs as a 'cmd-line' application, rather than graphical point-and-click. I use disable-mouse package to disable all mouse operations in evil mode.
