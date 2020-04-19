@@ -115,6 +115,14 @@
 ;; Buffer management
 (define-key evil-motion-state-map (kbd "SPC b") 'switch-to-buffer)
 
+;; Hydra Open Window
+(defhydra hydra-openbuffer (:color blue :hint nil)
+  "Open Buffer"
+  ("s" ml/bash "Shell Terminal")
+  ("c" (find-file "~/.emacs") "Open Emacs Config")
+  ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks"))
+(define-key evil-motion-state-map (kbd "SPC o") 'hydra-openbuffer/body)
+
 
 ;; Disable mouse!!
 ;; While it may be nice to use the mouse, I find it more preferable to use emacs as a 'cmd-line' application, rather than graphical point-and-click. I use disable-mouse package to disable all mouse operations in evil mode.
