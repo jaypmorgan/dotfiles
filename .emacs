@@ -21,7 +21,7 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative))
 
 ;; Iterate through the list of packages to be installed and call the check-and-install function for each package.
 (dolist (pkg local-packages)
@@ -64,7 +64,6 @@
 ;; Keyboard Shortcuts
 ;;--------------------
 ;; Terminal
-;; I prefer the ansi-terminal rather than `shell'. Ansi-term, instead of shell, allows for normal history cycling out-of-the-box. Moreover, we can define a function to use ansi-term much like how shell operates.
 (define-key evil-motion-state-map " " nil)
 
 (defun ml/bash ()
@@ -72,7 +71,7 @@
   (interactive)
   (split-window-sensibly)
   (other-window 1)
-  (ansi-term (executable-find "bash")))
+  (eshell))
 (define-key evil-motion-state-map (kbd "SPC t") #'ml/bash)
 
 ;; Helm shortcuts
@@ -120,7 +119,8 @@
   "Open Buffer"
   ("s" ml/bash "Shell Terminal")
   ("c" (find-file "~/.emacs") "Open Emacs Config")
-  ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks"))
+  ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
+  ("m" imenu-list-smart-toggle "Open Menu Buffer"))
 (define-key evil-motion-state-map (kbd "SPC o") 'hydra-openbuffer/body)
 
 
@@ -140,14 +140,19 @@
 (scroll-bar-mode -1)
 
 (global-hl-line-mode 1)
-(load-theme 'atom-one-dark t)
+(load-theme 'cyberpunk t)
 (powerline-default-theme)
 
-(set-default-font "Source Code Pro-10")
+(set-default-font "Source Code Pro-11")
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
 (set-window-margins (selected-window) 1 1)
+
+(setq indent-tabs-mode nil)
+(setq tab-width 2)
+
+(add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
 
 ;; Remove line continue character
 (setf (cdr (assq 'continuation fringe-indicator-alist))
@@ -158,12 +163,23 @@
       )
 
 ;; Display line numbers
-(global-linum-mode 1)
-(setq display-line-numbers 'relative)
+(global-linum-mode)
+(linum-relative-on)
+(add-hook 'eshell-mode-hook (lambda ()
+    (setq-local global-hl-line-mode
+		nil)))
+(add-hook 'term-mode-hook (lambda ()
+    (setq-local global-hl-line-mode
+		    nil)))
 
 ;; Suppress the splash screen
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 (setq initial-scratch-message "")
-(setq backup-directory-alist '((".*" . "~/.Trash"))) ; put backup files into the trash bin -- still there but not in working dir
+(setq auto-save-default nil)
+(setq backup-directory-alist '(("" . "~/.Trash"))) ; put backup files into the trash bin -- still there but not in working dir
+(put 'dired-find-alternate-file 'disabled nil)
+
+(setq org-todo-keywords
+  '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)")))
