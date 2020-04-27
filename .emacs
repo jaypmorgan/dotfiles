@@ -21,7 +21,11 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer rainbow-delimiters lispy evil-lispy))
+
+(require 'thingatpt)
+(require 'semantic/db)
+(global-semanticdb-minor-mode 1)
 
 ;; Iterate through the list of packages to be installed and call the check-and-install function for each package.
 (dolist (pkg local-packages)
@@ -188,3 +192,5 @@
 
 (setq org-todo-keywords
   '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)")))
+(add-hook 'common-lisp-mode-hook #'evil-lispy-mode)
+(add-hook 'emacs-lisp-mode-hook #'evil-lispy-mode)

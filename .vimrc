@@ -100,10 +100,17 @@ let g:NERDTreeWinPos = "right"
 nnoremap <leader>C :%s/\s*$//g<CR>
 nnoremap <leader>w :w<CR>
 function OpenSmallTerminal()
-    :bel terminal
-    :resize 20
+    if has('nvim')
+        :tnoremap <Esc> <C-\><C-n>
+        :below 10sp term://bash
+        :execute "normal $i"
+    else
+        :bel term
+        :resize 20
+    endif
 endfunction
 nnoremap <leader>t :call OpenSmallTerminal()<CR>
+nnoremap <leader>s :below 10sp *scratch*<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 "" vim-fswitch
