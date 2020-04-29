@@ -39,8 +39,8 @@ Plugin 'xavierd/clang_complete'
 Plugin 'Shougo/deoplete.nvim'
 Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
-Plugin 'ryanoasis/vim-devicons'
 Plugin 'christoomey/vim-tmux-navigator'
+Plugin 'psf/black'
 Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 
 call vundle#end()             " required
@@ -164,3 +164,5 @@ runtime macros/matchit.vim
 " deoplete.nvim
 let g:deoplete#sources#clang#libclang_path='/usr/lib/llvm-6.0/lib/libclang.so'
 let g:deoplete#sources#clang#clang_header='/usr/lib/llvm-6.0/lib/clang/'
+
+let g:black_virtualenv='~/.conda/envs/cristallo/bin/python'
