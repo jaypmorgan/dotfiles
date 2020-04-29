@@ -21,7 +21,7 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer rainbow-delimiters lispy evil-lispy))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer rainbow-delimiters lispy evil-lispy diminish))
 
 (require 'thingatpt)
 (require 'semantic/db)
@@ -42,6 +42,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default)))
  '(org-agenda-files (quote ("~/Dropbox/Notes/tasks.org")))
  '(package-selected-packages
    (quote
@@ -75,7 +78,7 @@
   (interactive)
   (split-window-sensibly)
   (other-window 1)
-  (eshell))
+  (ansi-term "/bin/bash"))
 (define-key evil-motion-state-map (kbd "SPC t") #'ml/bash)
 
 ;; Helm shortcuts
@@ -130,8 +133,17 @@
 ;; Multi-cursors
 (defhydra hydra-multipleCursors (:color blue :hint nil)
   "Multiple Cursors"
-  ("e" 'mc/edit-lines "Edit Lines"))
+  ("e" mc/edit-lines "Edit Lines"))
 (define-key evil-motion-state-map (kbd "SPC e") 'hydra-multipleCursors/body)
+
+;; Remote hosts
+(defhydra hydra-remote-hosts (:color blue :hint nil)
+  "Browse remote hosts"
+  ("l" (dired "/ssh:lis.me:~/workspace") "LIS Lab")
+  ("s" (dired "/ssh:sunbird.me:~/workspace") "Sunbird Swansea")
+  ("i" (dired "/ssh:ibex.me:~") "KAUST Ibex")
+  ("c" (dired "/ssh:chemistry.me:~") "Chemistry Swanasea"))
+(define-key evil-motion-state-map (kbd "SPC r") 'hydra-remote-hosts/body)
 
 ;; Disable mouse!!
 ;; While it may be nice to use the mouse, I find it more preferable to use emacs as a 'cmd-line' application, rather than graphical point-and-click. I use disable-mouse package to disable all mouse operations in evil mode.
@@ -149,17 +161,17 @@
 (scroll-bar-mode -1)
 
 (global-hl-line-mode 1)
-(load-theme 'cyberpunk t)
+(load-theme 'atom-one-dark t)
 (powerline-default-theme)
 
-(set-default-font "Source Code Pro-11")
+(set-default-font "Source Code Pro-10")
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
 (set-window-margins (selected-window) 1 1)
 
-(setq indent-tabs-mode nil)
-(setq tab-width 2)
+(setq-default indent-tabs-mode nil)
+(setq tab-stop 4)
 
 (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
 
@@ -194,3 +206,10 @@
   '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)")))
 (add-hook 'common-lisp-mode-hook #'evil-lispy-mode)
 (add-hook 'emacs-lisp-mode-hook #'evil-lispy-mode)
+
+(defun hide-minor-modes ()
+  "Who wants to be reminded of active modes"
+  (interactive)
+  (mapc (lambda (mode) (diminish mode))
+        minor-mode-list))
+(hide-minor-modes)
