@@ -14,6 +14,7 @@
         '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives 
         '("melpa-stable" . "http://stable.melpa.org/packages/"))
+(package-refresh-contents)
 (package-initialize)
 
 ;; Install function
@@ -24,7 +25,7 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer rainbow-delimiters diminish slime focus smartparens adaptive-wrap htmlize git-gutter))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer diminish slime adaptive-wrap htmlize git-gutter))
 
 (require 'thingatpt)
 (require 'semantic/db)
@@ -118,12 +119,13 @@
   ("6" eyebrowse-switch-to-window-config-6 "Workspace 6")
   ("7" eyebrowse-switch-to-window-config-7 "Workspace 7")
   ("8" eyebrowse-switch-to-window-config-8 "Workspace 8")
-  ("9" eyebrowse-switch-to-window-config-9 "Workspace 9")
-  )
-(define-key evil-motion-state-map (kbd "SPC TAB") 'hydra-eyebrowse/body)
+  ("9" eyebrowse-switch-to-window-config-9 "Workspace 9"))
+(define-key evil-motion-state-map
+  (kbd "SPC TAB") 'hydra-eyebrowse/body)
 
 ;; Buffer management
-(define-key evil-motion-state-map (kbd "SPC b") 'switch-to-buffer)
+(define-key evil-motion-state-map
+  (kbd "SPC b") 'switch-to-buffer)
 
 ;; Hydra Open Window
 (defhydra hydra-openbuffer (:color blue :hint nil)
@@ -131,14 +133,16 @@
   ("s" ml/bash "Shell Terminal")
   ("c" (find-file "~/.emacs") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
-  ("m" imenu-list-smart-toggle "Open Menu Buffer"))
-(define-key evil-motion-state-map (kbd "SPC o") 'hydra-openbuffer/body)
+  ("i" imenu-list-smart-toggle "Open Menu Buffer"))
+(define-key evil-motion-state-map
+  (kbd "SPC o") 'hydra-openbuffer/body)
 
 ;; Multi-cursors
 (defhydra hydra-multipleCursors (:color blue :hint nil)
   "Multiple Cursors"
   ("e" mc/edit-lines "Edit Lines"))
-(define-key evil-motion-state-map (kbd "SPC e") 'hydra-multipleCursors/body)
+(define-key evil-motion-state-map
+  (kbd "SPC e") 'hydra-multipleCursors/body)
 
 ;; Remote hosts
 (defhydra hydra-remote-hosts (:color blue :hint nil)
@@ -147,7 +151,8 @@
   ("s" (dired "/ssh:sunbird.me:~/workspace") "Sunbird Swansea")
   ("i" (dired "/ssh:ibex.me:~") "KAUST Ibex")
   ("c" (dired "/ssh:chemistry.me:~") "Chemistry Swanasea"))
-(define-key evil-motion-state-map (kbd "SPC r") 'hydra-remote-hosts/body)
+(define-key evil-motion-state-map
+  (kbd "SPC r") 'hydra-remote-hosts/body)
 
 ;; Disable mouse!!
 ;; While it may be nice to use the mouse, I find it more preferable to use emacs as a 'cmd-line' application, rather than graphical point-and-click. I use disable-mouse package to disable all mouse operations in evil mode.
@@ -168,7 +173,8 @@
     (progn
       (balance-windows)
       (setq *fullscreen* 0))))
-(define-key evil-motion-state-map (kbd "C-b") 'toggle-frame-size)
+(define-key evil-motion-state-map
+  (kbd "C-b") 'toggle-frame-size)
 
 ;; Display themes
 ;;---------------------
@@ -178,7 +184,7 @@
 
 (global-hl-line-mode 1)
 (load-theme 'atom-one-dark t)
-(powerline-vim-theme)
+(powerline-center-theme)
 
 (set-default-font "Ubuntu Mono-12")
 (set-language-environment "UTF-8")
@@ -203,12 +209,10 @@
 ;; Display line numbers
 (global-linum-mode)
 (linum-relative-on)
-(add-hook 'eshell-mode-hook (lambda ()
-    (setq-local global-hl-line-mode
-		nil)))
-(add-hook 'term-mode-hook (lambda ()
-    (setq-local global-hl-line-mode
-		    nil)))
+(add-hook 'term-mode-hook
+    (lambda ()
+      (setq-local global-hl-line-mode nil)
+      (setq-local linum-mode -1)))
 
 ;; Suppress the splash screen
 (setq-default inhibit-startup-screen t)
