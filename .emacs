@@ -3,6 +3,9 @@
 ;; Author: Jay Morgan
 ;;--------------------------
 
+(require 'cl)
+(load "~/.emacs.d/ox-jekyll.el")
+
 ;; Setup package.el to work with MELPA
 (require 'package)
 (add-to-list 'package-archives
@@ -21,10 +24,11 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer rainbow-delimiters lispy evil-lispy diminish))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile auto-complete epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer rainbow-delimiters diminish slime focus smartparens adaptive-wrap htmlize git-gutter))
 
 (require 'thingatpt)
 (require 'semantic/db)
+(smartparens-global-mode 1)
 (global-semanticdb-minor-mode 1)
 
 ;; Iterate through the list of packages to be installed and call the check-and-install function for each package.
@@ -154,6 +158,18 @@
         evil-visual-state-map
         evil-insert-state-map))
 
+(setq *fullscreen* 0)
+(defun toggle-frame-size ()
+  (interactive)
+  (if (eq *fullscreen* 1)
+      (progn
+        (maximize-window)
+        (setq *fullscreen* 1))
+    (progn
+      (balance-windows)
+      (setq *fullscreen* 0))))
+(define-key evil-motion-state-map (kbd "C-b") 'toggle-frame-size)
+
 ;; Display themes
 ;;---------------------
 (menu-bar-mode -1)
@@ -162,9 +178,9 @@
 
 (global-hl-line-mode 1)
 (load-theme 'atom-one-dark t)
-(powerline-default-theme)
+(powerline-vim-theme)
 
-(set-default-font "Source Code Pro-10")
+(set-default-font "Ubuntu Mono-12")
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
@@ -173,6 +189,7 @@
 (setq-default indent-tabs-mode nil)
 (setq tab-stop 4)
 
+;; Julia Markdown
 (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
 
 ;; Remove line continue character
@@ -204,8 +221,6 @@
 
 (setq org-todo-keywords
   '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)")))
-(add-hook 'common-lisp-mode-hook #'evil-lispy-mode)
-(add-hook 'emacs-lisp-mode-hook #'evil-lispy-mode)
 
 (defun hide-minor-modes ()
   "Who wants to be reminded of active modes"
@@ -213,3 +228,14 @@
   (mapc (lambda (mode) (diminish mode))
         minor-mode-list))
 (hide-minor-modes)
+(setq inferior-lisp-program "sbcl")
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((gnuplot . t) (dot . t)))
+
+(with-eval-after-load 'org
+  (setq org-startup-indented t)
+  (add-hook 'org-mode-hook #'visual-line-mode)
+  (add-hook 'org-mode-hook '(lambda () (set-fill-column 80)))
+  (add-hook 'org-mode-hook #'auto-fill-mode))
+(global-auto-revert-mode t)

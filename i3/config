@@ -38,7 +38,7 @@ floating_modifier Mod4
 bindsym Mod4+Return exec i3-sensible-terminal
 
 # start emacs
-bindsym Mod4+BackSpace exec emacs
+bindsym Mod4+BackSpace exec emacsclient -c -a emacs
 
 # kill focused window
 bindsym Mod4+Shift+q kill
