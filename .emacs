@@ -4,15 +4,17 @@
 ;;--------------------------
 
 (require 'cl)
-(load "~/.emacs.d/ox-jekyll.el")
+(add-to-list 'load-path "~/.emacs.d/plugins/")
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
+(require 'mu4e)
 
 ;; Setup package.el to work with MELPA
 (require 'package)
 (add-to-list 'package-archives
         '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives 
+(add-to-list 'package-archives
         '("org" . "http://orgmode.org/elpa/"))
-(add-to-list 'package-archives 
+(add-to-list 'package-archives
         '("melpa-stable" . "http://stable.melpa.org/packages/"))
 (package-refresh-contents)
 (package-initialize)
@@ -54,7 +56,8 @@
  '(package-selected-packages
    (quote
     (company company-mode markdown-mode powerline helm evil)))
- '(powerline-display-hud nil))
+ '(powerline-display-hud nil)
+ '(send-mail-function (quote smtpmail-send-it)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -183,10 +186,11 @@
 (scroll-bar-mode -1)
 
 (global-hl-line-mode 1)
-(load-theme 'atom-one-dark t)
+(load-theme 'atom-one-dark 1)
 (powerline-center-theme)
 
-(set-default-font "Ubuntu Mono-12")
+(set-default-font "Tamsyn-12")
+(setq default-frame-alist '((font . "Tamsyn-12")))
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
@@ -243,3 +247,15 @@
   (add-hook 'org-mode-hook '(lambda () (set-fill-column 80)))
   (add-hook 'org-mode-hook #'auto-fill-mode))
 (global-auto-revert-mode t)
+
+;; mu4e Config
+;;---------------
+(setq
+ mu4e-sent-folder   "/envoyée"
+ mu4e-drafts-folder "/brouillon"
+ mu4e-trash-folder  "/trash"
+ mu4e-refile-folder "/archiver"
+ mu4e-get-mail-command "offlineimap -o -u quiet")
+(setq
+ user-full-name     "Jay Morgan"
+ user-mail-address "jaymiles17@gmail.com")
