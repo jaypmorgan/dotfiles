@@ -39,7 +39,6 @@ Plugin 'xavierd/clang_complete'
 Plugin 'Shougo/deoplete.nvim'
 Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
-Plugin 'ryanoasis/vim-devicons'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 Plugin 'chriskempson/base16-vim'
