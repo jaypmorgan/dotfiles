@@ -1,5 +1,5 @@
 ;;--------------------------
-;; EMACS Configuration File
+; EMACS Configuration File
 ;; Author: Jay Morgan
 ;;--------------------------
 
@@ -24,8 +24,9 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer diminish slime adaptive-wrap htmlize git-gutter evil-collection))
+(setq local-packages '(evil helm powerline atom-one-dark-theme disable-mouse projectile epc jedi julia-mode which-key ispell markdown-mode magit hydra eyebrowse company imenu-list smartparens cyberpunk-theme linum-relative multiple-cursors parinfer diminish slime adaptive-wrap htmlize git-gutter evil-collection base16-theme))
 
+(setq evil-want-keybinding nil)
 (require 'thingatpt)
 (require 'semantic/db)
 (smartparens-global-mode 1)
@@ -51,7 +52,7 @@
  '(package-selected-packages
    (quote
     (company company-mode markdown-mode powerline helm evil)))
- '(powerline-display-hud nil)
+ '(powerline-display-hud t)
  '(send-mail-function (quote smtpmail-send-it)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -151,6 +152,13 @@
 (define-key evil-motion-state-map
   (kbd "SPC r") 'hydra-remote-hosts/body)
 
+(defhydra hydra-modify-buffers (:color blue :hint nil)
+  "Modify buffer"
+  ("w" write-file "Write")
+  ("q" quit-window "Close"))
+(define-key evil-motion-state-map
+  (kbd "SPC m") 'hydra-modify-buffers/body)
+
 ;; Disable mouse!!
 ;; While it may be nice to use the mouse, I find it more preferable to use emacs as a 'cmd-line' application, rather than graphical point-and-click. I use disable-mouse package to disable all mouse operations in evil mode.
 (global-disable-mouse-mode)
@@ -180,8 +188,16 @@
 (scroll-bar-mode -1)
 
 (global-hl-line-mode 1)
-(load-theme 'atom-one-dark 1)
-(powerline-center-theme)
+(load-theme 'base16-default-dark 1)
+(powerline-default-theme)
+;; Set the cursor color based on the evil state
+(defvar my/base16-colors base16-default-dark-colors)
+(setq evil-emacs-state-cursor   `(,(plist-get my/base16-colors :base0D) box)
+      evil-insert-state-cursor  `(,(plist-get my/base16-colors :base0D) bar)
+      evil-motion-state-cursor  `(,(plist-get my/base16-colors :base0E) box)
+      evil-normal-state-cursor  `(,(plist-get my/base16-colors :base0B) box)
+      evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
+      evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
 
 (set-default-font "Tamsyn-12")
 (setq default-frame-alist '((font . "Tamsyn-12")))
@@ -253,3 +269,4 @@
 (setq
  user-full-name     "Jay Morgan"
  user-mail-address "jaymiles17@gmail.com")
+(scroll-bar-mode -1)

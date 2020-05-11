@@ -18,7 +18,7 @@
 
 [colors]
 ;background = ${xrdb:color0:#222}
-background = #2F343F
+background = #171717
 background-alt = #444
 ;foreground = ${xrdb:color7:#222}
 foreground = #dfdfdf
@@ -28,19 +28,19 @@ secondary = #e60053
 alert = #bd2c40
 
 [bar/example]
-;monitor = ${env:MONITOR:HDMI-1}
-margin-top = 0
+; monitor = ${env:MONITOR:HDMI-1}
+margin-top = 1
 width = 100%
-height = 24
+height = 25
 ; offset-x = 1%
 ; offset-y = 1%
-radius = 4.0
-fixed-center = false
+radius = 0.0
+fixed-center = true
 
 background = ${colors.background}
 foreground = ${colors.foreground}
 
-line-size = 3
+line-size = 1
 line-color = #f00
 
 border-size = 0
@@ -50,17 +50,17 @@ padding-left = 0
 padding-right = 0
 
 module-margin-left = 1
-module-margin-right = 2
+module-margin-right = 1
 
-font-0 = Source Code Pro:style=Regular:fixed:pixelsize=9;1
+font-0 = Tamsyn:style=Regular:fixed:pixelsize=13
 font-1 = unifont:fontformat=truetype:size=8:antialias=false;0
 font-2 = siji:pixelsize=10;1
 
-modules-left = bspwm i3
-modules-center = mpd
+modules-left = bspwm i3 spotify
+modules-center = mpd 
 modules-right = filesystem xbacklight pulseaudio cpu battery temperature date powermenu
 
-tray-position = right
+tray-position = none
 tray-padding = 0
 ;tray-background = #0063ff
 
@@ -104,7 +104,7 @@ interval = 25
 
 mount-0 = /
 
-label-mounted = %{F#0a81f5}%mountpoint%%{F-}: %percentage_used%%
+label-mounted = | FS %mountpoint%: %percentage_used%%
 label-unmounted = %mountpoint% not mounted
 label-unmounted-foreground = ${colors.foreground-alt}
 
@@ -184,8 +184,7 @@ label-song-ellipsis = true
 [module/xbacklight]
 type = internal/xbacklight
 
-format = <label> <bar>
-label = BL
+format = | BL <bar>
 
 bar-width = 10
 bar-indicator = |
@@ -205,19 +204,19 @@ card = intel_backlight
 
 [module/cpu]
 type = internal/cpu
-interval = 2
-format-prefix = " "
+interval = 1
+; format-prefix = "| CPU "
 format-prefix-foreground = ${colors.foreground-alt}
-format-underline = #f90000
-label = %percentage:2%%
+; format-underline = ${colors.primary}
+label = | CPU %percentage:2%%
 
 [module/memory]
 type = internal/memory
 interval = 2
 format-prefix = " "
 format-prefix-foreground = ${colors.foreground-alt}
-format-underline = #4bffdc
-label = %percentage_used%%
+format-underline = ${colors.primary}
+label = | MEM %percentage_used%%
 
 [module/wlan]
 type = internal/network
@@ -269,15 +268,15 @@ time-alt = %H:%M:%S
 
 format-prefix = 
 format-prefix-foreground = ${colors.foreground-alt}
-format-underline = #0a6cf5
+; format-underline = ${colors.primary}
 
-label = %date% %time%
+label = | %date% %time%
 
 [module/pulseaudio]
 type = internal/pulseaudio
 
 format-volume = <label-volume> <bar-volume>
-label-volume = VOL %percentage%%
+label-volume = | VOL %percentage%%
 label-volume-foreground = ${root.foreground}
 
 label-muted = 🔇 muted
@@ -334,13 +333,15 @@ battery = BAT0
 adapter = ADP1
 full-at = 98
 
-format-charging = <animation-charging> <label-charging>
-format-charging-underline = #ffb52a
+format = | BAT <label-charging>
+format-charging = | BAT <animation-charging> <label-charging>
+format-charging-underline = 
 
-format-discharging = <animation-discharging> <label-discharging>
+format-discharging = | BAT <animation-discharging> <label-discharging>
 format-discharging-underline = ${self.format-charging-underline}
 
-format-full-prefix = " "
+format-full-prefix =
+format-full = | BAT <label-full>
 format-full-prefix-foreground = ${colors.foreground-alt}
 format-full-underline = ${self.format-charging-underline}
 
@@ -367,13 +368,13 @@ thermal-zone = 0
 warn-temperature = 60
 
 format = <ramp> <label>
-format-underline = #f50a4d
+; format-underline = #f50a4d
 format-warn = <ramp> <label-warn>
-format-warn-underline = ${self.format-underline}
+; format-warn-underline = ${colors.primary}
 
-label = %temperature-c%
-label-warn = %temperature-c%
-label-warn-foreground = ${colors.secondary}
+label = | TEMP %temperature-c%
+label-warn = | TEMP %temperature-c%
+label-warn-foreground = #fff
 
 ramp-0 = 
 ramp-1 = 
@@ -422,3 +423,11 @@ margin-top = 5
 margin-bottom = 5
 
 ; vim:ft=dosini
+
+[module/spotify]
+type = custom/script
+interval = 1
+format-prefix = " "
+format = <label>
+exec = python ~/Applications/polybar-spotify/spotify_status.py -f '{artist}: {song}'
+format-underline = ${colors.secondary}

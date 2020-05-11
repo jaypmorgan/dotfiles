@@ -42,6 +42,7 @@ Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plugin 'ryanoasis/vim-devicons'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'neoclide/coc.nvim', {'branch': 'release'}
+Plugin 'chriskempson/base16-vim'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -63,10 +64,11 @@ set number relativenumber   " hybrid numbers
 if &term =~# '^screen'
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-    set termguicolors
 endif
+set termguicolors
+let base16colorspace=256
 set background=dark
-colorscheme onehalfdark
+colorscheme base16-default-dark
 let g:airline_theme='onehalfdark'
 
 " FINDING FILES

@@ -179,7 +179,6 @@ exec i3-config-wizard
 exec_always --no-startup-id polybar example &
 exec --no-startup-id redshift
 exec --no-startup-id nm-applet
-exec --no-startup-id killall compton; compton --blur-background-fixed -i 0.9 &
 exec --no-startup-id dropbox start
 exec --no-startup-id service bluetooth start
 exec --no-startup-id blueman-applet
