@@ -3,6 +3,7 @@
 
 set nocompatible              " be iMproved, required
 filetype off                  " required
+set noswapfile
 
 " execute local vimrc files
 set exrc
@@ -84,6 +85,7 @@ command! MakeTags !ctags -R .
 command! Q :q    " always hold shift accidently when trying to leave
 command! W :w    " when accidently holding shift
 command! EC :e ~/.vimrc
+command! Tasks :e ~/Dropbox/Notes/tasks.org
 
 """"""""""""""""""""""""""""
 "        SHORTCUTS         "
