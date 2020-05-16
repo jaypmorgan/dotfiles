@@ -9,12 +9,16 @@
 (require 'mu4e)
 
 ;; Setup package.el to work with MELPA
+(setq package-check-signature nil)
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
 (package-refresh-contents)
 (package-initialize)
+
+(setq evil-want-keybinding nil)
+(setq x-wait-for-event-timeout nil)
 
 ;; Install function
 ;; define a function to check if a package is installed, if it not we can install it. From this, we may quickly and easily install packages.
@@ -26,6 +30,7 @@
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
 (setq local-packages '(evil
                        helm
+                       which-key
                        powerline
                        disable-mouse
                        projectile
@@ -54,7 +59,8 @@
 
 ;; Enable Packages & Config
 ;;-------------------
-(setq x-wait-for-event-timeout nil)
+(require 'helm-config)
+(setq which-key-idle-delay 0.001)
 (evil-mode 1)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -65,9 +71,7 @@
    (quote
     ("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default)))
  '(org-agenda-files (quote ("~/Dropbox/Notes/tasks.org")))
- '(package-selected-packages
-   (quote
-    ()))
+ '(package-selected-packages nil)
  '(powerline-display-hud t)
  '(send-mail-function (quote smtpmail-send-it)))
 (custom-set-faces
@@ -79,7 +83,7 @@
 (helm-mode 1)
 (projectile-mode 1)
 (eyebrowse-mode 1)
-
+(which-key-mode)
 ;; spelling
 (setq ispell-dictionary "british")
 
@@ -99,6 +103,7 @@
 
 ;; mu4e Config
 ;;---------------
+(setq mu4e-confirm-quit nil)
 (setq
  mu4e-sent-folder   "/envoyée"
  mu4e-drafts-folder "/brouillon"
@@ -126,7 +131,7 @@
   (interactive)
   (split-window-sensibly)
   (other-window 1)
-  (ansi-term "/bin/bash"))
+  (eshell))
 (define-key evil-motion-state-map (kbd "SPC t") #'ml/bash)
 
 ;; Helm shortcuts
