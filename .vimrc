@@ -43,6 +43,8 @@ Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 Plugin 'chriskempson/base16-vim'
+Plugin 'vimwiki/vimwiki'
+Plugin 'vim-voom/VOoM'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -122,6 +124,9 @@ nnoremap <leader>sw :FSHere<CR>
 "" tagbar
 nnoremap <leader>; :TagbarToggle<CR>
 
+" Terminal remap for neovim
+tnoremap <Esc> <C-\><C-n>
+
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
 """""""""""""""""""""""""""
@@ -167,3 +172,7 @@ runtime macros/matchit.vim
 " deoplete.nvim
 let g:deoplete#sources#clang#libclang_path='/usr/lib/llvm-6.0/lib/libclang.so'
 let g:deoplete#sources#clang#clang_header='/usr/lib/llvm-6.0/lib/clang/'
+let &t_SI = "\<Esc>[6 q"
+let &t_SR = "\<Esc>[4 q"
+let &t_EI = "\<Esc>[2 q"
+let g:voom_ft_modes = {'markdown': 'markdown', 'tex': 'latex', 'html': 'html', 'wiki': 'vimwiki'}
