@@ -115,6 +115,18 @@ nnoremap <leader>t :call OpenSmallTerminal()<CR>
 nnoremap <leader>s :below 10sp *scratch*<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
+function Send2REPL()
+    if len(keys(g:neoterm.instances)) == 0
+        :Topen
+    endif
+    if mode() == "\<C-v>"
+        :TREPLSendSelection
+    else
+        :TREPLSendLine
+    endif
+endfunction
+nnoremap <leader>/ :call Send2REPL()<CR>
+
 "" vim-fswitch
 nnoremap <leader>sw :FSHere<CR>
 
@@ -127,6 +139,8 @@ tnoremap <Esc> <C-\><C-n>
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
 """""""""""""""""""""""""""
+set splitright
+set splitbelow
 
 " python settings
 let python_highlight_all=1
@@ -169,9 +183,18 @@ runtime macros/matchit.vim
 " deoplete.nvim
 let g:deoplete#sources#clang#libclang_path='/usr/lib/llvm-6.0/lib/libclang.so'
 let g:deoplete#sources#clang#clang_header='/usr/lib/llvm-6.0/lib/clang/'
+let g:python_host_prog="/usr/bin/python2"
+let g:python3_host_prog="/usr/bin/python3"
+
 let &t_SI = "\<Esc>[6 q"
 let &t_SR = "\<Esc>[4 q"
 let &t_EI = "\<Esc>[2 q"
 let g:voom_ft_modes = {'markdown': 'markdown', 'tex': 'latex', 'html': 'html', 'wiki': 'vimwiki'}
-let g:python_host_prog="/usr/bin/python2"
-let g:python3_host_prog="/usr/bin/python3"
+
+au VimEnter,BufRead,BufNewFile *.jl set filetype=julia
+au VimEnter,BufRead,BufNewFile *.idr set filetype=idris
+au VimEnter,BufRead,BufNewFile *.lidr set filetype=lidris
+au VimEnter,BufRead,BufNewFile *.lfe set filetype=lfe
+
+let g:neoterm_default_mod="vertical"
+let g:neoterm_size=60
