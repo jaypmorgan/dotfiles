@@ -115,17 +115,20 @@ nnoremap <leader>t :call OpenSmallTerminal()<CR>
 nnoremap <leader>s :below 10sp *scratch*<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
-function Send2REPL()
+function Send2REPL(mode)
     if len(keys(g:neoterm.instances)) == 0
         :Topen
     endif
-    if mode() == "\<C-v>"
+    if a:mode ==# 'v'
         :TREPLSendSelection
     else
         :TREPLSendLine
     endif
+    :normal $
+    :call search("\\S$", "W")
 endfunction
-nnoremap <leader>/ :call Send2REPL()<CR>
+nnoremap <leader>c :silent call Send2REPL('n')<CR>
+xnoremap <leader>c :silent call Send2REPL('v')<CR>
 
 "" vim-fswitch
 nnoremap <leader>sw :FSHere<CR>
@@ -139,22 +142,12 @@ tnoremap <Esc> <C-\><C-n>
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
 """""""""""""""""""""""""""
-set splitright
-set splitbelow
-
 " python settings
 let python_highlight_all=1
-let g:jedi#popup_on_dot=0
 
-" Vimteractive configuration
-let g:vimteractive_vertical = 1  " vertically split terminal
-
-" " YouCompleteMe
-" hi Pmenu ctermbg=gray guibg=gray
-" let g:ycm_confirm_extra_conf=0
-" let g:ycm_show_diagnostics_ui=0
-" let g:ycm_server_python_interpreter='/usr/bin/python3'
-" let g:ycm_python_binary_path='/usr/bin/python3'
+set textwidth=75
+set formatoptions+=a
+set wrap
 
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
@@ -197,4 +190,3 @@ au VimEnter,BufRead,BufNewFile *.lidr set filetype=lidris
 au VimEnter,BufRead,BufNewFile *.lfe set filetype=lfe
 
 let g:neoterm_default_mod="vertical"
-let g:neoterm_size=60
