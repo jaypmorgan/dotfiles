@@ -203,8 +203,8 @@ bindsym XF86AudioPrev exec playerctl previous
 
 new_window 1pixel
 # smart_borders on
-gaps inner 10
+# gaps inner 10
 # class                 border  backgr. text    indicator child_border
-client.focused_inactive #0d1010 #212121 #d9d9d9 #0d1010 #063340
-client.unfocused        #0d1010 #212121 #d9d9d9 #424242 #063340
-client.focused          #7d32a8 #a641f2 #000000 #a641f2 #5294e2
+client.focused_inactive #5c8994 #212121 #d9d9d9 #0d1010 #5c8994
+client.unfocused        #43656e #212121 #d9d9d9 #424242 #43656e
+client.focused          #83c5d4 #212121 #d9d9d9 #424242 #83c5d4
