@@ -19,11 +19,8 @@ Plugin 'JuliaEditorSupport/julia-vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'vim-scripts/indentpython.vim'
 Plugin 'sheerun/vim-polyglot' " syntax highlighting
-Plugin 'williamjameshandley/vimteractive'
 Plugin 'vim-syntastic/syntastic'
 Plugin 'tpope/vim-commentary'
-Plugin 'challenger-deep-theme/vim'
-Plugin 'davidhalter/jedi-vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 Plugin 'airblade/vim-gitgutter'
@@ -33,7 +30,6 @@ Plugin 'derekwyatt/vim-fswitch'
 Plugin 'jiangmiao/auto-pairs'
 Plugin 'jceb/vim-orgmode'
 Plugin 'tpope/vim-speeddating' " required for org-mode editing
-Plugin 'colepeters/spacemacs-theme.vim'
 Plugin 'sonph/onehalf', {'rtp': 'vim/'}
 Plugin 'majutsushi/tagbar'
 Plugin 'xavierd/clang_complete'
@@ -45,6 +41,7 @@ Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 Plugin 'chriskempson/base16-vim'
 Plugin 'vimwiki/vimwiki'
 Plugin 'vim-voom/VOoM'
+Plugin 'kassio/neoterm'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -60,7 +57,7 @@ set softtabstop=4
 set cursorline
 hi CursorLine term=bold cterm=bold guibg=Grey30
 set showmatch
-set number relativenumber   " hybrid numbers
+set number
 
 " COLORS
 if &term =~# '^screen'
@@ -176,3 +173,5 @@ let &t_SI = "\<Esc>[6 q"
 let &t_SR = "\<Esc>[4 q"
 let &t_EI = "\<Esc>[2 q"
 let g:voom_ft_modes = {'markdown': 'markdown', 'tex': 'latex', 'html': 'html', 'wiki': 'vimwiki'}
+let g:python_host_prog="/usr/bin/python2"
+let g:python3_host_prog="/usr/bin/python3"
