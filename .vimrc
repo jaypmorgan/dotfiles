@@ -112,7 +112,15 @@ function OpenSmallTerminal()
     endif
 endfunction
 nnoremap <leader>te :call OpenSmallTerminal()<CR>
-nnoremap <leader>sc :below 10sp *scratch*<CR>
+
+function OpenScratchBuffer()
+    :new
+    :res 10
+    :setlocal buftype=nofile
+    :setlocal bufhidden=hide
+    :setlocal noswapfile
+endfunction
+nnoremap <leader>sc :call OpenScratchBuffer()<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 function Send2REPL(mode)
@@ -160,7 +168,7 @@ set statusline+=%*
 let g:syntastic_python_checkers=['python', 'mypy']
 let g:syntastic_python_mypy_args="--ignore-missing-import"
 let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
+let g:syntastic_auto_loc_list = 0
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_w = 1
 let g:syntastic_check_on_wq = 0
