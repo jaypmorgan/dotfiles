@@ -110,6 +110,7 @@ function OpenSmallTerminal()
         :bel term
         :resize 20
     endif
+    :setlocal nonu
 endfunction
 nnoremap <leader>te :call OpenSmallTerminal()<CR>
 
