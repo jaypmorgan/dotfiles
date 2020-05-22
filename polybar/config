@@ -57,10 +57,10 @@ font-1 = unifont:fontformat=truetype:size=8:antialias=false;0
 font-2 = siji:pixelsize=10;1
 
 modules-left = bspwm i3 spotify
-modules-center = mpd 
+modules-center = mpd
 modules-right = filesystem xbacklight pulseaudio cpu battery temperature date powermenu
 
-tray-position = none
+tray-position = right
 tray-padding = 0
 ;tray-background = #0063ff
 
@@ -335,7 +335,7 @@ full-at = 98
 
 format = | BAT <label-charging>
 format-charging = | BAT <animation-charging> <label-charging>
-format-charging-underline = 
+format-charging-underline =
 
 format-discharging = | BAT <animation-discharging> <label-discharging>
 format-discharging-underline = ${self.format-charging-underline}

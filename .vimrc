@@ -39,7 +39,6 @@ Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'chriskempson/base16-vim'
 Plugin 'vimwiki/vimwiki'
-Plugin 'vim-voom/VOoM'
 Plugin 'kassio/neoterm'
 Plugin 'jlanzarotta/bufexplorer'
 
@@ -101,7 +100,7 @@ let g:NERDTreeWinPos = "right"
 "" Misc
 " remove all trailing spaces
 nnoremap <leader>C :%s/\s*$//g<CR>
-nnoremap <leader>w :w<CR>
+nnoremap <leader>ss :w<CR>
 function OpenSmallTerminal()
     if has('nvim')
         :tnoremap <Esc> <C-\><C-n>
@@ -112,8 +111,8 @@ function OpenSmallTerminal()
         :resize 20
     endif
 endfunction
-nnoremap <leader>t :call OpenSmallTerminal()<CR>
-nnoremap <leader>s :below 10sp *scratch*<CR>
+nnoremap <leader>te :call OpenSmallTerminal()<CR>
+nnoremap <leader>sc :below 10sp *scratch*<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 function Send2REPL(mode)
