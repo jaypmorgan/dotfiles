@@ -37,11 +37,11 @@ Plugin 'Shougo/deoplete.nvim'
 Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plugin 'christoomey/vim-tmux-navigator'
-Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 Plugin 'chriskempson/base16-vim'
 Plugin 'vimwiki/vimwiki'
 Plugin 'vim-voom/VOoM'
 Plugin 'kassio/neoterm'
+Plugin 'jlanzarotta/bufexplorer'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -145,9 +145,9 @@ tnoremap <Esc> <C-\><C-n>
 " python settings
 let python_highlight_all=1
 
-set textwidth=75
-set formatoptions+=a
-set wrap
+au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
+au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
+au VimEnter,BufRead,BufNewFile *.tex set wrap
 
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
