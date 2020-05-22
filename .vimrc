@@ -68,7 +68,8 @@ set termguicolors
 let base16colorspace=256
 set background=dark
 colorscheme base16-default-dark
-let g:airline_theme='onehalfdark'
+let g:airline_theme='base16_default'
+let g:airline_powerline_fonts = 1
 
 " FINDING FILES
 " enable fuzzy file searching from
@@ -144,6 +145,10 @@ tnoremap <Esc> <C-\><C-n>
 """""""""""""""""""""""""""
 " python settings
 let python_highlight_all=1
+
+set splitbelow
+set splitright
+set nohlsearch
 
 au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
 au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
