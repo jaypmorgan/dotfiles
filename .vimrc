@@ -100,7 +100,7 @@ let g:NERDTreeWinPos = "right"
 "" Misc
 " remove all trailing spaces
 nnoremap <leader>C :%s/\s*$//g<CR>
-nnoremap <leader>ss :w<CR>
+nnoremap <leader>w :w<CR>
 function OpenSmallTerminal()
     if has('nvim')
         :tnoremap <Esc> <C-\><C-n>
@@ -112,7 +112,7 @@ function OpenSmallTerminal()
     endif
 endfunction
 nnoremap <leader>t :call OpenSmallTerminal()<CR>
-nnoremap <leader>sc :below 10sp *scratch*<CR>
+nnoremap <leader>s :below 10sp *scratch*<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 function Send2REPL(mode)
