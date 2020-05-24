@@ -68,7 +68,6 @@ let base16colorspace=256
 set background=dark
 colorscheme base16-default-dark
 let g:airline_theme='base16_default'
-let g:airline_powerline_fonts = 1
 
 " FINDING FILES
 " enable fuzzy file searching from
