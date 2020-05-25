@@ -155,6 +155,8 @@ tnoremap <Esc> <C-\><C-n>
 """""""""""""""""""""""""""
 " python settings
 let python_highlight_all=1
+let g:jedi#auto_initialization=1
+
 
 au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
 au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
