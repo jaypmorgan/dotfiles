@@ -5,11 +5,11 @@
  ***********************************************/
 
 * {
-    font:                        "Tamsyn 11";
+    font:                        "SF Mono 11";
     selected-normal-foreground:  rgba ( 249, 249, 249, 100 % );
     foreground:                  rgba ( 196, 203, 212, 100 % );
     normal-foreground:           @foreground;
-    alternate-normal-background: rgba ( 64, 69, 82, 59 % );
+    alternative-normal-background:  rgba ( 249, 249, 249, 100 % );
     red:                         rgba ( 220, 50, 47, 100 % );
     selected-urgent-foreground:  rgba ( 249, 249, 249, 100 % );
     blue:                        rgba ( 38, 139, 210, 100 % );
@@ -23,7 +23,7 @@
     alternate-normal-foreground: @foreground;
     normal-background:           @background;
     lightfg:                     rgba ( 88, 104, 117, 100 % );
-    selected-normal-background:  rgba ( 140, 93, 201, 100 % );
+    selected-normal-background:  @blue;
     border-color:                rgba ( 140, 93, 201, 100 % );
     spacing:                     2;
     separatorcolor:              rgba ( 29, 31, 33, 100 % );
@@ -37,7 +37,7 @@
 }
 #window {
     background-color: @background;
-    border:           1;
+    border:           0;
     padding:          5;
 }
 #mainbox {
@@ -62,7 +62,7 @@
 }
 #element {
     border:  0;
-    padding: 1px ;
+    padding: 10px ;
 }
 #element.normal.normal {
     background-color: @normal-background;
@@ -101,14 +101,14 @@
     text-color:       @alternate-active-foreground;
 }
 #scrollbar {
-    width:        4px ;
+    width:        0px ;
     border:       0;
     handle-color: @normal-foreground;
-    handle-width: 8px ;
+    handle-width: 0px ;
     padding:      0;
 }
 #sidebar {
-    border:       2px 0px 0px ;
+    border:       0px 0px 0px ;
     border-color: @separatorcolor;
 }
 #button {
@@ -122,7 +122,7 @@
 #inputbar {
     spacing:    0;
     text-color: @normal-foreground;
-    padding:    1px ;
+    padding:    10px ;
 }
 #case-indicator {
     spacing:    0;
@@ -141,7 +141,7 @@
 }
 #textbox-prompt-colon {
     expand:     false;
-    str:        ":";
+    str:        " | ";
     margin:     0px 0.3em 0em 0em ;
     text-color: @normal-foreground;
 }

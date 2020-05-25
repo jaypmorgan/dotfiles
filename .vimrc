@@ -41,6 +41,7 @@ Plugin 'chriskempson/base16-vim'
 Plugin 'vimwiki/vimwiki'
 Plugin 'kassio/neoterm'
 Plugin 'jlanzarotta/bufexplorer'
+Plugin 'davidhalter/jedi-vim'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -57,6 +58,9 @@ set cursorline
 hi CursorLine term=bold cterm=bold guibg=Grey30
 set showmatch
 set number
+set splitbelow
+set splitright
+set nohlsearch
 
 " COLORS
 if &term =~# '^screen'
@@ -83,7 +87,6 @@ command! MakeTags !ctags -R .
 command! Q :q    " always hold shift accidently when trying to leave
 command! W :w    " when accidently holding shift
 command! EC :e ~/.vimrc
-command! Tasks :e ~/Dropbox/Notes/tasks.org
 
 """"""""""""""""""""""""""""
 "        SHORTCUTS         "
@@ -153,10 +156,6 @@ tnoremap <Esc> <C-\><C-n>
 " python settings
 let python_highlight_all=1
 
-set splitbelow
-set splitright
-set nohlsearch
-
 au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
 au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
 au VimEnter,BufRead,BufNewFile *.tex set wrap
@@ -175,7 +174,6 @@ let g:syntastic_check_on_wq = 0
 set backspace=indent,eol,start
 
 set laststatus=2 " status bar
-" let g:airline_theme='deus'
 set ttyfast      " speed up scrolling
 
 " display different types of whitespace
@@ -194,11 +192,9 @@ let g:python3_host_prog="/usr/bin/python3"
 let &t_SI = "\<Esc>[6 q"
 let &t_SR = "\<Esc>[4 q"
 let &t_EI = "\<Esc>[2 q"
-let g:voom_ft_modes = {'markdown': 'markdown', 'tex': 'latex', 'html': 'html', 'wiki': 'vimwiki'}
 
 au VimEnter,BufRead,BufNewFile *.jl set filetype=julia
 au VimEnter,BufRead,BufNewFile *.idr set filetype=idris
 au VimEnter,BufRead,BufNewFile *.lidr set filetype=lidris
 au VimEnter,BufRead,BufNewFile *.lfe set filetype=lfe
 
-let g:neoterm_default_mod="vertical"
