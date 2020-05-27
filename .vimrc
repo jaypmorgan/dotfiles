@@ -42,6 +42,7 @@ Plugin 'vimwiki/vimwiki'
 Plugin 'kassio/neoterm'
 Plugin 'jlanzarotta/bufexplorer'
 Plugin 'davidhalter/jedi-vim'
+Plugin 'deoplete-plugins/deoplete-jedi'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -156,6 +157,16 @@ tnoremap <Esc> <C-\><C-n>
 " python settings
 let python_highlight_all=1
 let g:jedi#auto_initialization=1
+let g:jedi#show_call_signatures=0
+let g:pymode_folding=0
+let g:pymode_rope=0
+let g:jedi#completions_enabled=0      " use deoplete-vim as its async in neovim
+let g:deoplete#sources#jedi#show_docstring=1
+
+
+au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
+au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
+au VimEnter,BufRead,BufNewFile *.tex set wrap
 
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
@@ -181,6 +192,7 @@ set listchars=tab:›\ ,trail:•,extends:#,nbsp:.
 runtime macros/matchit.vim
 
 " deoplete.nvim
+let g:deoplete#enable_at_startup=1
 let g:deoplete#sources#clang#libclang_path='/usr/lib/llvm-6.0/lib/libclang.so'
 let g:deoplete#sources#clang#clang_header='/usr/lib/llvm-6.0/lib/clang/'
 let g:python_host_prog="/usr/bin/python2"
