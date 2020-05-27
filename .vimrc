@@ -157,11 +157,6 @@ tnoremap <Esc> <C-\><C-n>
 let python_highlight_all=1
 let g:jedi#auto_initialization=1
 
-
-au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
-au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
-au VimEnter,BufRead,BufNewFile *.tex set wrap
-
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
