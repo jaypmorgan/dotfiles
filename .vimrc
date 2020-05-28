@@ -28,12 +28,12 @@ Plugin 'vhdirk/vim-cmake'
 Plugin 'Yggdroot/indentLine'
 Plugin 'derekwyatt/vim-fswitch'
 Plugin 'jiangmiao/auto-pairs'
-Plugin 'jceb/vim-orgmode'
-Plugin 'tpope/vim-speeddating' " required for org-mode editing
-Plugin 'sonph/onehalf', {'rtp': 'vim/'}
+" Plugin 'jceb/vim-orgmode'
+" Plugin 'tpope/vim-speeddating' " required for org-mode editing
+" Plugin 'sonph/onehalf', {'rtp': 'vim/'}
 Plugin 'majutsushi/tagbar'
 Plugin 'xavierd/clang_complete'
-Plugin 'Shougo/deoplete.nvim'
+" Plugin 'Shougo/deoplete.nvim'
 Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plugin 'christoomey/vim-tmux-navigator'
@@ -41,8 +41,9 @@ Plugin 'chriskempson/base16-vim'
 Plugin 'vimwiki/vimwiki'
 Plugin 'kassio/neoterm'
 Plugin 'jlanzarotta/bufexplorer'
-Plugin 'davidhalter/jedi-vim'
-Plugin 'deoplete-plugins/deoplete-jedi'
+" Plugin 'davidhalter/jedi-vim'
+" Plugin 'deoplete-plugins/deoplete-jedi'
+Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -88,6 +89,7 @@ command! MakeTags !ctags -R .
 command! Q :q    " always hold shift accidently when trying to leave
 command! W :w    " when accidently holding shift
 command! EC :e ~/.vimrc
+command! Black !black %
 
 """"""""""""""""""""""""""""
 "        SHORTCUTS         "
