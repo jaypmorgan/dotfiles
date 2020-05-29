@@ -3,14 +3,12 @@
 
 set nocompatible              " be iMproved, required
 filetype off                  " required
-set noswapfile
 
 " execute local vimrc files
 set exrc
 set secure
 
 " set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/YouCompleteMe
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
@@ -39,6 +37,8 @@ Plugin 'kassio/neoterm'
 Plugin 'jlanzarotta/bufexplorer'
 Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 Plugin 'metakirby5/codi.vim'
+Plugin 'mbbill/undotree'
+Plugin 'jremmen/vim-ripgrep'
 
 
 call vundle#end()             " required
@@ -49,9 +49,10 @@ set cc=100
 set encoding=utf-8
 set modeline
 set tabstop=4
-set expandtab
-set shiftwidth=4
 set softtabstop=4
+set shiftwidth=4
+set expandtab
+set smartcase
 set cursorline
 hi CursorLine term=bold cterm=bold guibg=Grey30
 set showmatch
@@ -59,6 +60,11 @@ set number
 set splitbelow
 set splitright
 set nohlsearch
+set noswapfile
+set nobackup
+set undodir=~/.vim/undodir
+set undofile
+set incsearch
 
 " COLORS
 if &term =~# '^screen'
@@ -92,7 +98,7 @@ command! Black !black %
 """"""""""""""""""""""""""""
 
 "" Change the leader to a comma
-let mapleader=","
+let mapleader=" "
 
 "" NerdTree
 nnoremap <leader>, :NERDTreeToggle<CR>
@@ -149,6 +155,15 @@ nnoremap <leader>; :TagbarToggle<CR>
 " Terminal remap for neovim
 tnoremap <Esc> <C-\><C-n>
 
+
+" Window management
+nnoremap <leader>h :wincmd h<CR>
+nnoremap <leader>j :wincmd j<CR>
+nnoremap <leader>k :wincmd k<CR>
+nnoremap <leader>l :wincmd l<CR>
+nnoremap <leader>u :UndotreeToggle<CR>
+nnoremap <leader>r :Rg 
+
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
 """""""""""""""""""""""""""
@@ -160,7 +175,6 @@ let g:pymode_folding=0
 let g:pymode_rope=0
 let g:jedi#completions_enabled=0      " use deoplete-vim as its async in neovim
 let g:deoplete#sources#jedi#show_docstring=1
-
 
 au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
 au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
@@ -190,9 +204,6 @@ set listchars=tab:›\ ,trail:•,extends:#,nbsp:.
 runtime macros/matchit.vim
 
 " deoplete.nvim
-let g:deoplete#enable_at_startup=1
-let g:deoplete#sources#clang#libclang_path='/usr/lib/llvm-6.0/lib/libclang.so'
-let g:deoplete#sources#clang#clang_header='/usr/lib/llvm-6.0/lib/clang/'
 let g:python_host_prog="/usr/bin/python2"
 let g:python3_host_prog="/usr/bin/python3"
 
@@ -205,3 +216,6 @@ au VimEnter,BufRead,BufNewFile *.idr set filetype=idris
 au VimEnter,BufRead,BufNewFile *.lidr set filetype=lidris
 au VimEnter,BufRead,BufNewFile *.lfe set filetype=lfe
 
+if executable('rg')
+    let g:rg_derive_root='true'
+endif
