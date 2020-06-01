@@ -39,7 +39,7 @@ Plugin 'neoclide/coc.nvim', {'branch': 'release'}
 Plugin 'metakirby5/codi.vim'
 Plugin 'mbbill/undotree'
 Plugin 'jremmen/vim-ripgrep'
-
+Plugin 'junegunn/fzf'
 
 call vundle#end()             " required
 filetype plugin indent on     " required
@@ -163,6 +163,8 @@ nnoremap <leader>k :wincmd k<CR>
 nnoremap <leader>l :wincmd l<CR>
 nnoremap <leader>u :UndotreeToggle<CR>
 nnoremap <leader>r :Rg 
+
+nnoremap <leader>p :FZF<CR>
 
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
