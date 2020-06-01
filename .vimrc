@@ -21,7 +21,6 @@ Plugin 'vim-syntastic/syntastic'
 Plugin 'tpope/vim-commentary'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
-Plugin 'airblade/vim-gitgutter'
 Plugin 'vhdirk/vim-cmake'
 Plugin 'Yggdroot/indentLine'
 Plugin 'derekwyatt/vim-fswitch'
@@ -221,3 +220,8 @@ au VimEnter,BufRead,BufNewFile *.lfe set filetype=lfe
 if executable('rg')
     let g:rg_derive_root='true'
 endif
+
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
