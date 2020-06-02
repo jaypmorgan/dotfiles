@@ -65,6 +65,11 @@ set undodir=~/.vim/undodir
 set undofile
 set incsearch
 
+
+" Relative numbers on active buffer, else absolute
+autocmd BufEnter,FocusGained,InsertLeave  * set relativenumber
+autocmd BufLeave,FocusLost,InsertEnter    * set norelativenumber
+
 " COLORS
 if &term =~# '^screen'
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
@@ -100,12 +105,12 @@ command! Black !black %
 let mapleader=" "
 
 "" NerdTree
-nnoremap <leader>, :NERDTreeToggle<CR>
+nnoremap ,, :NERDTreeToggle<CR>
 let g:NERDTreeWinPos = "right"
 
 "" Misc
 " remove all trailing spaces
-nnoremap <leader>C :%s/\s*$//g<CR>
+nnoremap ,C :%s/\s*$//g<CR>
 nnoremap <leader>ss :w<CR>
 function OpenSmallTerminal()
     if has('nvim')
@@ -118,7 +123,7 @@ function OpenSmallTerminal()
     endif
     :setlocal nonu
 endfunction
-nnoremap <leader>te :call OpenSmallTerminal()<CR>
+nnoremap <leader>ot :call OpenSmallTerminal()<CR>
 
 function OpenScratchBuffer()
     :new
@@ -127,7 +132,7 @@ function OpenScratchBuffer()
     :setlocal bufhidden=hide
     :setlocal noswapfile
 endfunction
-nnoremap <leader>sc :call OpenScratchBuffer()<CR>
+nnoremap <leader>os :call OpenScratchBuffer()<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 function Send2REPL(mode)
@@ -150,7 +155,7 @@ xnoremap <leader>c :silent call TREPLSendSelection<CR>
 nnoremap <leader>sw :FSHere<CR>
 
 "" tagbar
-nnoremap <leader>; :TagbarToggle<CR>
+nnoremap <leader>p; :TagbarToggle<CR>
 
 " Terminal remap for neovim
 tnoremap <Esc> <C-\><C-n>
@@ -161,10 +166,17 @@ nnoremap <leader>h :wincmd h<CR>
 nnoremap <leader>j :wincmd j<CR>
 nnoremap <leader>k :wincmd k<CR>
 nnoremap <leader>l :wincmd l<CR>
+
+" Undo Tree
 nnoremap <leader>u :UndotreeToggle<CR>
+
+" RipGrep
 nnoremap <leader>r :Rg 
 
+" Fuzzy File Search
 nnoremap <leader>p :FZF<CR>
+
+nnoremap <leader>ow <Plug>VimwikiIndex
 
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
