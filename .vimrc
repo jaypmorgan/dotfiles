@@ -77,8 +77,8 @@ if &term =~# '^screen'
 endif
 set termguicolors
 let base16colorspace=256
-set background=dark
-colorscheme base16-default-dark
+set background=light
+colorscheme base16-mexico-light
 let g:airline_theme='base16_default'
 
 " FINDING FILES
@@ -148,14 +148,14 @@ function Send2REPL(mode)
     :call search("\\S$", "W")
 endfunction
 nnoremap <leader>c :silent call Send2REPL('n')<CR>
-xnoremap <leader>c :silent call Send2REPL('v')<CR>
 xnoremap <leader>c :silent call TREPLSendSelection<CR>
+vnoremap <silent> <leader>c :<C-U>TREPLSendSelection<CR>
 
 "" vim-fswitch
 nnoremap <leader>sw :FSHere<CR>
 
 "" tagbar
-nnoremap <leader>p; :TagbarToggle<CR>
+nnoremap <leader>o; :TagbarToggle<CR>
 
 " Terminal remap for neovim
 tnoremap <Esc> <C-\><C-n>
