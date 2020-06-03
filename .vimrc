@@ -78,7 +78,7 @@ endif
 set termguicolors
 let base16colorspace=256
 set background=light
-colorscheme base16-mexico-light
+colorscheme base16-default-dark
 let g:airline_theme='base16_default'
 
 " FINDING FILES
