@@ -268,3 +268,4 @@ function! s:check_back_space() abort
 endfunction
 " Use <c-space> to trigger completion.
 inoremap <silent><expr> <c-space> coc#refresh()
+let g:coc_disable_startup_warning=1
