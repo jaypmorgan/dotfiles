@@ -175,7 +175,7 @@ nnoremap <leader>r :Rg
 " Fuzzy File Search
 nnoremap <leader>p :FZF<CR>
 
-nnoremap <leader>ow <Plug>VimwikiIndex
+nnoremap <silent> <leader>ow :VimwikiIndex<CR>
 
 " Split buffers
 nnoremap <silent> <leader>sv :split new<CR>
