@@ -123,7 +123,7 @@ function OpenSmallTerminal()
     endif
     :setlocal nonu
 endfunction
-nnoremap <leader>ot :call OpenSmallTerminal()<CR>
+nnoremap <silent> <leader>ot :call OpenSmallTerminal()<CR>
 
 function OpenScratchBuffer()
     :new
@@ -132,7 +132,7 @@ function OpenScratchBuffer()
     :setlocal bufhidden=hide
     :setlocal noswapfile
 endfunction
-nnoremap <leader>os :call OpenScratchBuffer()<CR>
+nnoremap <silent> <leader>os :call OpenScratchBuffer()<CR>
 nnoremap <F5> :!clear && tectonic '%:p'<CR>
 
 function Send2REPL(mode)
@@ -147,8 +147,8 @@ function Send2REPL(mode)
     :normal $
     :call search("\\S$", "W")
 endfunction
-nnoremap <leader>c :silent call Send2REPL('n')<CR>
-xnoremap <leader>c :silent call TREPLSendSelection<CR>
+nnoremap <silent> <leader>c :silent call Send2REPL('n')<CR>
+xnoremap <silent> <leader>c :silent call TREPLSendSelection<CR>
 vnoremap <silent> <leader>c :<C-U>TREPLSendSelection<CR>
 
 "" vim-fswitch
@@ -159,7 +159,6 @@ nnoremap <leader>o; :TagbarToggle<CR>
 
 " Terminal remap for neovim
 tnoremap <Esc> <C-\><C-n>
-
 
 " Window management
 nnoremap <leader>h :wincmd h<CR>
@@ -177,6 +176,10 @@ nnoremap <leader>r :Rg
 nnoremap <leader>p :FZF<CR>
 
 nnoremap <leader>ow <Plug>VimwikiIndex
+
+" Split buffers
+nnoremap <silent> <leader>sv :split new<CR>
+nnoremap <silent> <leader>sh :vsplit new<CR>
 
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
