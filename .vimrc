@@ -105,7 +105,7 @@ command! Black !black %
 let mapleader=" "
 
 "" NerdTree
-nnoremap ,, :NERDTreeToggle<CR>
+nnoremap <silent> ,, :NERDTreeToggle<CR>
 let g:NERDTreeWinPos = "right"
 
 "" Misc
@@ -152,28 +152,29 @@ xnoremap <silent> <leader>c :silent call TREPLSendSelection<CR>
 vnoremap <silent> <leader>c :<C-U>TREPLSendSelection<CR>
 
 "" vim-fswitch
-nnoremap <leader>sw :FSHere<CR>
+nnoremap <silent> <leader>sw :FSHere<CR>
 
 "" tagbar
-nnoremap <leader>o; :TagbarToggle<CR>
+nnoremap <silent> <leader>o; :TagbarToggle<CR>
+nnoremap <silent> <leader>oc :EC<cr>
 
 " Terminal remap for neovim
 tnoremap <Esc> <C-\><C-n>
 
 " Window management
-nnoremap <leader>h :wincmd h<CR>
-nnoremap <leader>j :wincmd j<CR>
-nnoremap <leader>k :wincmd k<CR>
-nnoremap <leader>l :wincmd l<CR>
+nnoremap <silent> <leader>h :wincmd h<CR>
+nnoremap <silent> <leader>j :wincmd j<CR>
+nnoremap <silent> <leader>k :wincmd k<CR>
+nnoremap <silent> <leader>l :wincmd l<CR>
 
 " Undo Tree
-nnoremap <leader>u :UndotreeToggle<CR>
+nnoremap <silent> <leader>ou :UndotreeShow<CR>
 
 " RipGrep
 nnoremap <leader>r :Rg 
 
 " Fuzzy File Search
-nnoremap <leader>p :FZF<CR>
+nnoremap <silent> <leader>p :FZF<CR>
 
 nnoremap <silent> <leader>ow :VimwikiIndex<CR>
 
