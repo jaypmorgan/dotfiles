@@ -65,6 +65,8 @@ set nobackup
 set undodir=~/.vim/undodir
 set undofile
 set incsearch
+set foldmethod=indent
+set nofoldenable
 
 
 " Relative numbers on active buffer, else absolute
@@ -104,6 +106,9 @@ command! Black !black %
 
 "" Change the leader to a comma
 let mapleader=" "
+
+" Colding folding
+nnoremap <tab> za
 
 "" NerdTree
 nnoremap <silent> ,, :NERDTreeToggle<CR>
