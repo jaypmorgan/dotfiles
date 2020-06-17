@@ -39,6 +39,7 @@ Plugin 'metakirby5/codi.vim'
 Plugin 'mbbill/undotree'
 Plugin 'jremmen/vim-ripgrep'
 Plugin 'junegunn/fzf'
+Plugin 'jaypmorgan/vim-makefile'
 
 call vundle#end()             " required
 filetype plugin indent on     " required

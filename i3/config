@@ -35,10 +35,9 @@ set $right semicolon
 floating_modifier Mod4
 
 # start a terminal
-bindsym Mod4+t exec alacritty
+bindsym Mod4+Return exec alacritty
 
-# start emacs
-bindsym Mod4+e exec emacsclient -c
+bindsym Mod4+i exec google-chrome-stable
 
 # kill focused window
 bindsym Mod4+Shift+q kill
