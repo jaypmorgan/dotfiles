@@ -240,6 +240,11 @@ au VimEnter,BufRead,BufNewFile *.idr set filetype=idris
 au VimEnter,BufRead,BufNewFile *.lidr set filetype=lidris
 au VimEnter,BufRead,BufNewFile *.lfe set filetype=lfe
 
+au BufRead,BufNewFile *.md setlocal textwidth=80
+au BufRead,BufNewFile *.jmd setlocal textwidth=80
+au BufRead,BufNewFile *.tex setlocal textwidth=80
+let g:markdown_syntax_conceal = 0
+
 if executable('rg')
     let g:rg_derive_root='true'
 endif
@@ -288,3 +293,6 @@ autocmd BufReadCmd,FileReadCmd,SourceCmd jar:file://* call s:LoadClojureContent(
   setl nomodified
   setl readonly
 endfunction
+
+set conceallevel=0
+let g:indentLine_conceallevel = 0
