@@ -78,9 +78,9 @@ if &term =~# '^screen'
 endif
 set termguicolors
 let base16colorspace=256
-set background=light
+set background=dark
 colorscheme base16-default-dark
-let g:airline_theme='base16_default'
+let g:airline_theme='minimalist'
 
 " FINDING FILES
 " enable fuzzy file searching from
