@@ -28,14 +28,14 @@
 
 ;; List of packages to be installed
 ;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
-(setq local-packages '(evil
+(setq local-packages '(use-package
+                       evil
                        helm
                        which-key
                        powerline
                        disable-mouse
                        projectile
                        julia-mode
-                       ispell
                        markdown-mode
                        magit
                        hydra
@@ -44,11 +44,13 @@
                        linum-relative
                        diminish
                        slime
-                       adaptive-wrap
                        htmlize
-                       git-gutter
                        evil-collection
-                       base16-theme))
+                       base16-theme
+                       ranger
+                       clojure-mode
+                       vterm
+                       helm-projectile))
 
 ;; Iterate through the list of packages to be installed and call the check-and-install function for each package.
 (dolist (pkg local-packages) (my/check-and-install pkg))
@@ -57,41 +59,97 @@
 
 ;; ===========================================================================================================
 
+(use-package evil
+  :config
+  (evil-mode 1))
+
+(setq use-package-always-ensure t)
+(use-package evil-collection
+  :after (evil)
+  :config
+  (evil-collection-init))
+
+(use-package company
+  :init
+  (global-company-mode)
+  (setq company-idle-delay 0.001
+        jedi:setup-keys t
+        jedi:complete-on-dot t)
+  (add-hook 'python-mode-hook 'jedi:setup))
+
+(use-package company-jedi
+  :config
+  (add-to-list 'company-backends 'company-jedi))
+
+(use-package blacken)
+(use-package itail)
+
+(use-package flycheck
+  :init
+  (add-hook 'python-mode-hook 'flycheck-mode)
+  (setq flycheck-check-syntax-automatically '(mode-enabled save)
+        flycheck-highlighting-mode 'lines
+        flycheck-indication-mode 'left-fringe
+        flycheck-checker-error-threshold 200
+        python-interp "~/miniconda3/bin/python"
+        flycheck-python-flake8-executable python-interp))
+
+(use-package eyebrowse
+  :config
+  (setq eyebrowse-new-workspace t))
+
+(use-package helm
+  :init
+  (require 'helm-config)
+  :config
+  (helm-mode 1)
+  (setq helm-use-frame-when-more-than-two-windows nil
+        helm-split-window-in-side nil
+        helm-display-function 'pop-to-buffer
+        helm-idle-delay 0.0
+        helm-input-idle-delay 0.01))
+
+(use-package shackle
+  :after (helm)
+  (shackle-mode)
+  :config
+  (setq shackle-rules '((compilation-mode :noselect t))
+        shackle-default-rule '(:align 'below :size 0.3)))
+
 ;; Enable Packages & Config
 ;;-------------------
-(require 'helm-config)
-(setq which-key-idle-delay 0.001)
-(evil-mode 1)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default)))
- '(org-agenda-files (quote ("~/Dropbox/Notes/tasks.org")))
- '(package-selected-packages nil)
- '(powerline-display-hud t)
- '(send-mail-function (quote smtpmail-send-it)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-(helm-mode 1)
+(setq which-key-idle-delay 1)
+;; (custom-set-variables
+;;  ;; custom-set-variables was added by Custom.
+;;  ;; If you edit it by hand, you could mess it up, so be careful.
+;;  ;; Your init file should contain only one such instance.
+;;  ;; If there is more than one, they won't work right.
+;;  '(custom-safe-themes
+;;    (quote
+;;     ("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default)))
+;;  '(org-agenda-files (quote ("~/Dropbox/Notes/tasks.org")))
+;;  '(package-selected-packages
+;;    (quote
+;;     (blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base16-theme adaptive-wrap)))
+;;  '(powerline-display-hud t)
+;;  '(send-mail-function (quote smtpmail-send-it)))
+;; (custom-set-faces
+;;  ;; custom-set-faces was added by Custom.
+;;  ;; If you edit it by hand, you could mess it up, so be careful.
+;;  ;; Your init file should contain only one such instance.
+;;  ;; If there is more than one, they won't work right.
+;;  )
 (projectile-mode 1)
 (eyebrowse-mode 1)
 (which-key-mode)
 ;; spelling
 (setq ispell-dictionary "british")
 
-;; Lisp configuration
-(setq inferior-lisp-program "sbcl")
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((gnuplot . t) (dot . t)))
+;; ;; Lisp configuration
+;; (setq inferior-lisp-program "sbcl")
+;; (org-babel-do-load-languages
+;;  'org-babel-load-languages
+;;  '((gnuplot . t) (dot . t)))
 
 ;; Org Mode
 (with-eval-after-load 'org
@@ -118,6 +176,8 @@
 (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
+(setq projectile-git-submodule-command nil)
+(setq completion-auto-help nil)
 
 ;; =============================================================================================================
 
@@ -129,9 +189,10 @@
 (defun ml/bash ()
   "start a terminal emulator in a new window"
   (interactive)
-  (split-window-sensibly)
+  (split-window-below)
   (other-window 1)
-  (eshell))
+  (set-frame-height (selected-frame) 20)
+  (vterm))
 (define-key evil-motion-state-map (kbd "SPC t") #'ml/bash)
 
 ;; Helm shortcuts
@@ -153,6 +214,7 @@
 
 ;; Org-mode
 (define-key evil-motion-state-map (kbd "SPC a") 'org-agenda)
+
 
 ;; Eyebrowse
 (defhydra hydra-eyebrowse (:color blue :hint nil)
@@ -182,6 +244,7 @@
   ("c" (find-file "~/.emacs") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
+  ("u" undo-tree-visualize "Undo-tree")
   ("m" mu4e "Open Mailbox"))
 (define-key evil-motion-state-map
   (kbd "SPC o") 'hydra-openbuffer/body)
@@ -199,7 +262,7 @@
   ("l" (dired-at-point "/ssh:lis.me:~/workspace") "LIS Lab")
   ("s" (dired-at-point "/ssh:sunbird.me:~/workspace") "Sunbird Swansea")
   ("i" (dired-at-point "/ssh:ibex.me:~") "KAUST Ibex")
-  ("c" (dired-at-point "/ssh:chemistry.me:~") "Chemistry Swanasea"))
+  ("c" (dired-at-point "/ssh:chemistry.me:~/workspace") "Chemistry Swanasea"))
 (define-key evil-motion-state-map
   (kbd "SPC r") 'hydra-remote-hosts/body)
 
@@ -240,8 +303,8 @@
       evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
       evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
 
-(set-default-font "Tamsyn-11")
-(setq default-frame-alist '((font . "Tamsyn-11")))
+(set-default-font "JetBrains Mono-10")
+(setq default-frame-alist '((font . "JetBrains Mono-10")))
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
@@ -282,10 +345,19 @@
 
 (scroll-bar-mode -1)
 
-; Whitespace
-(whitespace-mode -1)
-(setq whiteline-style '(face spaces tabs space-mark tab-mark))
-(whitespace-mode 1)
-
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (company-jedi which-key vterm use-package slime shackle ranger python-mode powerline markdown-mode magit linum-relative julia-mode itail imenu-list hydra htmlize helm-projectile flycheck eyebrowse evil-collection disable-mouse diminish company clojure-mode blacken base16-theme))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

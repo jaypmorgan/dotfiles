@@ -2,7 +2,7 @@
 
 FILES=("${HOME}/.vimrc"
        "${HOME}/.tmux.conf"
-       "$HOME/.init.el"
+       "$HOME/.emacs.d/init.el"
        "${HOME}/.config/i3"
        "${HOME}/.config/polybar"
        "${HOME}/.config/rofi"
