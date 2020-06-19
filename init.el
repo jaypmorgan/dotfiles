@@ -19,53 +19,16 @@
 (setq evil-want-keybinding nil)
 (setq x-wait-for-event-timeout nil)
 
-;; Install function define a function to check if a package is
-;; installed, if it not we can install it. From this, we may quickly
-;; and easily install packages.
-(defun my/check-and-install (pkg)
-  (unless (package-installed-p pkg)
-    (package-install pkg)))
-
-;; List of packages to be installed Instead of writing many lines of
-;; `check-and-install', we will define a list of packages to install,
-;; then loop through the list, calling the function for each element
-;; in this list. To install a new package (or just add it to the base
-;; installation), add the package to this list.
-(setq local-packages '(use-package
-                       evil
-                       helm
-                       which-key
-                       powerline
-                       disable-mouse
-                       projectile
-                       julia-mode
-                       markdown-mode
-                       magit
-                       hydra
-                       eyebrowse
-                       imenu-list
-                       linum-relative
-                       diminish
-                       slime
-                       htmlize
-                       evil-collection
-                       base16-theme
-                       ranger
-                       clojure-mode
-                       vterm
-                       helm-projectile))
-
-;; Iterate through the list of packages to be installed and call the
-;; check-and-install function for each package.
-(dolist (pkg local-packages) (my/check-and-install pkg))
-;; Require packages -- package imports
-(dolist (pkg local-packages) (require pkg))
 
 ;; ===========================================================================================================
 
 (use-package evil
   :config
   (evil-mode 1))
+
+(use-package which-key
+  :config
+  (which-key-mode 1))
 
 (setq use-package-always-ensure t)
 (use-package evil-collection
@@ -108,9 +71,25 @@
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
 
+(use-package projectile)
 (use-package anaconda-mode)
 (use-package blacken)
 (use-package itail)
+(use-package julia-mode)
+(use-package clojure-mode)
+(use-package markdown-mode)
+(use-package ranger)
+(use-package magit)
+(use-package powerline)
+(use-package disable-mouse)
+(use-package hydra)
+(use-package imenu-list)
+(use-package linum-relative)
+(use-package diminish)
+(use-package slime)
+(use-package htmlize)
+(use-package base16-theme)
+(use-package helm-projectile)
 
 (use-package pdf-tools
   :init
