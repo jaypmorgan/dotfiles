@@ -65,6 +65,8 @@ set nobackup
 set undodir=~/.vim/undodir
 set undofile
 set incsearch
+set foldmethod=indent
+set nofoldenable
 
 
 " Relative numbers on active buffer, else absolute
@@ -104,6 +106,9 @@ command! Black !black %
 
 "" Change the leader to a comma
 let mapleader=" "
+
+" Colding folding
+nnoremap <tab> za
 
 "" NerdTree
 nnoremap <silent> ,, :NERDTreeToggle<CR>
@@ -235,6 +240,11 @@ au VimEnter,BufRead,BufNewFile *.idr set filetype=idris
 au VimEnter,BufRead,BufNewFile *.lidr set filetype=lidris
 au VimEnter,BufRead,BufNewFile *.lfe set filetype=lfe
 
+au BufRead,BufNewFile *.md setlocal textwidth=80
+au BufRead,BufNewFile *.jmd setlocal textwidth=80
+au BufRead,BufNewFile *.tex setlocal textwidth=80
+let g:markdown_syntax_conceal = 0
+
 if executable('rg')
     let g:rg_derive_root='true'
 endif
@@ -283,3 +293,6 @@ autocmd BufReadCmd,FileReadCmd,SourceCmd jar:file://* call s:LoadClojureContent(
   setl nomodified
   setl readonly
 endfunction
+
+set conceallevel=0
+let g:indentLine_conceallevel = 0
