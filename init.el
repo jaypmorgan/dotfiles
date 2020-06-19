@@ -3,7 +3,6 @@
 ;; Author: Jay Morgan
 ;;--------------------------
 
-(require 'cl)
 (add-to-list 'load-path "~/.emacs.d/plugins/")
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
 (require 'mu4e)
@@ -20,14 +19,18 @@
 (setq evil-want-keybinding nil)
 (setq x-wait-for-event-timeout nil)
 
-;; Install function
-;; define a function to check if a package is installed, if it not we can install it. From this, we may quickly and easily install packages.
+;; Install function define a function to check if a package is
+;; installed, if it not we can install it. From this, we may quickly
+;; and easily install packages.
 (defun my/check-and-install (pkg)
   (unless (package-installed-p pkg)
     (package-install pkg)))
 
-;; List of packages to be installed
-;; Instead of writing many lines of `check-and-install', we will define a list of packages to install, then loop through the list, calling the function for each element in this list. To install a new package (or just add it to the base installation), add the package to this list.
+;; List of packages to be installed Instead of writing many lines of
+;; `check-and-install', we will define a list of packages to install,
+;; then loop through the list, calling the function for each element
+;; in this list. To install a new package (or just add it to the base
+;; installation), add the package to this list.
 (setq local-packages '(use-package
                        evil
                        helm
@@ -52,7 +55,8 @@
                        vterm
                        helm-projectile))
 
-;; Iterate through the list of packages to be installed and call the check-and-install function for each package.
+;; Iterate through the list of packages to be installed and call the
+;; check-and-install function for each package.
 (dolist (pkg local-packages) (my/check-and-install pkg))
 ;; Require packages -- package imports
 (dolist (pkg local-packages) (require pkg))
@@ -72,17 +76,46 @@
 (use-package company
   :init
   (global-company-mode)
-  (setq company-idle-delay 0.001
-        jedi:setup-keys t
-        jedi:complete-on-dot t)
-  (add-hook 'python-mode-hook 'jedi:setup))
+  (setq company-idle-delay 0.001))
 
-(use-package company-jedi
+(use-package company-anaconda
+  :after (company anaconda-mode)
+  :init
+  (add-to-list 'company-backends '(company-anaconda))
+  (add-hook 'python-mode-hook 'anaconda-mode)
+  (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+  (add-hook 'python-mode-hook (lambda () (setq-local company-idle-delay 1)))
+
+(use-package pyenv-mode
+  :after (company-anaconda)
+  :functions projectile-pyenv-mode-set
+  :init
+  (let ((pyenv-path (expand-file-name "~/.pyenv/bin")))
+    (setenv "PATH" (concat pyenv-path ":" (getenv "PATH")))
+    (add-to-list 'exec-path pyenv-path))
   :config
-  (add-to-list 'company-backends 'company-jedi))
+  (pyenv-mode)
+  (add-hook 'projectile-after-switch-project-hook 'projectile-pyenv-mode-set)
+  (defun projectile-pyenv-mode-set ()
+    "Set pyenv version matching project name."
+    (let ((project (projectile-project-name)))
+      (if (member project (pyenv-mode-versions))
+          (pyenv-mode-set project)
+        (pyenv-mode-unset)))))
 
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+
+(use-package anaconda-mode)
 (use-package blacken)
 (use-package itail)
+
+(use-package pdf-tools
+  :init
+  (pdf-loader-install)
+  (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1))))
 
 (use-package flycheck
   :init
@@ -116,29 +149,39 @@
   (setq shackle-rules '((compilation-mode :noselect t))
         shackle-default-rule '(:align 'below :size 0.3)))
 
+(use-package vterm
+  :commands (vterm vterm-other-window)
+  :init
+  (add-hook 'vterm-exit-hook (lambda ()
+                               (let ((buffer (get-buffer))
+                                     (window (get-buffer-window)))
+                                 (when window
+                                   (delete-window window))
+                                 (kill-buffer buffer))))
+  :custom (vterm-kill-buffer-on-exit t))
+
 ;; Enable Packages & Config
 ;;-------------------
 (setq which-key-idle-delay 1)
-;; (custom-set-variables
-;;  ;; custom-set-variables was added by Custom.
-;;  ;; If you edit it by hand, you could mess it up, so be careful.
-;;  ;; Your init file should contain only one such instance.
-;;  ;; If there is more than one, they won't work right.
-;;  '(custom-safe-themes
-;;    (quote
-;;     ("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default)))
-;;  '(org-agenda-files (quote ("~/Dropbox/Notes/tasks.org")))
-;;  '(package-selected-packages
-;;    (quote
-;;     (blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base16-theme adaptive-wrap)))
-;;  '(powerline-display-hud t)
-;;  '(send-mail-function (quote smtpmail-send-it)))
-;; (custom-set-faces
-;;  ;; custom-set-faces was added by Custom.
-;;  ;; If you edit it by hand, you could mess it up, so be careful.
-;;  ;; Your init file should contain only one such instance.
-;;  ;; If there is more than one, they won't work right.
-;;  )
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
+ '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
+ '(package-selected-packages
+   '(pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base16-theme adaptive-wrap))
+ '(powerline-display-hud t)
+ '(send-mail-function 'smtpmail-send-it)
+ '(vterm-kill-buffer-on-exit t))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
 (projectile-mode 1)
 (eyebrowse-mode 1)
 (which-key-mode)
@@ -189,11 +232,11 @@
 (defun ml/bash ()
   "start a terminal emulator in a new window"
   (interactive)
-  (split-window-below)
+  (split-window-below 55)
   (other-window 1)
-  (set-frame-height (selected-frame) 20)
-  (vterm))
-(define-key evil-motion-state-map (kbd "SPC t") #'ml/bash)
+  (if (get-buffer "vterm")
+      (switch-to-buffer "vterm")
+    (vterm)))
 
 ;; Helm shortcuts
 (defhydra hydra-helm (:color blue :hint nil)
@@ -203,16 +246,9 @@
 (define-key evil-motion-state-map (kbd "SPC f") 'hydra-helm/body)
 (global-set-key (kbd "M-x") 'helm-M-x)
 
-;; Projectile
 (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
-
-;; Dired
 (define-key evil-motion-state-map (kbd "SPC d") 'dired)
-
-;; Magit
 (define-key evil-motion-state-map (kbd "SPC g") 'magit-status)
-
-;; Org-mode
 (define-key evil-motion-state-map (kbd "SPC a") 'org-agenda)
 
 
@@ -241,7 +277,7 @@
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("s" ml/bash "Shell Terminal")
-  ("c" (find-file "~/.emacs") "Open Emacs Config")
+  ("c" (find-file "~/.emacs.d/init.el") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("u" undo-tree-visualize "Undo-tree")
@@ -303,7 +339,7 @@
       evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
       evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
 
-(set-default-font "JetBrains Mono-10")
+(set-frame-font "JetBrains Mono-10")
 (setq default-frame-alist '((font . "JetBrains Mono-10")))
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
@@ -347,17 +383,3 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (company-jedi which-key vterm use-package slime shackle ranger python-mode powerline markdown-mode magit linum-relative julia-mode itail imenu-list hydra htmlize helm-projectile flycheck eyebrowse evil-collection disable-mouse diminish company clojure-mode blacken base16-theme))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
