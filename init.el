@@ -239,7 +239,7 @@
 (defun ml/bash ()
   "start a terminal emulator in a new window"
   (interactive)
-  (split-window-below 55)
+  (split-window-below)
   (other-window 1)
   (if (get-buffer "vterm")
       (switch-to-buffer "vterm")
@@ -323,13 +323,16 @@
   (kbd "SPC m") 'hydra-modify-buffers/body)
 
 ;; Disable mouse!!
-;; While it may be nice to use the mouse, I find it more preferable to use emacs as a 'cmd-line' application, rather than graphical point-and-click. I use disable-mouse package to disable all mouse operations in evil mode.
-(global-disable-mouse-mode)
-(mapc #'disable-mouse-in-keymap
-  (list evil-motion-state-map
-        evil-normal-state-map
-        evil-visual-state-map
-        evil-insert-state-map))
+;; While it may be nice to use the mouse, I find it more preferable to
+;; use emacs as a 'cmd-line' application, rather than graphical
+;; point-and-click. I use disable-mouse package to disable all mouse
+;; operations in evil mode.
+;; (global-disable-mouse-mode)
+;; (mapc #'disable-mouse-in-keymap
+;;   (list evil-motion-state-map
+;;         evil-normal-state-map
+;;         evil-visual-state-map
+;;         evil-insert-state-map))
 
 (setq projectile-project-rsyncs
       '(("cristallo" . "chemistry.me:~/workspace/cristallo")
@@ -347,24 +350,24 @@
 
 ;; Display themes
 ;;---------------------
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+;; (menu-bar-mode -1)
+;; (tool-bar-mode -1)
+;; (scroll-bar-mode -1)
 
-(global-hl-line-mode 1)
-(load-theme 'base16-default-dark 1)
-(powerline-default-theme)
-;; Set the cursor color based on the evil state
-(defvar my/base16-colors base16-default-dark-colors)
-(setq evil-emacs-state-cursor   `(,(plist-get my/base16-colors :base0D) box)
-      evil-insert-state-cursor  `(,(plist-get my/base16-colors :base0D) bar)
-      evil-motion-state-cursor  `(,(plist-get my/base16-colors :base0E) box)
-      evil-normal-state-cursor  `(,(plist-get my/base16-colors :base0B) box)
-      evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
-      evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
+;; (global-hl-line-mode 1)
+;; (load-theme 'base16-default-dark 1)
+;; (powerline-default-theme)
+;; ;; Set the cursor color based on the evil state
+;; (defvar my/base16-colors base16-default-dark-colors)
+;; (setq evil-emacs-state-cursor   `(,(plist-get my/base16-colors :base0D) box)
+;;       evil-insert-state-cursor  `(,(plist-get my/base16-colors :base0D) bar)
+;;       evil-motion-state-cursor  `(,(plist-get my/base16-colors :base0E) box)
+;;       evil-normal-state-cursor  `(,(plist-get my/base16-colors :base0B) box)
+;;       evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
+;;       evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
 
-(set-frame-font "JetBrains Mono-10")
-(setq default-frame-alist '((font . "JetBrains Mono-10")))
+;; (set-frame-font "JetBrains Mono-10")
+;; (setq default-frame-alist '((font . "JetBrains Mono-10")))
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
@@ -405,3 +408,4 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
+(setq projectile-project-search-path '("~/workspace/"))
