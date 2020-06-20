@@ -90,6 +90,31 @@
 (use-package htmlize)
 (use-package base16-theme)
 (use-package helm-projectile)
+(use-package cider)
+(use-package org
+  :after (cider)
+  :ensure org-plus-contrib
+  :init
+  (require 'ob-clojure)
+  (require 'cider)
+  (setq inferior-julia-program-name "/usr/bin/julia")
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-babel-clojure-backend 'cider)
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '((shell . t)
+                                 (emacs-lisp . t)
+                                 (julia . t))))
+(use-package ob-async)
+(use-package yasnippet
+  :init
+  (yas-reload-all)
+  (add-hook 'org-mode-hook #'yas-minor-mode))
+(use-package yasnippet-snippets
+  :after (yasnippet))
+
+(use-package paredit
+  :init
+  (add-hook 'clojure-mode-hook #'enable-paredit-mode))
 
 (use-package pdf-tools
   :init
@@ -235,7 +260,6 @@
 (defhydra hydra-eyebrowse (:color blue :hint nil)
   "Workspaces"
   ("s" eyebrowse-switch-to-window-config "Show workspaces")
-  ("0" eyebrowse-switch-to-window-config-0 "Workspace 0")
   ("1" eyebrowse-switch-to-window-config-1 "Workspace 1")
   ("2" eyebrowse-switch-to-window-config-2 "Workspace 2")
   ("3" eyebrowse-switch-to-window-config-3 "Workspace 3")
@@ -250,12 +274,13 @@
 
 ;; Buffer management
 (define-key evil-motion-state-map
-  (kbd "SPC b") 'switch-to-buffer)
+  (kbd "SPC SPC") 'helm-buffers-list)
 
 ;; Hydra Open Window
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("s" ml/bash "Shell Terminal")
+  ("d" (dired-directory ".") "Dired")
   ("c" (find-file "~/.emacs.d/init.el") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
@@ -263,6 +288,12 @@
   ("m" mu4e "Open Mailbox"))
 (define-key evil-motion-state-map
   (kbd "SPC o") 'hydra-openbuffer/body)
+
+(defhydra hydra-insert (:color blue :hint nil)
+  "Insert into Buffer"
+  ("s" yas-insert-snippet "Insert Snippet"))
+(define-key evil-motion-state-map
+  (kbd "SPC i") 'hydra-insert/body)
 
 ;; Multi-cursors
 (defhydra hydra-multipleCursors (:color blue :hint nil)
@@ -296,6 +327,32 @@
         evil-normal-state-map
         evil-visual-state-map
         evil-insert-state-map))
+
+(defhydra hydra-project-map (:color blue :hint nil)
+  "
+  ^Execute^       ^Remote Actions^
+  ^^^^^^^^^^-------------------------
+  _r_: run shell  _u_: upload
+"
+  ("r" ignore)
+  ("u" ignore))
+(define-key evil-motion-state-map
+  (kbd "<f5>") 'hydra-project-map/body)
+
+
+(setq projectile-project-rsyncs
+      '(("cristallo" . "chemistry.me:~/workspace/cristallo")
+        ("ogd" . "lis.me:~/workspace/ogd/classifier")))
+(setq projectile-project-virtualenvs
+      '(("cristallo" . "~/miniconda3/envs/cristallo")
+        ("ogd" . "~/miniconda3/envs/ema")))
+
+(defun rsync-project (dir location)
+  (interactive)
+  (start-process-shell-command "" nil "dorsync" dir location)))
+
+
+(rsync-project "~/workspace/cristallo/energy-estimation/src" "chemistry.me:~/workspace/cristallo/src")
 
 
 ;; =========================================================================================================
@@ -362,3 +419,22 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
+ '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
+ '(package-selected-packages
+   '(ob-julia ob-async ob-clojure org-plus-contrib org-mode yasnippet-snippets yasnippet cider paredit pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base16-theme adaptive-wrap))
+ '(powerline-display-hud t)
+ '(send-mail-function 'smtpmail-send-it)
+ '(vterm-kill-buffer-on-exit t))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
