@@ -19,8 +19,50 @@
 (setq evil-want-keybinding nil)
 (setq x-wait-for-event-timeout nil)
 
-
 ;; ===========================================================================================================
+;; Install function define a function to check if a package is
+;; installed, if it not we can install it. From this, we may quickly
+;; and easily install packages.
+(defun my/check-and-install (pkg)
+  (unless (package-installed-p pkg)
+    (package-install pkg)))
+
+;; List of packages to be installed Instead of writing many lines of
+;; `check-and-install', we will define a list of packages to install,
+;; then loop through the list, calling the function for each element
+;; in this list. To install a new package (or just add it to the base
+;; installation), add the package to this list.
+(setq local-packages '(use-package
+                       evil
+                       helm
+                       which-key
+                       powerline
+                       disable-mouse
+                       projectile
+                       julia-mode
+                       markdown-mode
+                       magit
+                       hydra
+                       eyebrowse
+                       imenu-list
+                       linum-relative
+                       diminish
+                       slime
+                       htmlize
+                       evil-collection
+                       base16-theme
+                       ranger
+                       clojure-mode
+                       vterm
+                       helm-projectile))
+
+;; Iterate through the list of packages to be installed and call the
+;; check-and-install function for each package.
+(dolist (pkg local-packages) (my/check-and-install pkg))
+;; Require packages -- package imports
+(dolist (pkg local-packages) (require pkg))
+(setq use-package-always-ensure t)
+(require 'use-package)
 
 (use-package evil
   :config
@@ -30,7 +72,6 @@
   :config
   (which-key-mode 1))
 
-(setq use-package-always-ensure t)
 (use-package evil-collection
   :after (evil)
   :config
@@ -47,29 +88,7 @@
   (add-to-list 'company-backends '(company-anaconda))
   (add-hook 'python-mode-hook 'anaconda-mode)
   (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
-  (add-hook 'python-mode-hook (lambda () (setq-local company-idle-delay 1)))
-
-(use-package pyenv-mode
-  :after (company-anaconda)
-  :functions projectile-pyenv-mode-set
-  :init
-  (let ((pyenv-path (expand-file-name "~/.pyenv/bin")))
-    (setenv "PATH" (concat pyenv-path ":" (getenv "PATH")))
-    (add-to-list 'exec-path pyenv-path))
-  :config
-  (pyenv-mode)
-  (add-hook 'projectile-after-switch-project-hook 'projectile-pyenv-mode-set)
-  (defun projectile-pyenv-mode-set ()
-    "Set pyenv version matching project name."
-    (let ((project (projectile-project-name)))
-      (if (member project (pyenv-mode-versions))
-          (pyenv-mode-set project)
-        (pyenv-mode-unset)))))
-
-(use-package exec-path-from-shell
-  :config
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
+  (add-hook 'python-mode-hook (lambda () (setq-local company-idle-delay 1))))
 
 (use-package projectile)
 (use-package anaconda-mode)
@@ -82,7 +101,6 @@
 (use-package magit)
 (use-package powerline)
 (use-package disable-mouse)
-(use-package hydra)
 (use-package imenu-list)
 (use-package linum-relative)
 (use-package diminish)
@@ -92,7 +110,7 @@
 (use-package helm-projectile)
 (use-package cider)
 (use-package org
-  :after (cider)
+  :after cider
   :ensure org-plus-contrib
   :init
   (require 'ob-clojure)
@@ -107,7 +125,6 @@
 (use-package ob-async)
 (use-package yasnippet
   :init
-  (yas-reload-all)
   (add-hook 'org-mode-hook #'yas-minor-mode))
 (use-package yasnippet-snippets
   :after (yasnippet))
@@ -136,33 +153,17 @@
   (setq eyebrowse-new-workspace t))
 
 (use-package helm
-  :init
-  (require 'helm-config)
   :config
-  (helm-mode 1)
   (setq helm-use-frame-when-more-than-two-windows nil
         helm-split-window-in-side nil
         helm-display-function 'pop-to-buffer
         helm-idle-delay 0.0
         helm-input-idle-delay 0.01))
 
-(use-package shackle
-  :after (helm)
-  (shackle-mode)
-  :config
-  (setq shackle-rules '((compilation-mode :noselect t))
-        shackle-default-rule '(:align 'below :size 0.3)))
-
 (use-package vterm
   :commands (vterm vterm-other-window)
-  :init
-  (add-hook 'vterm-exit-hook (lambda ()
-                               (let ((buffer (get-buffer))
-                                     (window (get-buffer-window)))
-                                 (when window
-                                   (delete-window window))
-                                 (kill-buffer buffer))))
   :custom (vterm-kill-buffer-on-exit t))
+
 
 ;; Enable Packages & Config
 ;;-------------------
@@ -173,10 +174,10 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
+   '("667e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
  '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
  '(package-selected-packages
-   '(pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base16-theme adaptive-wrap))
+   '(pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
  '(powerline-display-hud t)
  '(send-mail-function 'smtpmail-send-it)
  '(vterm-kill-buffer-on-exit t))
@@ -186,6 +187,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(evil-mode 1)
+(helm-mode 1)
 (projectile-mode 1)
 (eyebrowse-mode 1)
 (which-key-mode)
@@ -328,18 +331,6 @@
         evil-visual-state-map
         evil-insert-state-map))
 
-(defhydra hydra-project-map (:color blue :hint nil)
-  "
-  ^Execute^       ^Remote Actions^
-  ^^^^^^^^^^-------------------------
-  _r_: run shell  _u_: upload
-"
-  ("r" ignore)
-  ("u" ignore))
-(define-key evil-motion-state-map
-  (kbd "<f5>") 'hydra-project-map/body)
-
-
 (setq projectile-project-rsyncs
       '(("cristallo" . "chemistry.me:~/workspace/cristallo")
         ("ogd" . "lis.me:~/workspace/ogd/classifier")))
@@ -349,10 +340,7 @@
 
 (defun rsync-project (dir location)
   (interactive)
-  (start-process-shell-command "" nil "dorsync" dir location)))
-
-
-(rsync-project "~/workspace/cristallo/energy-estimation/src" "chemistry.me:~/workspace/cristallo/src")
+  (start-process-shell-command "" nil "dorsync" dir location))
 
 
 ;; =========================================================================================================
@@ -415,26 +403,5 @@
         minor-mode-list))
 (hide-minor-modes)
 
-(scroll-bar-mode -1)
-
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("669e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
- '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
- '(package-selected-packages
-   '(ob-julia ob-async ob-clojure org-plus-contrib org-mode yasnippet-snippets yasnippet cider paredit pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base16-theme adaptive-wrap))
- '(powerline-display-hud t)
- '(send-mail-function 'smtpmail-send-it)
- '(vterm-kill-buffer-on-exit t))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
