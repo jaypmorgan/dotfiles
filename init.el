@@ -1,5 +1,5 @@
 ;;--------------------------
-; EMACS Configuration File
+;; EMACS Configuration File
 ;; Author: Jay Morgan
 ;;--------------------------
 
@@ -19,13 +19,17 @@
 (setq evil-want-keybinding nil)
 (setq x-wait-for-event-timeout nil)
 
-;; ===========================================================================================================
+;; =====================================================================
+;; Install & Configure Packages
+;; =====================================================================
+
 ;; Install function define a function to check if a package is
 ;; installed, if it not we can install it. From this, we may quickly
 ;; and easily install packages.
 (defun my/check-and-install (pkg)
   (unless (package-installed-p pkg)
-    (package-install pkg)))
+    (package-install pkg))
+  (require pkg))
 
 ;; List of packages to be installed Instead of writing many lines of
 ;; `check-and-install', we will define a list of packages to install,
@@ -33,8 +37,8 @@
 ;; in this list. To install a new package (or just add it to the base
 ;; installation), add the package to this list.
 (setq local-packages '(use-package
-                       evil
-                       helm
+                       ;; evil
+                       ;; helm
                        which-key
                        powerline
                        disable-mouse
@@ -45,24 +49,27 @@
                        hydra
                        eyebrowse
                        imenu-list
-                       linum-relative
+                       ;; linum-relative
                        diminish
                        slime
                        htmlize
-                       evil-collection
-                       base16-theme
-                       ranger
-                       clojure-mode
-                       vterm
+                       ;; evil-collection
+                       ;; base16-theme
+                       ;; ranger
+                       ;; clojure-mode
+                       ;; vterm
                        helm-projectile))
 
 ;; Iterate through the list of packages to be installed and call the
 ;; check-and-install function for each package.
 (dolist (pkg local-packages) (my/check-and-install pkg))
 ;; Require packages -- package imports
-(dolist (pkg local-packages) (require pkg))
+;; (dolist (pkg local-packages) (require pkg))
+
+(my/check-and-install 'use-package)
 (setq use-package-always-ensure t)
-(require 'use-package)
+(use-package use-package-ensure-system-package)
+
 
 (use-package evil
   :config
@@ -70,6 +77,7 @@
 
 (use-package which-key
   :config
+  (setq which-key-idle-delay 1)
   (which-key-mode 1))
 
 (use-package evil-collection
@@ -90,14 +98,18 @@
   (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
   (add-hook 'python-mode-hook (lambda () (setq-local company-idle-delay 1))))
 
-(use-package projectile)
+(use-package projectile
+  :config
+  (projectile-mode 1))
 (use-package anaconda-mode)
 (use-package blacken)
 (use-package itail)
 (use-package julia-mode)
 (use-package clojure-mode)
 (use-package markdown-mode)
-(use-package ranger)
+(use-package ranger
+  :init
+  (ranger-override-dired-mode 1))
 (use-package magit)
 (use-package powerline)
 (use-package disable-mouse)
@@ -108,6 +120,8 @@
 (use-package htmlize)
 (use-package base16-theme)
 (use-package helm-projectile)
+(use-package helm-ag
+  :ensure-system-package (ag . silversearcher-ag))
 (use-package cider)
 (use-package org
   :after cider
@@ -121,13 +135,22 @@
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (emacs-lisp . t)
-                                 (julia . t))))
+                                 (julia . t)
+                                 (gnuplot . t)
+                                 (dot . t))))
 (use-package ob-async)
 (use-package yasnippet
   :init
   (add-hook 'org-mode-hook #'yas-minor-mode))
 (use-package yasnippet-snippets
   :after (yasnippet))
+(use-package olivetti
+  :init
+  (setq olivetti-body-width 0.4)
+  (add-hook 'olivetti-mode-hook
+            (lambda ()
+              (setq-local fringe-mode 'no-fringes
+                          linum-mode -1))))
 
 (use-package paredit
   :init
@@ -150,6 +173,7 @@
 
 (use-package eyebrowse
   :config
+  (eyebrowse-mode 1)
   (setq eyebrowse-new-workspace t))
 
 (use-package helm
@@ -164,10 +188,6 @@
   :commands (vterm vterm-other-window)
   :custom (vterm-kill-buffer-on-exit t))
 
-
-;; Enable Packages & Config
-;;-------------------
-(setq which-key-idle-delay 1)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -175,9 +195,10 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("667e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
+ '(ede-project-directories '("/home/jaymorgan/workspace/cristallo/energy-estimation"))
  '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
  '(package-selected-packages
-   '(pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
+   '(olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
  '(powerline-display-hud t)
  '(send-mail-function 'smtpmail-send-it)
  '(vterm-kill-buffer-on-exit t))
@@ -187,13 +208,12 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
 (evil-mode 1)
 (helm-mode 1)
 (projectile-mode 1)
 (eyebrowse-mode 1)
 (which-key-mode)
-;; spelling
-(setq ispell-dictionary "british")
 
 ;; ;; Lisp configuration
 ;; (setq inferior-lisp-program "sbcl")
@@ -229,12 +249,12 @@
 (setq projectile-git-submodule-command nil)
 (setq completion-auto-help nil)
 
-;; =============================================================================================================
-
+;; ===============================================================
 ;; Keyboard Shortcuts
-;;--------------------
-;; Terminal
+;; ===============================================================
+
 (define-key evil-motion-state-map " " nil)
+(global-set-key (kbd "M-x") 'helm-M-x)
 
 (defun ml/bash ()
   "start a terminal emulator in a new window"
@@ -245,21 +265,27 @@
       (switch-to-buffer "vterm")
     (vterm)))
 
-;; Helm shortcuts
-(defhydra hydra-helm (:color blue :hint nil)
+(defmacro bind-evil-key (binding func)
+  `(define-key evil-motion-state-map (kbd ,binding) (quote ,func)))
+
+(defhydra hydra-helm-files (:color blue :hint nil)
   "Helm Files"
   ("f" helm-find-files "Find Files")
   ("r" helm-recentf "File Recent Files"))
-(define-key evil-motion-state-map (kbd "SPC f") 'hydra-helm/body)
-(global-set-key (kbd "M-x") 'helm-M-x)
+(bind-evil-key "SPC f" hydra-helm-files/body)
 
-(define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
-(define-key evil-motion-state-map (kbd "SPC d") 'dired)
-(define-key evil-motion-state-map (kbd "SPC g") 'magit-status)
-(define-key evil-motion-state-map (kbd "SPC a") 'org-agenda)
+(defhydra hydra-helm (:color blue :hint nil)
+  "Helm"
+  ("r" helm-regexp "Regex")
+  ("i" helm-imenu "Imenu")
+  ("f" helm-find "Find")
+  ("g" helm-do-ag "AG Search"))
+(bind-evil-key "SPC h" hydra-helm/body)
 
+(bind-evil-key "SPC p" projectile-command-map)
+(bind-evil-key "SPC g" magit-status)
+(bind-evil-key "SPC a" org-agenda)
 
-;; Eyebrowse
 (defhydra hydra-eyebrowse (:color blue :hint nil)
   "Workspaces"
   ("s" eyebrowse-switch-to-window-config "Show workspaces")
@@ -275,15 +301,13 @@
 (define-key evil-motion-state-map
   (kbd "SPC TAB") 'hydra-eyebrowse/body)
 
-;; Buffer management
 (define-key evil-motion-state-map
   (kbd "SPC SPC") 'helm-buffers-list)
 
-;; Hydra Open Window
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("s" ml/bash "Shell Terminal")
-  ("d" (dired-directory ".") "Dired")
+  ("d" (dired-at-point ".") "Dired")
   ("c" (find-file "~/.emacs.d/init.el") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
@@ -298,14 +322,12 @@
 (define-key evil-motion-state-map
   (kbd "SPC i") 'hydra-insert/body)
 
-;; Multi-cursors
 (defhydra hydra-multipleCursors (:color blue :hint nil)
   "Multiple Cursors"
   ("e" mc/edit-lines "Edit Lines"))
 (define-key evil-motion-state-map
   (kbd "SPC e") 'hydra-multipleCursors/body)
 
-;; Remote hosts
 (defhydra hydra-remote-hosts (:color blue :hint nil)
   "Browse remote hosts"
   ("l" (dired-at-point "/ssh:lis.me:~/workspace") "LIS Lab")
@@ -318,6 +340,7 @@
 (defhydra hydra-modify-buffers (:color blue :hint nil)
   "Modify buffer"
   ("w" write-file "Write")
+  ("o" olivetti-mode "Olivetti Mode")
   ("q" quit-window "Close"))
 (define-key evil-motion-state-map
   (kbd "SPC m") 'hydra-modify-buffers/body)
@@ -327,12 +350,12 @@
 ;; use emacs as a 'cmd-line' application, rather than graphical
 ;; point-and-click. I use disable-mouse package to disable all mouse
 ;; operations in evil mode.
-;; (global-disable-mouse-mode)
-;; (mapc #'disable-mouse-in-keymap
-;;   (list evil-motion-state-map
-;;         evil-normal-state-map
-;;         evil-visual-state-map
-;;         evil-insert-state-map))
+(global-disable-mouse-mode)
+(mapc #'disable-mouse-in-keymap
+  (list evil-motion-state-map
+        evil-normal-state-map
+        evil-visual-state-map
+        evil-insert-state-map))
 
 (setq projectile-project-rsyncs
       '(("cristallo" . "chemistry.me:~/workspace/cristallo")
@@ -346,15 +369,21 @@
   (start-process-shell-command "" nil "dorsync" dir location))
 
 
-;; =========================================================================================================
-
+;; ===============================================================
 ;; Display themes
-;;---------------------
+;; ===============================================================
+
 ;; (menu-bar-mode -1)
 ;; (tool-bar-mode -1)
 ;; (scroll-bar-mode -1)
 
+;; Display line numbers
 ;; (global-hl-line-mode 1)
+(global-linum-mode)
+(linum-relative-on)
+(add-hook 'term-mode-hook
+    (lambda () (linum-relative-toggle)))
+
 ;; (load-theme 'base16-default-dark 1)
 ;; (powerline-default-theme)
 ;; ;; Set the cursor color based on the evil state
@@ -368,6 +397,7 @@
 
 ;; (set-frame-font "JetBrains Mono-10")
 ;; (setq default-frame-alist '((font . "JetBrains Mono-10")))
+
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
@@ -382,19 +412,13 @@
       ;; '(left-curly-arrow right-curly-arrow) ;; default
       )
 
-;; Display line numbers
-(global-linum-mode)
-(linum-relative-on)
-(add-hook 'term-mode-hook
-    (lambda () (linum-relative-toggle)))
-
 ;; Suppress the splash screen
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 (setq initial-scratch-message "")
 (setq auto-save-default nil)
-(setq backup-directory-alist '(("" . "~/.Trash"))) ; put backup files into the trash bin -- still there but not in working dir
+(setq backup-directory-alist '(("" . "~/.Trash")))
 (put 'dired-find-alternate-file 'disabled nil)
 
 (setq org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)")))
