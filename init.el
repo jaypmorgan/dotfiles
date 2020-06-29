@@ -3,8 +3,13 @@
 ;; Author: Jay Morgan
 ;;--------------------------
 
-(add-to-list 'load-path "~/.emacs.d/plugins/")
+(setq gc-cons-threshold 100000000)
+(setq read-process-output-max (* 1024 1024))
+
+;; Manually installed plugins/packages
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
+(load "~/.emacs.d/mu4e-init.el")
 (require 'mu4e)
 
 ;; Setup package.el to work with MELPA
@@ -36,29 +41,28 @@
 ;; then loop through the list, calling the function for each element
 ;; in this list. To install a new package (or just add it to the base
 ;; installation), add the package to this list.
-(setq local-packages '(use-package
+(setq local-packages '(use-package))
                        ;; evil
                        ;; helm
-                       which-key
-                       powerline
-                       disable-mouse
-                       projectile
-                       julia-mode
-                       markdown-mode
-                       magit
-                       hydra
-                       eyebrowse
-                       imenu-list
+                       ;; which-key
+                       ;; powerline
+                       ;; disable-mouse
+                       ;; projectile
+                       ;; julia-mode
+                       ;; markdown-mode
+                       ;; magit
+                       ;; hydra
+                       ;; eyebrowse
+                       ;; imenu-list
                        ;; linum-relative
-                       diminish
-                       slime
-                       htmlize
+                       ;; diminish
+                       ;; slime
+                       ;; htmlize
                        ;; evil-collection
                        ;; base16-theme
-                       ;; ranger
                        ;; clojure-mode
                        ;; vterm
-                       helm-projectile))
+                        ;; helm-projectile))
 
 ;; Iterate through the list of packages to be installed and call the
 ;; check-and-install function for each package.
@@ -86,30 +90,20 @@
   (evil-collection-init))
 
 (use-package company
-  :init
-  (global-company-mode)
+  :config
+  (global-company-mode 1)
   (setq company-idle-delay 0.001))
-
-(use-package company-anaconda
-  :after (company anaconda-mode)
-  :init
-  (add-to-list 'company-backends '(company-anaconda))
-  (add-hook 'python-mode-hook 'anaconda-mode)
-  (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
-  (add-hook 'python-mode-hook (lambda () (setq-local company-idle-delay 1))))
 
 (use-package projectile
   :config
   (projectile-mode 1))
-(use-package anaconda-mode)
+
 (use-package blacken)
 (use-package itail)
 (use-package julia-mode)
+(use-package ess)
 (use-package clojure-mode)
 (use-package markdown-mode)
-(use-package ranger
-  :init
-  (ranger-override-dired-mode 1))
 (use-package magit)
 (use-package powerline)
 (use-package disable-mouse)
@@ -119,38 +113,87 @@
 (use-package slime)
 (use-package htmlize)
 (use-package base16-theme)
-(use-package helm-projectile)
-(use-package helm-ag
-  :ensure-system-package (ag . silversearcher-ag))
 (use-package cider)
+(use-package atom-one-dark-theme)
+(use-package php-mode)
+(use-package quelpa)
+
+(use-package python-mode
+  :config
+  (use-package conda
+    :init
+    (conda-env-initialize-eshell)
+    (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
+          conda-env-home-directory (expand-file-name "~/miniconda3/"))))
+
+(use-package lsp-mode
+  :hook ((python-mode . lsp)
+         (julia-mode . lsp)
+         (ess-julia-mode . lsp)
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp
+  :init
+  (require 'lsp-clients)
+  (quelpa '(lsp-julia :fetcher github
+                      :repo "non-Jedi/lsp-julia"
+                      :files (:defaults "languageserver")))
+  (require 'lsp-julia)
+  (add-hook 'python-mode-hook #'lsp)
+  (add-hook 'ess-julia-mode-hook #'lsp-mode)
+  (add-hook 'julia-mode-hook #'lsp-mode)
+  (use-package lsp-ui
+    :config
+    (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+  (use-package company-lsp
+    :requires company
+    :config
+    (push 'company-lsp company-backends)
+    (setq company-lsp-async t)))
+
 (use-package org
   :after cider
   :ensure org-plus-contrib
   :init
   (require 'ob-clojure)
   (require 'cider)
+  (use-package ob-async)
+  (use-package ox-pandoc)
+  (use-package ox-gfm)
+  (use-package org-ref
+    :init
+    (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
+  (use-package helm-bibtex
+    :init
+    (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+          bibtex-completion-pdf-open-function 'org-open-file))
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
   (setq inferior-julia-program-name "/usr/bin/julia")
   (setq org-confirm-babel-evaluate nil)
   (setq org-babel-clojure-backend 'cider)
+  (setq org-latex-to-pdf-process '("tectonic %f"))
+  (add-hook 'org-mode-hook 'turn-on-auto-fill)
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (emacs-lisp . t)
                                  (julia . t)
                                  (gnuplot . t)
                                  (dot . t))))
-(use-package ob-async)
+
 (use-package yasnippet
+  :config
+  (use-package yasnippet-snippets)
   :init
   (add-hook 'org-mode-hook #'yas-minor-mode))
-(use-package yasnippet-snippets
-  :after (yasnippet))
+
 (use-package olivetti
   :init
-  (setq olivetti-body-width 0.4)
+  (setq olivetti-body-width 90)
   (add-hook 'olivetti-mode-hook
             (lambda ()
-              (setq-local fringe-mode 'no-fringes
-                          linum-mode -1))))
+              (progn
+                (linum-relative-mode -1)
+                (fringe-mode -1)))))
 
 (use-package paredit
   :init
@@ -159,10 +202,16 @@
 (use-package pdf-tools
   :init
   (pdf-loader-install)
+  (setq auto-revert-interval 0.5)
   (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1))))
+
+(use-package flyspell
+  :init
+  (setq flyspell-default-dictionary "british"))
 
 (use-package flycheck
   :init
+  (flycheck-add-mode 'proselint 'org-mode)
   (add-hook 'python-mode-hook 'flycheck-mode)
   (setq flycheck-check-syntax-automatically '(mode-enabled save)
         flycheck-highlighting-mode 'lines
@@ -178,6 +227,9 @@
 
 (use-package helm
   :config
+  (use-package helm-projectile)
+  (use-package helm-ag
+    :ensure-system-package (ag . silversearcher-ag))
   (setq helm-use-frame-when-more-than-two-windows nil
         helm-split-window-in-side nil
         helm-display-function 'pop-to-buffer
@@ -194,13 +246,14 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("667e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
+   '("ed4c48eb91d07c2e447b445e2491ef17e9b326d43a60022297fd56af4749e772" "c614d2423075491e6b7f38a4b7ea1c68f31764b9b815e35c9741e9490119efc0" "aea30125ef2e48831f46695418677b9d676c3babf43959c8e978c0ad672a7329" "196df8815910c1a3422b5f7c1f45a72edfa851f6a1d672b7b727d9551bb7c7ba" "1025e775a6d93981454680ddef169b6c51cc14cea8cb02d1872f9d3ce7a1da66" "8e51e44e5b079b2862335fcc5ff0f1e761dc595c7ccdb8398094fb8e088b2d50" "c2efd2e2e96b052dd91940b100d86885337a37be1245167642451cf6da5b924a" "65f35d1e0d0858947f854dc898bfd830e832189d5555e875705a939836b53054" "819d24b9aba8fcb446aecfb59f87d1817a6d3eb07de7fdec67743ef32194438b" "f5f3a6fb685fe5e1587bafd07db3bf25a0655f3ddc579ed9d331b6b19827ea46" "ffac21ab88a0f4603969a24b96993bd73a13fe0989db7ed76d94c305891fad64" "45a8b89e995faa5c69aa79920acff5d7cb14978fbf140cdd53621b09d782edcf" "41eb3fe4c6b80c7ad156a8c52e9dd6093e8856c7bbf2b92cc3a4108ceb385087" "fc7fd2530b82a722ceb5b211f9e732d15ad41d5306c011253a0ba43aaf93dccc" "3e34e9bf818cf6301fcabae2005bba8e61b1caba97d95509c8da78cff5f2ec8e" "cabc32838ccceea97404f6fcb7ce791c6e38491fd19baa0fcfb336dcc5f6e23c" "1d079355c721b517fdc9891f0fda927fe3f87288f2e6cc3b8566655a64ca5453" "d1af5ef9b24d25f50f00d455bd51c1d586ede1949c5d2863bef763c60ddf703a" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "667e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
  '(ede-project-directories '("/home/jaymorgan/workspace/cristallo/energy-estimation"))
  '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
  '(package-selected-packages
-   '(olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
+   '(lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
  '(powerline-display-hud t)
  '(send-mail-function 'smtpmail-send-it)
+ '(undo-tree-visualizer-diff t)
  '(vterm-kill-buffer-on-exit t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -252,6 +305,9 @@
 ;; ===============================================================
 ;; Keyboard Shortcuts
 ;; ===============================================================
+
+(require 'hydra)
+(require 'evil)
 
 (define-key evil-motion-state-map " " nil)
 (global-set-key (kbd "M-x") 'helm-M-x)
@@ -307,6 +363,7 @@
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("s" ml/bash "Shell Terminal")
+  ("S" vterm "Big Terminal")
   ("d" (dired-at-point ".") "Dired")
   ("c" (find-file "~/.emacs.d/init.el") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
@@ -324,7 +381,8 @@
 
 (defhydra hydra-multipleCursors (:color blue :hint nil)
   "Multiple Cursors"
-  ("e" mc/edit-lines "Edit Lines"))
+  ("e" mc/edit-lines "Edit Lines")
+  ("b" ibuffer "Edit Buffers"))
 (define-key evil-motion-state-map
   (kbd "SPC e") 'hydra-multipleCursors/body)
 
@@ -373,12 +431,14 @@
 ;; Display themes
 ;; ===============================================================
 
-;; (menu-bar-mode -1)
-;; (tool-bar-mode -1)
-;; (scroll-bar-mode -1)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
 
 ;; Display line numbers
 ;; (global-hl-line-mode 1)
+(load-theme 'base16-espresso)
+(setq completion-auto-help t)
 (global-linum-mode)
 (linum-relative-on)
 (add-hook 'term-mode-hook
@@ -395,8 +455,8 @@
 ;;       evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
 ;;       evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
 
-;; (set-frame-font "JetBrains Mono-10")
-;; (setq default-frame-alist '((font . "JetBrains Mono-10")))
+(set-frame-font "Roboto Mono-10.5")
+(setq default-frame-alist '((font . "Roboto Mono-10.5")))
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
@@ -433,3 +493,22 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
 (setq projectile-project-search-path '("~/workspace/"))
+
+;; Close the compilation window if there was no error at all.
+(setq compilation-exit-message-function
+    (lambda (status code msg)
+        ;; If M-x compile exists with a 0
+        (when (and (eq status 'exit) (zerop code))
+        ;; then bury the *compilation* buffer, so that C-x b doesn't go there
+        (bury-buffer "*compilation*")
+        ;; and return to whatever were looking at before
+        (replace-buffer-in-windows "*compilation*"))
+        ;; Always return the anticipated result of compilation-exit-message-function
+    (cons msg code)))
+
+(recentf-mode 1)
+(setq recentf-max-menu 50)
+(setq recentf-max-saved-items 50)
+(setq undo-tree-auto-save-history t)
+
+(scroll-bar-mode -1)
