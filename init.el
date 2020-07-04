@@ -5,6 +5,8 @@
 
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024))
+(setq exec-path (append exec-path '("/home/jaymorgan/miniconda3/bin")))
+(setenv "PATH" (concat (getenv "PATH") ":/home/jaymorgan/miniconda3/bin"))
 
 ;; Manually installed plugins/packages
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
@@ -66,7 +68,6 @@
 (use-package blacken)
 (use-package itail)
 (use-package julia-mode)
-(use-package ess)
 (use-package clojure-mode)
 (use-package markdown-mode)
 (use-package magit)
@@ -74,17 +75,18 @@
 (use-package disable-mouse)
 (use-package imenu-list)
 (use-package linum-relative)
-(use-package diminish)
 (use-package slime)
 (use-package htmlize)
 (use-package base16-theme)
 (use-package cider)
-(use-package atom-one-dark-theme)
 (use-package php-mode)
 (use-package quelpa)
+(use-package ace-window)
+(use-package focus)
 
 (use-package python-mode
   :config
+  (use-package ess)
   (use-package conda
     :init
     (conda-env-initialize-eshell)
@@ -132,12 +134,19 @@
     :init
     (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
           bibtex-completion-pdf-open-function 'org-open-file))
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
-  (setq inferior-julia-program-name "/usr/bin/julia")
-  (setq org-confirm-babel-evaluate nil)
-  (setq org-babel-clojure-backend 'cider)
-  (setq org-latex-to-pdf-process '("tectonic %f"))
+  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+  (add-to-list 'org-latex-compilers "tectonic")
   (add-hook 'org-mode-hook 'turn-on-auto-fill)
+  (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
+
+  ;; set variables
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
+        inferior-julia-program-name "/usr/bin/julia"
+        org-confirm-babel-evaluate nil
+        org-babel-clojure-backend 'cider
+        org-fontify-done-headline t)
+
+  ;; list of languages for org-mode to support
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (emacs-lisp . t)
@@ -149,16 +158,16 @@
   :config
   (use-package yasnippet-snippets)
   :init
-  (add-hook 'org-mode-hook #'yas-minor-mode))
+  (yas-global-mode))
 
 (use-package olivetti
   :init
   (setq olivetti-body-width 90)
-  (add-hook 'olivetti-mode-hook
-            (lambda ()
-              (progn
-                (linum-relative-mode -1)
-                (fringe-mode -1)))))
+  (add-hook 'olivetti-mode-hook (lambda ()
+                                  (progn
+                                    (linum-relative-mode nil)
+                                    (fringe-mode nil)
+                                    (hl-line-mode nil)))))
 
 (use-package paredit
   :init
@@ -215,7 +224,7 @@
  '(ede-project-directories '("/home/jaymorgan/workspace/cristallo/energy-estimation"))
  '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
  '(package-selected-packages
-   '(lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
+   '(focus ace-window lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
  '(powerline-display-hud t)
  '(send-mail-function 'smtpmail-send-it)
  '(undo-tree-visualizer-diff t)
@@ -249,16 +258,21 @@
 
 ;; mu4e Config
 ;;---------------
-(setq mu4e-confirm-quit nil)
-(setq
- mu4e-sent-folder   "/envoyée"
- mu4e-drafts-folder "/brouillon"
- mu4e-trash-folder  "/trash"
- mu4e-refile-folder "/archiver"
- mu4e-get-mail-command "offlineimap -o -u quiet")
-(setq
- user-full-name     "Jay Morgan"
- user-mail-address "jaymiles17@gmail.com")
+(setq mu4e-confirm-quit     nil
+      mu4e-sent-folder      "/envoyée"
+      mu4e-drafts-folder    "/brouillon"
+      mu4e-trash-folder     "/trash"
+      mu4e-refile-folder    "/archiver"
+      mu4e-get-mail-command "offlineimap -o -u quiet"
+      mu4e-view-show-images t
+      mu4e-show-images      t
+      mu4e-view-image-max-width 800)
+(setq user-full-name     "Jay Morgan"
+      user-mail-address "jay.p.morgan@outlook.com")
+(setq send-mail-function 'smtpmail-send-it
+      smtpmail-smtp-server "smtp.office365.com"
+      smtpmail-smtp-service 587
+      smtpmail-stream-type 'starttls)
 
 ;; Julia Markdown
 (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
@@ -273,9 +287,10 @@
 
 (require 'hydra)
 (require 'evil)
-
+(require 'ace-window)
 (define-key evil-motion-state-map " " nil)
 (global-set-key (kbd "M-x") 'helm-M-x)
+
 
 (defun ml/bash ()
   "start a terminal emulator in a new window"
@@ -306,6 +321,22 @@
 (bind-evil-key "SPC p" projectile-command-map)
 (bind-evil-key "SPC g" magit-status)
 (bind-evil-key "SPC a" org-agenda)
+(bind-evil-key "SPC w" ace-window)
+
+(bind-evil-key "SPC s v"
+               (lambda ()
+                 (interactive)
+                 (progn
+                   (split-window-right)
+                   (other-window 1)
+                   (switch-to-buffer "*scratch*"))))
+(bind-evil-key "SPC s h"
+               (lambda ()
+                 (interactive)
+                 (progn
+                   (split-window-below)
+                   (other-window 1)
+                   (switch-to-buffer "*scratch*"))))
 
 (defhydra hydra-eyebrowse (:color blue :hint nil)
   "Workspaces"
@@ -330,6 +361,7 @@
   ("s" ml/bash "Shell Terminal")
   ("S" vterm "Big Terminal")
   ("d" (dired-at-point ".") "Dired")
+  ("D" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
   ("c" (find-file "~/.emacs.d/init.el") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
@@ -401,24 +433,23 @@
 (scroll-bar-mode -1)
 
 ;; Display line numbers
-;; (global-hl-line-mode 1)
+(global-hl-line-mode 1)
 (load-theme 'base16-espresso)
 (setq completion-auto-help t)
 (global-linum-mode)
 (linum-relative-on)
-(add-hook 'term-mode-hook
-    (lambda () (linum-relative-toggle)))
+(add-hook 'term-mode-hook (lambda () (linum-relative-toggle)))
 
 ;; (load-theme 'base16-default-dark 1)
-;; (powerline-default-theme)
-;; ;; Set the cursor color based on the evil state
-;; (defvar my/base16-colors base16-default-dark-colors)
-;; (setq evil-emacs-state-cursor   `(,(plist-get my/base16-colors :base0D) box)
-;;       evil-insert-state-cursor  `(,(plist-get my/base16-colors :base0D) bar)
-;;       evil-motion-state-cursor  `(,(plist-get my/base16-colors :base0E) box)
-;;       evil-normal-state-cursor  `(,(plist-get my/base16-colors :base0B) box)
-;;       evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
-;;       evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
+(powerline-default-theme)
+;; Set the cursor color based on the evil state
+(defvar my/base16-colors base16-theme-256-color-source)
+(setq evil-emacs-state-cursor   `(,(plist-get my/base16-colors :base0D) box)
+      evil-insert-state-cursor  `(,(plist-get my/base16-colors :base0D) bar)
+      evil-motion-state-cursor  `(,(plist-get my/base16-colors :base0E) box)
+      evil-normal-state-cursor  `(,(plist-get my/base16-colors :base0B) box)
+      evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
+      evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
 
 (set-frame-font "Roboto Mono-10.5")
 (setq default-frame-alist '((font . "Roboto Mono-10.5")))
@@ -474,6 +505,6 @@
 (recentf-mode 1)
 (setq recentf-max-menu 50)
 (setq recentf-max-saved-items 50)
-(setq undo-tree-auto-save-history t)
+(global-prettify-symbols-mode +1)
 
 (scroll-bar-mode -1)
