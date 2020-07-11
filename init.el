@@ -2,17 +2,23 @@
 ;; EMACS Configuration File
 ;; Author: Jay Morgan
 ;;--------------------------
-
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024))
-(setq exec-path (append exec-path '("/home/jaymorgan/miniconda3/bin")))
-(setenv "PATH" (concat (getenv "PATH") ":/home/jaymorgan/miniconda3/bin"))
+
+(defun my/add-to-exec (new-path)
+  (let ((new-path (expand-file-name new-path)))
+  (setq exec-path (push new-path exec-path))
+  (setenv "PATH" (format "%s:%s" (getenv "PATH") new-path))))
+(my/add-to-exec "~/miniconda3/bin")
+(my/add-to-exec "~/.fzf/bin")
 
 ;; Manually installed plugins/packages
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
-(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
-(load "~/.emacs.d/mu4e-init.el")
-(require 'mu4e)
+(when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
+  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
+  (require 'mu4e))
+(when (file-exists-p "~/.emacs.d/mu4e-init.el")
+    (load "~/.emacs.d/mu4e-init.el"))
 
 ;; Setup package.el to work with MELPA
 (setq package-check-signature nil)
@@ -46,6 +52,8 @@
   :config
   (evil-mode 1))
 
+(use-package hydra)
+
 (use-package which-key
   :config
   (setq which-key-idle-delay 1)
@@ -63,15 +71,43 @@
 
 (use-package projectile
   :config
-  (projectile-mode 1))
+  (projectile-mode 1)
+  (setq projectile-git-submodule-command nil)
+  (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
+  (setq projectile-project-search-path '("~/workspace/")))
 
 (use-package blacken)
 (use-package itail)
-(use-package julia-mode)
+(use-package diminish)
+
+(use-package julia-mode
+  :init
+  (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
+  (use-package julia-repl
+    :hook
+    ((julia-mode-hook . julia-repl-mode)
+     (julia-repl-hook . julia-repl-use-emacsclient))
+    :init
+    (setenv "JULIA_NUM_THREADS" "4")
+    (setq julia-repl-executable-records
+          '((default "julia")
+            (master "/usr/bin/julia")
+            (chemistry "ssh -t chemistry.me julia")))))
+
 (use-package clojure-mode)
 (use-package markdown-mode)
 (use-package magit)
-(use-package powerline)
+
+(use-package mu4e-alert
+  :init
+  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
+
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode 1)
+  (setq doom-modeline-height 25
+        doom-modeline-mu4e t))
+
 (use-package disable-mouse)
 (use-package imenu-list)
 (use-package linum-relative)
@@ -80,9 +116,15 @@
 (use-package base16-theme)
 (use-package cider)
 (use-package php-mode)
-(use-package quelpa)
 (use-package ace-window)
 (use-package focus)
+
+(use-package quelpa)
+(quelpa
+ '(quelpa-use-package
+   :fetcher git
+   :url "https://github.com/quelpa/quelpa-use-package.git"))
+(require 'quelpa-use-package)
 
 (use-package python-mode
   :config
@@ -94,9 +136,11 @@
           conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
 (use-package lsp-mode
+  :quelpa t
   :hook ((python-mode . lsp)
          (julia-mode . lsp)
          (ess-julia-mode . lsp)
+         (sh-mode . lsp)
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
   :init
@@ -105,11 +149,21 @@
                       :repo "non-Jedi/lsp-julia"
                       :files (:defaults "languageserver")))
   (require 'lsp-julia)
-  (add-hook 'python-mode-hook #'lsp)
-  (add-hook 'ess-julia-mode-hook #'lsp-mode)
-  (add-hook 'julia-mode-hook #'lsp-mode)
+  (setq lsp-diagnostics-modeline-scope :project)
+  (setq lsp-enable-links nil)
+  (setq lsp-modeline-code-actions-enable nil)
+  (setq lsp-lens-mode nil)
+  (setq lsp-idle-delay 1000)
+  (add-hook 'lsp-managed-mode-hook 'lsp-diagnostics-modeline-mode)
+  (add-hook 'lsp-managed-mode-hook 'lsp-modeline-code-actions-mode)
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
   (use-package lsp-ui
     :config
+    (setq lsp-ui-doc-enable t)
+    (setq lsp-ui-sideline--code-actions nil)
+    (setq lsp-ui-sideline-show-code-actions nil)
+    (setq lsp-ui-peek-enable nil)
+    (setq lsp-ui-doc-enable nil)
     (add-hook 'lsp-mode-hook 'lsp-ui-mode))
   (use-package company-lsp
     :requires company
@@ -121,6 +175,10 @@
   :after cider
   :ensure org-plus-contrib
   :init
+  (setq org-startup-indented t)
+  (add-hook 'org-mode-hook #'visual-line-mode)
+  (add-hook 'org-mode-hook '(lambda () (set-fill-column 80)))
+  (add-hook 'org-mode-hook #'auto-fill-mode)
   (require 'ob-clojure)
   (require 'cider)
   (use-package ob-async)
@@ -139,12 +197,31 @@
   (add-hook 'org-mode-hook 'turn-on-auto-fill)
   (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
+  (require 'ox-latex)
+  (add-to-list 'org-latex-classes
+               '("thesis"
+                 "\\documentclass{book}\n
+                  \\usepackage{amssymb}
+                  \\usepackage{gensymb}
+                  \\usepackage[margin=1.5in]{geometry}
+                  \\usepackage[T1]{fontenc}
+                  \\usepackage{kpfonts,baskervald}
+                  \\usepackage{units}
+                  \\setlength{\\parskip}{11pt}
+                  \\setlength{\\parindent}{0pt}"
+                 ("\\chapter{%s}" . "\\chapter*{%s}")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
   ;; set variables
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
         org-confirm-babel-evaluate nil
         org-babel-clojure-backend 'cider
         org-fontify-done-headline t)
+        org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)"))
 
   ;; list of languages for org-mode to support
   (org-babel-do-load-languages 'org-babel-load-languages
@@ -224,11 +301,11 @@
  '(ede-project-directories '("/home/jaymorgan/workspace/cristallo/energy-estimation"))
  '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
  '(package-selected-packages
-   '(focus ace-window lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
+   '(mu4e-alert doom-modeline julia-repl quelpa-use-package fzf org-latex focus ace-window lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
  '(powerline-display-hud t)
  '(send-mail-function 'smtpmail-send-it)
  '(undo-tree-visualizer-diff t)
- '(vterm-kill-buffer-on-exit t))
+ '(vterm-kill-buffer-on-exit t t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -236,50 +313,11 @@
  ;; If there is more than one, they won't work right.
  )
 
-(evil-mode 1)
-(helm-mode 1)
-(projectile-mode 1)
-(eyebrowse-mode 1)
-(which-key-mode)
-
-;; ;; Lisp configuration
-;; (setq inferior-lisp-program "sbcl")
-;; (org-babel-do-load-languages
-;;  'org-babel-load-languages
-;;  '((gnuplot . t) (dot . t)))
-
-;; Org Mode
-(with-eval-after-load 'org
-  (setq org-startup-indented t)
-  (add-hook 'org-mode-hook #'visual-line-mode)
-  (add-hook 'org-mode-hook '(lambda () (set-fill-column 80)))
-  (add-hook 'org-mode-hook #'auto-fill-mode))
-(global-auto-revert-mode t)
-
-;; mu4e Config
-;;---------------
-(setq mu4e-confirm-quit     nil
-      mu4e-sent-folder      "/envoyée"
-      mu4e-drafts-folder    "/brouillon"
-      mu4e-trash-folder     "/trash"
-      mu4e-refile-folder    "/archiver"
-      mu4e-get-mail-command "offlineimap -o -u quiet"
-      mu4e-view-show-images t
-      mu4e-show-images      t
-      mu4e-view-image-max-width 800)
-(setq user-full-name     "Jay Morgan"
-      user-mail-address "jay.p.morgan@outlook.com")
-(setq send-mail-function 'smtpmail-send-it
-      smtpmail-smtp-server "smtp.office365.com"
-      smtpmail-smtp-service 587
-      smtpmail-stream-type 'starttls)
-
-;; Julia Markdown
-(add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
-
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-(setq projectile-git-submodule-command nil)
-(setq completion-auto-help nil)
+;; (evil-mode 1)
+;; (helm-mode 1)
+;; (projectile-mode 1)
+;; (eyebrowse-mode 1)
+;; (which-key-mode)
 
 ;; ===============================================================
 ;; Keyboard Shortcuts
@@ -293,7 +331,7 @@
 
 
 (defun ml/bash ()
-  "start a terminal emulator in a new window"
+  "start a (or connect to existing) terminal emulator in a new window"
   (interactive)
   (split-window-below)
   (other-window 1)
@@ -326,17 +364,24 @@
 (bind-evil-key "SPC s v"
                (lambda ()
                  (interactive)
-                 (progn
-                   (split-window-right)
+                 (let ((p-name (projectile-project-name)))
+                   (evil-window-vsplit)
                    (other-window 1)
-                   (switch-to-buffer "*scratch*"))))
+                   (if p-name
+                       (helm-projectile-find-file)
+                     (switch-to-buffer "*scratch*")))))
 (bind-evil-key "SPC s h"
                (lambda ()
                  (interactive)
-                 (progn
-                   (split-window-below)
+                 (let ((p-name (projectile-project-name)))
+                   (evil-window-split)
                    (other-window 1)
-                   (switch-to-buffer "*scratch*"))))
+                   ;; activate projectile-project if original source
+                   ;; was in one.
+                   (if p-name
+                       (helm-projectile-find-file)
+                     (switch-to-buffer "*scratch*")))))
+
 
 (defhydra hydra-eyebrowse (:color blue :hint nil)
   "Workspaces"
@@ -358,8 +403,8 @@
 
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
-  ("s" ml/bash "Shell Terminal")
-  ("S" vterm "Big Terminal")
+  ("s" ml/bash "Shell")
+  ("S" vterm "Big Shell")
   ("d" (dired-at-point ".") "Dired")
   ("D" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
   ("c" (find-file "~/.emacs.d/init.el") "Open Emacs Config")
@@ -376,13 +421,6 @@
 (define-key evil-motion-state-map
   (kbd "SPC i") 'hydra-insert/body)
 
-(defhydra hydra-multipleCursors (:color blue :hint nil)
-  "Multiple Cursors"
-  ("e" mc/edit-lines "Edit Lines")
-  ("b" ibuffer "Edit Buffers"))
-(define-key evil-motion-state-map
-  (kbd "SPC e") 'hydra-multipleCursors/body)
-
 (defhydra hydra-remote-hosts (:color blue :hint nil)
   "Browse remote hosts"
   ("l" (dired-at-point "/ssh:lis.me:~/workspace") "LIS Lab")
@@ -394,9 +432,10 @@
 
 (defhydra hydra-modify-buffers (:color blue :hint nil)
   "Modify buffer"
-  ("w" write-file "Write")
+  ("w" (write-file (buffer-file-name)) "Write")
   ("o" olivetti-mode "Olivetti Mode")
-  ("q" quit-window "Close"))
+  ("b" ibuffer "Edit Buffers")
+  ("q" (kill-buffer-and-window) "Close"))
 (define-key evil-motion-state-map
   (kbd "SPC m") 'hydra-modify-buffers/body)
 
@@ -412,45 +451,19 @@
         evil-visual-state-map
         evil-insert-state-map))
 
-(setq projectile-project-rsyncs
-      '(("cristallo" . "chemistry.me:~/workspace/cristallo")
-        ("ogd" . "lis.me:~/workspace/ogd/classifier")))
-(setq projectile-project-virtualenvs
-      '(("cristallo" . "~/miniconda3/envs/cristallo")
-        ("ogd" . "~/miniconda3/envs/ema")))
-
-(defun rsync-project (dir location)
-  (interactive)
-  (start-process-shell-command "" nil "dorsync" dir location))
-
-
 ;; ===============================================================
 ;; Display themes
 ;; ===============================================================
 
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-
 ;; Display line numbers
-(global-hl-line-mode 1)
-(load-theme 'base16-espresso)
-(setq completion-auto-help t)
 (global-linum-mode)
 (linum-relative-on)
+(setq completion-auto-help t)
+(global-auto-revert-mode t)
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'term-mode-hook (lambda () (linum-relative-toggle)))
 
-;; (load-theme 'base16-default-dark 1)
-(powerline-default-theme)
-;; Set the cursor color based on the evil state
-(defvar my/base16-colors base16-theme-256-color-source)
-(setq evil-emacs-state-cursor   `(,(plist-get my/base16-colors :base0D) box)
-      evil-insert-state-cursor  `(,(plist-get my/base16-colors :base0D) bar)
-      evil-motion-state-cursor  `(,(plist-get my/base16-colors :base0E) box)
-      evil-normal-state-cursor  `(,(plist-get my/base16-colors :base0B) box)
-      evil-replace-state-cursor `(,(plist-get my/base16-colors :base08) bar)
-      evil-visual-state-cursor  `(,(plist-get my/base16-colors :base09) box))
-
+(load-theme 'base16-espresso)
 (set-frame-font "Roboto Mono-10.5")
 (setq default-frame-alist '((font . "Roboto Mono-10.5")))
 
@@ -477,18 +490,8 @@
 (setq backup-directory-alist '(("" . "~/.Trash")))
 (put 'dired-find-alternate-file 'disabled nil)
 
-(setq org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)")))
-
-(defun hide-minor-modes ()
-  "Who wants to be reminded of active modes"
-  (interactive)
-  (mapc (lambda (mode) (diminish mode))
-        minor-mode-list))
-(hide-minor-modes)
-
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
-(setq projectile-project-search-path '("~/workspace/"))
 
 ;; Close the compilation window if there was no error at all.
 (setq compilation-exit-message-function
@@ -503,8 +506,11 @@
     (cons msg code)))
 
 (recentf-mode 1)
-(setq recentf-max-menu 50)
-(setq recentf-max-saved-items 50)
+(setq recentf-max-menu 50
+      recentf-max-saved-items 50)
 (global-prettify-symbols-mode +1)
 
+;; Remove the GUI elements
+(menu-bar-mode -1)
+(tool-bar-mode -1)
 (scroll-bar-mode -1)
