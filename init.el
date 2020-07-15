@@ -53,6 +53,8 @@
   (evil-mode 1))
 
 (use-package hydra)
+(use-package docker
+  :bind ("C-c d" . docker))
 
 (use-package which-key
   :config
@@ -106,7 +108,8 @@
   :init
   (doom-modeline-mode 1)
   (setq doom-modeline-height 25
-        doom-modeline-mu4e t))
+        doom-modeline-mu4e t
+        doom-modeline-icon t))
 
 (use-package disable-mouse)
 (use-package imenu-list)
@@ -118,6 +121,9 @@
 (use-package php-mode)
 (use-package ace-window)
 (use-package focus)
+(use-package web-mode
+  :init
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
 
 (use-package quelpa)
 (quelpa
@@ -278,6 +284,7 @@
 
 (use-package helm
   :config
+  (helm-mode 1)
   (use-package helm-projectile)
   (use-package helm-ag
     :ensure-system-package (ag . silversearcher-ag))
@@ -301,11 +308,11 @@
  '(ede-project-directories '("/home/jaymorgan/workspace/cristallo/energy-estimation"))
  '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
  '(package-selected-packages
-   '(mu4e-alert doom-modeline julia-repl quelpa-use-package fzf org-latex focus ace-window lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
+   '(web-mode html-mode docker mu4e-alert doom-modeline julia-repl quelpa-use-package fzf org-latex focus ace-window lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
  '(powerline-display-hud t)
  '(send-mail-function 'smtpmail-send-it)
  '(undo-tree-visualizer-diff t)
- '(vterm-kill-buffer-on-exit t t))
+ '(vterm-kill-buffer-on-exit t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -461,7 +468,13 @@
 (setq completion-auto-help t)
 (global-auto-revert-mode t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-(add-hook 'term-mode-hook (lambda () (linum-relative-toggle)))
+
+(defun my/disable-line-numbers-in-term ()
+  "Disable the line numbers when entering the terminal"
+  (add-hook 'after-change-major-mode-hook
+            (lambda () (linum-mode 0))
+            :append :local))
+(add-hook 'term-mode-hook 'my/disable-line-numbers-in-term)
 
 (load-theme 'base16-espresso)
 (set-frame-font "Roboto Mono-10.5")
@@ -489,6 +502,7 @@
 (setq auto-save-default nil)
 (setq backup-directory-alist '(("" . "~/.Trash")))
 (put 'dired-find-alternate-file 'disabled nil)
+(setq confirm-kill-processes nil)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
