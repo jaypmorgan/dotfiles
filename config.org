@@ -1,0 +1,106 @@
+#+TITLE: Emacs Config
+#+AUTHOR: Jay Morgan
+
+* Executable Path
+There are a few directories I would like to include in the environment =PATH=
+variable. This includes anything binary install via Anaconda (sometimes it can
+be convienant), and fzf (though...I really do use it, helm covers the
+functionality pretty well).
+
+#+BEGIN_SRC emacs-lisp
+(defun my/add-to-exec (new-path)
+  " Add the new-path (dir) to the PATH variable "
+  (let ((new-path (expand-file-name new-path)))
+  (setq exec-path (push new-path exec-path))
+  (setenv "PATH" (format "%s:%s" (getenv "PATH") new-path))))
+
+(my/add-to-exec "~/miniconda3/bin")
+(my/add-to-exec "~/.fzf/bin")
+#+END_SRC
+* Setup Package Environment
+** Initialisation
+Over the time of configuring Emacs, I've found these variables help certain
+packages from creating speed problems.
+
+#+BEGIN_SRC emacs-lisp
+(setq gc-cons-threshold 100000000)
+(setq read-process-output-max (* 1024 1024))
+(setq evil-want-keybinding nil)
+(setq x-wait-for-event-timeout nil)
+#+END_SRC
+
+A necessary configuration step of a customised Emacs setup is using melpa with
+=package.el=.
+
+#+BEGIN_SRC emacs-lisp
+;; Manually installed plugins/packages
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
+
+;; Setup package.el to work with MELPA
+(setq package-check-signature nil)
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
+(package-refresh-contents)
+(package-initialize)
+#+END_SRC
+
+Most, if not all, packages are managed using the =use-package= plugin. This
+should be the only plugin that is install in the "normal" fashion.
+
+#+BEGIN_SRC emacs-lisp
+;; Install function define a function to check if a package is
+;; installed, if it not we can install it. From this, we may quickly
+;; and easily install packages.
+(defun my/check-and-install (pkg)
+  (unless (package-installed-p pkg)
+    (package-install pkg))
+  (require pkg))
+
+(my/check-and-install 'use-package)
+;; Don't need a :ensure t in every package
+(setq use-package-always-ensure t)
+;; Makes it possible to install required binaries
+(use-package use-package-ensure-system-package)
+#+END_SRC
+
+* Email Client
+I use mu4e and offlinemap to manage my email.
+
+For the most part, the mu4e configuration is as default. The exception to this
+is to use the =mail-add-attachment= function that doesn't prompt for the type of
+file you're trying to attach. The second is =org-store-link= which allows me to
+easily reference the email from my TODO list.
+
+#+BEGIN_SRC emacs-lisp
+(when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
+  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
+  ;; define some custom keybindings
+  (require 'mu4e)
+  (define-key mu4e-compose-mode-map (kbd "C-c C-a") 'mail-add-attachment)
+  (define-key mu4e-view-mode-map (kbd "C-c C-s") 'org-store-link)
+  ;; load the configuration details
+  (when (file-exists-p "~/.emacs.d/mu4e-init.el")
+      (load "~/.emacs.d/mu4e-init.el")))
+#+END_SRC
+
+* Display & Load Settings
+** GUI Elements
+Keep the frame clean by removing all such GUI elements.
+
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+#+END_SRC
+** Splash Screen
+In my workflow, I don't find the splash screen useful, thus I prefer to supress
+it and use the scratch buffer as the initial state.
+
+#+BEGIN_SRC emacs-lisp
+(setq-default inhibit-startup-screen t)
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+(setq initial-scratch-message "")
+#+END_SRC

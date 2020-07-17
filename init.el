@@ -2,32 +2,15 @@
 ;; EMACS Configuration File
 ;; Author: Jay Morgan
 ;;--------------------------
+
+;; Config settings are available in an org-mode
+;; file. This function call loads them.
+(require 'org)
+(org-babel-load-file
+ (expand-file-name "config.org" user-emacs-directory))
+
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024))
-
-(defun my/add-to-exec (new-path)
-  (let ((new-path (expand-file-name new-path)))
-  (setq exec-path (push new-path exec-path))
-  (setenv "PATH" (format "%s:%s" (getenv "PATH") new-path))))
-(my/add-to-exec "~/miniconda3/bin")
-(my/add-to-exec "~/.fzf/bin")
-
-;; Manually installed plugins/packages
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
-(when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
-  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
-  (require 'mu4e))
-(when (file-exists-p "~/.emacs.d/mu4e-init.el")
-    (load "~/.emacs.d/mu4e-init.el"))
-
-;; Setup package.el to work with MELPA
-(setq package-check-signature nil)
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
-(package-refresh-contents)
-(package-initialize)
 
 (setq evil-want-keybinding nil)
 (setq x-wait-for-event-timeout nil)
@@ -36,23 +19,11 @@
 ;; Install & Configure Packages
 ;; =====================================================================
 
-;; Install function define a function to check if a package is
-;; installed, if it not we can install it. From this, we may quickly
-;; and easily install packages.
-(defun my/check-and-install (pkg)
-  (unless (package-installed-p pkg)
-    (package-install pkg))
-  (require pkg))
-
-(my/check-and-install 'use-package)
-(setq use-package-always-ensure t)
-(use-package use-package-ensure-system-package)
 
 (use-package evil
   :config
   (evil-mode 1))
 
-(use-package hydra)
 (use-package docker
   :bind ("C-c d" . docker))
 
@@ -78,27 +49,18 @@
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
 
-(use-package blacken)
-(use-package itail)
-(use-package diminish)
-
 (use-package julia-mode
   :init
   (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
   (use-package julia-repl
-    :hook
-    ((julia-mode-hook . julia-repl-mode)
-     (julia-repl-hook . julia-repl-use-emacsclient))
     :init
+    (add-hook 'julia-mode-hook 'julia-repl-mode)
+    (add-hook 'julia-repl-hook 'julia-repl-use-emacsclient)
     (setenv "JULIA_NUM_THREADS" "4")
     (setq julia-repl-executable-records
           '((default "julia")
             (master "/usr/bin/julia")
             (chemistry "ssh -t chemistry.me julia")))))
-
-(use-package clojure-mode)
-(use-package markdown-mode)
-(use-package magit)
 
 (use-package mu4e-alert
   :init
@@ -111,6 +73,14 @@
         doom-modeline-mu4e t
         doom-modeline-icon t))
 
+(use-package hydra)
+(use-package avy)
+(use-package blacken)
+(use-package itail)
+(use-package diminish)
+(use-package clojure-mode)
+(use-package markdown-mode)
+(use-package magit)
 (use-package disable-mouse)
 (use-package imenu-list)
 (use-package linum-relative)
@@ -121,6 +91,7 @@
 (use-package php-mode)
 (use-package ace-window)
 (use-package focus)
+
 (use-package web-mode
   :init
   (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
@@ -156,21 +127,26 @@
                       :files (:defaults "languageserver")))
   (require 'lsp-julia)
   (setq lsp-diagnostics-modeline-scope :project)
-  (setq lsp-enable-links nil)
-  (setq lsp-modeline-code-actions-enable nil)
-  (setq lsp-lens-mode nil)
-  (setq lsp-idle-delay 1000)
+  ;; (setq lsp-enable-links nil)
+  ;; (setq lsp-modeline-code-actions-enable nil)
+  ;; (setq lsp-lens-mode nil)
+  ;; (setq lsp-idle-delay 1000)
+  (setq lsp-completion-show-detail t
+        lsp-completion-enable-additional-text-edit t)
   (add-hook 'lsp-managed-mode-hook 'lsp-diagnostics-modeline-mode)
   (add-hook 'lsp-managed-mode-hook 'lsp-modeline-code-actions-mode)
   (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-  (use-package lsp-ui
-    :config
-    (setq lsp-ui-doc-enable t)
-    (setq lsp-ui-sideline--code-actions nil)
-    (setq lsp-ui-sideline-show-code-actions nil)
-    (setq lsp-ui-peek-enable nil)
-    (setq lsp-ui-doc-enable nil)
-    (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+  ;; (use-package lsp-ui
+  ;;   :config
+  ;;   (setq lsp-ui-doc-enable t
+  ;;         lsp-ui-doc-position 'at-point
+  ;;         lsp-ui-sideline--code-actions nil
+  ;;         lsp-ui-sideline-show-code-actions nil
+  ;;         lsp-ui-peek-enable nil
+  ;;         lsp-ui-peek-show-directory nil)
+  ;;   (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+  (use-package helm-lsp
+    :commands helm-lsp-workspace-symbol)
   (use-package company-lsp
     :requires company
     :config
@@ -246,11 +222,12 @@
 (use-package olivetti
   :init
   (setq olivetti-body-width 90)
-  (add-hook 'olivetti-mode-hook (lambda ()
-                                  (progn
-                                    (linum-relative-mode nil)
-                                    (fringe-mode nil)
-                                    (hl-line-mode nil)))))
+  (defun set-editing-buffer ()
+    (interactive)
+    (linum-relative-mode -1)
+    (set-window-fringes (selected-window) 0 0)
+    (hl-line-mode -1))
+  (add-hook 'olivetti-mode-hook 'set-editing-buffer))
 
 (use-package paredit
   :init
@@ -296,7 +273,9 @@
 
 (use-package vterm
   :commands (vterm vterm-other-window)
-  :custom (vterm-kill-buffer-on-exit t))
+  :custom (vterm-kill-buffer-on-exit t)
+  :init
+  (add-hook 'vterm-mode-hook '(lambda () (interactive) (linum-relative-mode -1))))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -304,14 +283,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("ed4c48eb91d07c2e447b445e2491ef17e9b326d43a60022297fd56af4749e772" "c614d2423075491e6b7f38a4b7ea1c68f31764b9b815e35c9741e9490119efc0" "aea30125ef2e48831f46695418677b9d676c3babf43959c8e978c0ad672a7329" "196df8815910c1a3422b5f7c1f45a72edfa851f6a1d672b7b727d9551bb7c7ba" "1025e775a6d93981454680ddef169b6c51cc14cea8cb02d1872f9d3ce7a1da66" "8e51e44e5b079b2862335fcc5ff0f1e761dc595c7ccdb8398094fb8e088b2d50" "c2efd2e2e96b052dd91940b100d86885337a37be1245167642451cf6da5b924a" "65f35d1e0d0858947f854dc898bfd830e832189d5555e875705a939836b53054" "819d24b9aba8fcb446aecfb59f87d1817a6d3eb07de7fdec67743ef32194438b" "f5f3a6fb685fe5e1587bafd07db3bf25a0655f3ddc579ed9d331b6b19827ea46" "ffac21ab88a0f4603969a24b96993bd73a13fe0989db7ed76d94c305891fad64" "45a8b89e995faa5c69aa79920acff5d7cb14978fbf140cdd53621b09d782edcf" "41eb3fe4c6b80c7ad156a8c52e9dd6093e8856c7bbf2b92cc3a4108ceb385087" "fc7fd2530b82a722ceb5b211f9e732d15ad41d5306c011253a0ba43aaf93dccc" "3e34e9bf818cf6301fcabae2005bba8e61b1caba97d95509c8da78cff5f2ec8e" "cabc32838ccceea97404f6fcb7ce791c6e38491fd19baa0fcfb336dcc5f6e23c" "1d079355c721b517fdc9891f0fda927fe3f87288f2e6cc3b8566655a64ca5453" "d1af5ef9b24d25f50f00d455bd51c1d586ede1949c5d2863bef763c60ddf703a" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "667e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
+   '("2a998a3b66a0a6068bcb8b53cd3b519d230dd1527b07232e54c8b9d84061d48d" "ed4c48eb91d07c2e447b445e2491ef17e9b326d43a60022297fd56af4749e772" "c614d2423075491e6b7f38a4b7ea1c68f31764b9b815e35c9741e9490119efc0" "aea30125ef2e48831f46695418677b9d676c3babf43959c8e978c0ad672a7329" "196df8815910c1a3422b5f7c1f45a72edfa851f6a1d672b7b727d9551bb7c7ba" "1025e775a6d93981454680ddef169b6c51cc14cea8cb02d1872f9d3ce7a1da66" "8e51e44e5b079b2862335fcc5ff0f1e761dc595c7ccdb8398094fb8e088b2d50" "c2efd2e2e96b052dd91940b100d86885337a37be1245167642451cf6da5b924a" "65f35d1e0d0858947f854dc898bfd830e832189d5555e875705a939836b53054" "819d24b9aba8fcb446aecfb59f87d1817a6d3eb07de7fdec67743ef32194438b" "f5f3a6fb685fe5e1587bafd07db3bf25a0655f3ddc579ed9d331b6b19827ea46" "ffac21ab88a0f4603969a24b96993bd73a13fe0989db7ed76d94c305891fad64" "45a8b89e995faa5c69aa79920acff5d7cb14978fbf140cdd53621b09d782edcf" "41eb3fe4c6b80c7ad156a8c52e9dd6093e8856c7bbf2b92cc3a4108ceb385087" "fc7fd2530b82a722ceb5b211f9e732d15ad41d5306c011253a0ba43aaf93dccc" "3e34e9bf818cf6301fcabae2005bba8e61b1caba97d95509c8da78cff5f2ec8e" "cabc32838ccceea97404f6fcb7ce791c6e38491fd19baa0fcfb336dcc5f6e23c" "1d079355c721b517fdc9891f0fda927fe3f87288f2e6cc3b8566655a64ca5453" "d1af5ef9b24d25f50f00d455bd51c1d586ede1949c5d2863bef763c60ddf703a" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "667e02142a56f63861288cc585bee81643ded48a19e36bfdf02b66d745bcc626" default))
  '(ede-project-directories '("/home/jaymorgan/workspace/cristallo/energy-estimation"))
  '(org-agenda-files '("~/Dropbox/Notes/tasks.org"))
  '(package-selected-packages
-   '(web-mode html-mode docker mu4e-alert doom-modeline julia-repl quelpa-use-package fzf org-latex focus ace-window lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
+   '(helm-lsp web-mode html-mode docker mu4e-alert doom-modeline julia-repl quelpa-use-package fzf org-latex focus ace-window lsp-julia quelpa atom-one-dark-theme one-dark-theme php-mode org-ref ox-gfm ox-pandoc ox-md esqlite calibre-mode olivetti use-package-ensure-system-package helm-ag pdf-tools blacken black which-key slime projectile powerline markdown-mode magit linum-relative julia-mode imenu-list hydra htmlize helm git-gutter eyebrowse evil-collection disable-mouse diminish base14-theme adaptive-wrap))
  '(powerline-display-hud t)
  '(send-mail-function 'smtpmail-send-it)
- '(undo-tree-visualizer-diff t)
  '(vterm-kill-buffer-on-exit t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -319,12 +297,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-;; (evil-mode 1)
-;; (helm-mode 1)
-;; (projectile-mode 1)
-;; (eyebrowse-mode 1)
-;; (which-key-mode)
 
 ;; ===============================================================
 ;; Keyboard Shortcuts
@@ -336,8 +308,9 @@
 (define-key evil-motion-state-map " " nil)
 (global-set-key (kbd "M-x") 'helm-M-x)
 
+(add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))
 
-(defun ml/bash ()
+(defun my/bash ()
   "start a (or connect to existing) terminal emulator in a new window"
   (interactive)
   (split-window-below)
@@ -345,6 +318,20 @@
   (if (get-buffer "vterm")
       (switch-to-buffer "vterm")
     (vterm)))
+
+(defvar dark-theme-p t)
+
+(defun my/toggle-theme ()
+  (interactive)
+  (let ((light-theme 'base16-default-light)
+        (dark-theme 'base16-espresso))
+    (if (eq dark-theme-p t)
+        (progn
+          (load-theme light-theme)
+          (setq dark-theme-p -1))
+      (progn
+        (load-theme dark-theme)
+        (setq dark-theme-p t)))))
 
 (defmacro bind-evil-key (binding func)
   `(define-key evil-motion-state-map (kbd ,binding) (quote ,func)))
@@ -367,28 +354,21 @@
 (bind-evil-key "SPC g" magit-status)
 (bind-evil-key "SPC a" org-agenda)
 (bind-evil-key "SPC w" ace-window)
+(bind-evil-key "SPC n" avy-goto-char-timer)
 
-(bind-evil-key "SPC s v"
-               (lambda ()
-                 (interactive)
-                 (let ((p-name (projectile-project-name)))
-                   (evil-window-vsplit)
-                   (other-window 1)
-                   (if p-name
-                       (helm-projectile-find-file)
-                     (switch-to-buffer "*scratch*")))))
-(bind-evil-key "SPC s h"
-               (lambda ()
-                 (interactive)
-                 (let ((p-name (projectile-project-name)))
-                   (evil-window-split)
-                   (other-window 1)
-                   ;; activate projectile-project if original source
-                   ;; was in one.
-                   (if p-name
-                       (helm-projectile-find-file)
-                     (switch-to-buffer "*scratch*")))))
+(defun my/split (direction)
+  (interactive)
+  (let ((p-name (projectile-project-name)))
+    (if (string-equal direction "vertical")
+        (evil-window-vsplit)
+      (evil-window-split))
+    (other-window 1)
+    (if p-name
+        (helm-projectile-find-file)
+      (switch-to-buffer "*scratch*"))))
 
+(bind-evil-key "SPC s v" (lambda () (interactive) (my/split "vertical")))
+(bind-evil-key "SPC s h" (lambda () (interactive) (my/split "horizontal")))
 
 (defhydra hydra-eyebrowse (:color blue :hint nil)
   "Workspaces"
@@ -410,7 +390,7 @@
 
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
-  ("s" ml/bash "Shell")
+  ("s" my/bash "Shell")
   ("S" vterm "Big Shell")
   ("d" (dired-at-point ".") "Dired")
   ("D" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
@@ -469,13 +449,6 @@
 (global-auto-revert-mode t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
-(defun my/disable-line-numbers-in-term ()
-  "Disable the line numbers when entering the terminal"
-  (add-hook 'after-change-major-mode-hook
-            (lambda () (linum-mode 0))
-            :append :local))
-(add-hook 'term-mode-hook 'my/disable-line-numbers-in-term)
-
 (load-theme 'base16-espresso)
 (set-frame-font "Roboto Mono-10.5")
 (setq default-frame-alist '((font . "Roboto Mono-10.5")))
@@ -494,11 +467,6 @@
       ;; '(left-curly-arrow right-curly-arrow) ;; default
       )
 
-;; Suppress the splash screen
-(setq-default inhibit-startup-screen t)
-(setq inhibit-splash-screen t)
-(setq inhibit-startup-message t)
-(setq initial-scratch-message "")
 (setq auto-save-default nil)
 (setq backup-directory-alist '(("" . "~/.Trash")))
 (put 'dired-find-alternate-file 'disabled nil)
@@ -522,6 +490,7 @@
 (recentf-mode 1)
 (setq recentf-max-menu 50
       recentf-max-saved-items 50)
+
 (global-prettify-symbols-mode +1)
 
 ;; Remove the GUI elements
