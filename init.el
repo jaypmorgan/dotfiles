@@ -9,20 +9,11 @@
 (org-babel-load-file
  (expand-file-name "config.org" user-emacs-directory))
 
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024))
-
-(setq evil-want-keybinding nil)
-(setq x-wait-for-event-timeout nil)
 
 ;; =====================================================================
 ;; Install & Configure Packages
 ;; =====================================================================
 
-
-(use-package evil
-  :config
-  (evil-mode 1))
 
 (use-package docker
   :bind ("C-c d" . docker))
@@ -49,22 +40,6 @@
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
 
-(use-package julia-mode
-  :init
-  (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
-  (use-package julia-repl
-    :init
-    (add-hook 'julia-mode-hook 'julia-repl-mode)
-    (add-hook 'julia-repl-hook 'julia-repl-use-emacsclient)
-    (setenv "JULIA_NUM_THREADS" "4")
-    (setq julia-repl-executable-records
-          '((default "julia")
-            (master "/usr/bin/julia")
-            (chemistry "ssh -t chemistry.me julia")))))
-
-(use-package mu4e-alert
-  :init
-  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
 
 (use-package doom-modeline
   :init
@@ -78,140 +53,13 @@
 (use-package blacken)
 (use-package itail)
 (use-package diminish)
-(use-package clojure-mode)
-(use-package markdown-mode)
 (use-package magit)
 (use-package disable-mouse)
 (use-package imenu-list)
 (use-package linum-relative)
-(use-package slime)
-(use-package htmlize)
 (use-package base16-theme)
-(use-package cider)
-(use-package php-mode)
 (use-package ace-window)
 (use-package focus)
-
-(use-package web-mode
-  :init
-  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
-
-(use-package quelpa)
-(quelpa
- '(quelpa-use-package
-   :fetcher git
-   :url "https://github.com/quelpa/quelpa-use-package.git"))
-(require 'quelpa-use-package)
-
-(use-package python-mode
-  :config
-  (use-package ess)
-  (use-package conda
-    :init
-    (conda-env-initialize-eshell)
-    (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
-          conda-env-home-directory (expand-file-name "~/miniconda3/"))))
-
-(use-package lsp-mode
-  :quelpa t
-  :hook ((python-mode . lsp)
-         (julia-mode . lsp)
-         (ess-julia-mode . lsp)
-         (sh-mode . lsp)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp
-  :init
-  (require 'lsp-clients)
-  (quelpa '(lsp-julia :fetcher github
-                      :repo "non-Jedi/lsp-julia"
-                      :files (:defaults "languageserver")))
-  (require 'lsp-julia)
-  (setq lsp-diagnostics-modeline-scope :project)
-  ;; (setq lsp-enable-links nil)
-  ;; (setq lsp-modeline-code-actions-enable nil)
-  ;; (setq lsp-lens-mode nil)
-  ;; (setq lsp-idle-delay 1000)
-  (setq lsp-completion-show-detail t
-        lsp-completion-enable-additional-text-edit t)
-  (add-hook 'lsp-managed-mode-hook 'lsp-diagnostics-modeline-mode)
-  (add-hook 'lsp-managed-mode-hook 'lsp-modeline-code-actions-mode)
-  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-  ;; (use-package lsp-ui
-  ;;   :config
-  ;;   (setq lsp-ui-doc-enable t
-  ;;         lsp-ui-doc-position 'at-point
-  ;;         lsp-ui-sideline--code-actions nil
-  ;;         lsp-ui-sideline-show-code-actions nil
-  ;;         lsp-ui-peek-enable nil
-  ;;         lsp-ui-peek-show-directory nil)
-  ;;   (add-hook 'lsp-mode-hook 'lsp-ui-mode))
-  (use-package helm-lsp
-    :commands helm-lsp-workspace-symbol)
-  (use-package company-lsp
-    :requires company
-    :config
-    (push 'company-lsp company-backends)
-    (setq company-lsp-async t)))
-
-(use-package org
-  :after cider
-  :ensure org-plus-contrib
-  :init
-  (setq org-startup-indented t)
-  (add-hook 'org-mode-hook #'visual-line-mode)
-  (add-hook 'org-mode-hook '(lambda () (set-fill-column 80)))
-  (add-hook 'org-mode-hook #'auto-fill-mode)
-  (require 'ob-clojure)
-  (require 'cider)
-  (use-package ob-async)
-  (use-package ox-pandoc)
-  (use-package ox-gfm)
-  (use-package org-ref
-    :init
-    (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
-  (use-package helm-bibtex
-    :init
-    (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          bibtex-completion-pdf-open-function 'org-open-file))
-  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-  (add-to-list 'org-latex-compilers "tectonic")
-  (add-hook 'org-mode-hook 'turn-on-auto-fill)
-  (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
-
-  (require 'ox-latex)
-  (add-to-list 'org-latex-classes
-               '("thesis"
-                 "\\documentclass{book}\n
-                  \\usepackage{amssymb}
-                  \\usepackage{gensymb}
-                  \\usepackage[margin=1.5in]{geometry}
-                  \\usepackage[T1]{fontenc}
-                  \\usepackage{kpfonts,baskervald}
-                  \\usepackage{units}
-                  \\setlength{\\parskip}{11pt}
-                  \\setlength{\\parindent}{0pt}"
-                 ("\\chapter{%s}" . "\\chapter*{%s}")
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-
-  ;; set variables
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
-        inferior-julia-program-name "/usr/bin/julia"
-        org-confirm-babel-evaluate nil
-        org-babel-clojure-backend 'cider
-        org-fontify-done-headline t)
-        org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)"))
-
-  ;; list of languages for org-mode to support
-  (org-babel-do-load-languages 'org-babel-load-languages
-                               '((shell . t)
-                                 (emacs-lisp . t)
-                                 (julia . t)
-                                 (gnuplot . t)
-                                 (dot . t))))
 
 (use-package yasnippet
   :config
