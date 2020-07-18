@@ -1,12 +1,7 @@
 #+TITLE: Emacs Config
 #+AUTHOR: Jay Morgan
 
-* Table of Contents
-:PROPERTIES:
-:TOC:      :include all
-:END:
-:CONTENTS:
-- [[#table-of-contents][Table of Contents]]
+* Table of Contents :TOC:
 - [[#executable-path][Executable Path]]
 - [[#setup-package-environment][Setup Package Environment]]
   - [[#initialisation][Initialisation]]
@@ -22,12 +17,11 @@
   - [[#line-numbering][Line Numbering]]
   - [[#look--feel-theme][Look & Feel (Theme)]]
   - [[#splash-screen][Splash Screen]]
-:END:
 
 * Executable Path
 There are a few directories I would like to include in the environment =PATH=
 variable. This includes anything binary install via Anaconda (sometimes it can
-be convenient), and fzf (though...I really do use it, helm covers the
+be convenient), and fzf (though...I really don't use it, helm covers the
 functionality pretty well).
 
 #+BEGIN_SRC emacs-lisp
@@ -256,13 +250,14 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
 #+END_SRC
 
 Sometimes it is nice to have a table of contents inside the org-mode document,
-or in the rendered version on GitHub/Gitlab. With =org-make-toc= this is easily
+or in the rendered version on GitHub/Gitlab. With =toc-org= this is easily
 possible.
 
 #+BEGIN_SRC emacs-lisp
-(use-package org-make-toc
+(use-package toc-org
   :init
-  (add-hook 'org-mode-hook #'org-make-toc-mode))
+  (add-hook 'markdown-mode-hook 'toc-org-mode)
+  (add-hook 'org-mode-hook 'toc-org-mode))
 #+END_SRC
 
 
