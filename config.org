@@ -260,7 +260,6 @@ possible.
   (add-hook 'org-mode-hook 'toc-org-mode))
 #+END_SRC
 
-
 ** Miscellaneous Packages
 
 #+BEGIN_SRC emacs-lisp
@@ -314,7 +313,6 @@ possible.
         python-interp "~/miniconda3/bin/python"
         flycheck-python-flake8-executable python-interp))
 #+END_SRC
-
 
 * Emacs Environment
 A number of changes to the default config have been made to make the transition
@@ -438,10 +436,10 @@ And finally, helm for partial completions, searches, etc.
         (dark-theme 'base16-espresso))
     (if (eq dark-theme-p t)
         (progn
-          (load-theme light-theme)
+          (load-theme light-theme t)
           (setq dark-theme-p -1))
       (progn
-        (load-theme dark-theme)
+        (load-theme dark-theme t)
         (setq dark-theme-p t)))))
 
 (defmacro bind-evil-key (binding func)
@@ -595,7 +593,7 @@ disable-mouse package to disable all mouse operations in evil mode.
 ** Look & Feel (Theme)
 
 #+BEGIN_SRC emacs-lisp
-(load-theme 'base16-espresso)
+(load-theme 'base16-espresso t)
 (set-frame-font "Roboto Mono-10.5")
 (setq default-frame-alist '((font . "Roboto Mono-10.5")))
 #+END_SRC
