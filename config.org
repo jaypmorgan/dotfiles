@@ -79,7 +79,7 @@ And quelpa
 ** Programming Modes
 It's a constant struggle to not learn every programming language ever!
 
-Q: What are your favourite programming languages?
+Q: What are your favourite programming languages?\\
 A: Clojure > Julia > C++ > Python
 
 #+BEGIN_SRC emacs-lisp
@@ -115,6 +115,13 @@ A: Clojure > Julia > C++ > Python
 #+END_SRC
 
 ** LanguageServer
+
+#+BEGIN_SRC emacs-lisp
+(use-package company
+  :config
+  (global-company-mode 1)
+  (setq company-idle-delay 0.001))
+#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
@@ -226,6 +233,82 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
 #+END_SRC
 
 * Emacs Environment
+A number of changes to the default config have been made to make the transition
+from VIM to Emacs a little easier. First and foremost is =evil-mode=. Another
+amendment is =evil-collection= with helps with propagating =evil-mode= to other
+non-evil environments such as mu4e.
+
+#+BEGIN_SRC emacs-lisp
+(use-package evil
+  :init
+  (evil-mode 1))
+
+(use-package evil-collection
+  :after (evil)
+  :config
+  (evil-collection-init))
+#+END_SRC
+
+It is unnecessary to say that Emacs comes with a whole load of keybindings,
+=which-key= helps with easily being reminded.
+
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :config
+  (setq which-key-idle-delay 1)
+  (which-key-mode 1))
+#+END_SRC
+
+A very simple modeline is configured with =doom-modeline=
+
+#+BEGIN_SRC emacs-lisp
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode 1)
+  (setq doom-modeline-height 25
+        doom-modeline-mu4e t
+        doom-modeline-icon t))
+#+END_SRC
+
+Workspaces are created using =eyebrowse=
+
+#+BEGIN_SRC emacs-lisp
+(use-package eyebrowse
+  :config
+  (eyebrowse-mode 1)
+  ;; new workspaces are always empty
+  (setq eyebrowse-new-workspace t))
+#+END_SRC
+
+The best terminal I've yet to come across, even if it doesn't have the elisp
+bells & wistles that eshell does, is vterm
+
+#+BEGIN_SRC emacs-lisp
+(use-package vterm
+  :commands (vterm vterm-other-window)
+  :custom (vterm-kill-buffer-on-exit t)
+  :init
+  ;; remove lines from the terminal buffer
+  (add-hook 'vterm-mode-hook '(lambda () (interactive) (linum-relative-mode -1))))
+#+END_SRC
+
+
+And finally, helm for partial completions, searchs, etc.
+
+#+BEGIN_SRC emacs-lisp
+(use-package helm
+  :config
+  (helm-mode 1)
+  (use-package helm-projectile)
+  (use-package helm-ag
+    :ensure-system-package (ag . silversearcher-ag))
+  (setq helm-use-frame-when-more-than-two-windows nil
+        helm-split-window-in-side nil
+        helm-display-function 'pop-to-buffer
+        helm-idle-delay 0.0
+        helm-input-idle-delay 0.01))
+#+END_SRC
+
 * Email Client
 I use mu4e and offlinemap to manage my email.
 

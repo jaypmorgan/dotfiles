@@ -18,16 +18,6 @@
 (use-package docker
   :bind ("C-c d" . docker))
 
-(use-package which-key
-  :config
-  (setq which-key-idle-delay 1)
-  (which-key-mode 1))
-
-(use-package evil-collection
-  :after (evil)
-  :config
-  (evil-collection-init))
-
 (use-package company
   :config
   (global-company-mode 1)
@@ -39,14 +29,6 @@
   (setq projectile-git-submodule-command nil)
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
-
-
-(use-package doom-modeline
-  :init
-  (doom-modeline-mode 1)
-  (setq doom-modeline-height 25
-        doom-modeline-mu4e t
-        doom-modeline-icon t))
 
 (use-package hydra)
 (use-package avy)
