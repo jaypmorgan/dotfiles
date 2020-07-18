@@ -1,6 +1,29 @@
 #+TITLE: Emacs Config
 #+AUTHOR: Jay Morgan
 
+* Table of Contents
+:PROPERTIES:
+:TOC:      :include all
+:END:
+:CONTENTS:
+- [[#table-of-contents][Table of Contents]]
+- [[#executable-path][Executable Path]]
+- [[#setup-package-environment][Setup Package Environment]]
+  - [[#initialisation][Initialisation]]
+  - [[#programming-modes][Programming Modes]]
+  - [[#languageserver][LanguageServer]]
+  - [[#org-mode-all-the-things][Org-mode all the things!]]
+  - [[#miscellaneous-packages][Miscellaneous Packages]]
+- [[#emacs-environment][Emacs Environment]]
+- [[#keybindings][Keybindings]]
+- [[#email-client][Email Client]]
+- [[#display-settings][Display Settings]]
+  - [[#gui-elements][GUI Elements]]
+  - [[#line-numbering][Line Numbering]]
+  - [[#look--feel-theme][Look & Feel (Theme)]]
+  - [[#splash-screen][Splash Screen]]
+:END:
+
 * Executable Path
 There are a few directories I would like to include in the environment =PATH=
 variable. This includes anything binary install via Anaconda (sometimes it can
@@ -231,6 +254,17 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
                                  (gnuplot . t)
                                  (dot . t))))
 #+END_SRC
+
+Sometimes it is nice to have a table of contents inside the org-mode document,
+or in the rendered version on GitHub/Gitlab. With =org-make-toc= this is easily
+possible.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-make-toc
+  :init
+  (add-hook 'org-mode-hook #'org-make-toc-mode))
+#+END_SRC
+
 
 ** Miscellaneous Packages
 
