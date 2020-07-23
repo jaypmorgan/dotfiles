@@ -144,22 +144,19 @@ A: Clojure > Julia > C++ > Python
 (use-package lsp-mode
   :quelpa t
   :hook ((python-mode . lsp)
-         (julia-mode . lsp)
+         ;; (julia-mode . lsp)
          (ess-julia-mode . lsp)
          (sh-mode . lsp)
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
   :init
   (require 'lsp-clients)
-  (quelpa '(lsp-julia :fetcher github
-                      :repo "non-Jedi/lsp-julia"
-                      :files (:defaults "languageserver")))
-  (require 'lsp-julia)
-  (setq lsp-diagnostics-modeline-scope :project)
-  ;; (setq lsp-enable-links nil)
-  ;; (setq lsp-modeline-code-actions-enable nil)
-  ;; (setq lsp-lens-mode nil)
-  ;; (setq lsp-idle-delay 1000)
+  ;; (quelpa '(lsp-julia :fetcher github
+  ;;                     :repo "non-Jedi/lsp-julia"
+  ;;                     :files (:defaults "languageserver")))
+  ;; (require 'lsp-julia)
+  (setq lsp-diagnostics-modeline-scope :project
+        lsp-signature-auto-activate    nil)
   (setq lsp-completion-show-detail t
         lsp-completion-enable-additional-text-edit t)
   (add-hook 'lsp-managed-mode-hook 'lsp-diagnostics-modeline-mode)
@@ -503,7 +500,7 @@ And finally, helm for partial completions, searches, etc.
   ("S" vterm "Big Shell")
   ("d" (dired-at-point ".") "Dired")
   ("D" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
-  ("c" (find-file "~/.emacs.d/init.el") "Open Emacs Config")
+  ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("u" undo-tree-visualize "Undo-tree")
