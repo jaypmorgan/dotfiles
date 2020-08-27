@@ -33,6 +33,7 @@ functionality pretty well).
 
 (my/add-to-exec "~/miniconda3/bin")
 (my/add-to-exec "~/.fzf/bin")
+(my/add-to-exec "~/.cargo/bin")
 #+END_SRC
 * Setup Package Environment
 ** Initialisation
@@ -108,6 +109,13 @@ A: Clojure > Julia > C++ > Python
 (use-package htmlize)
 (use-package slime)
 (use-package ess)
+(use-package rust-mode)
+(use-package toml-mode)
+(use-package cargo
+  :hook (rust-mode . cargo-minor-mode))
+(use-package flycheck-rust
+  :config
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
 
 (use-package python-mode
   :config
@@ -146,6 +154,7 @@ A: Clojure > Julia > C++ > Python
   :hook ((python-mode . lsp)
          ;; (julia-mode . lsp)
          (ess-julia-mode . lsp)
+         (rust-mode . lsp)
          (sh-mode . lsp)
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
@@ -190,7 +199,7 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   :init
   (setq org-startup-indented t)
   (add-hook 'org-mode-hook #'visual-line-mode)
-  (add-hook 'org-mode-hook '(lambda () (set-fill-column 80)))
+  (add-hook 'org-mode-hook '(lambda () (set-fill-column 70)))
   (add-hook 'org-mode-hook #'auto-fill-mode)
   (require 'ob-clojure)
   (require 'cider)
@@ -426,7 +435,6 @@ And finally, helm for partial completions, searches, etc.
     (vterm)))
 
 (defvar dark-theme-p t)
-
 (defun my/toggle-theme ()
   (interactive)
   (let ((light-theme 'base16-default-light)
@@ -461,6 +469,7 @@ And finally, helm for partial completions, searches, etc.
 (bind-evil-key "SPC a" org-agenda)
 (bind-evil-key "SPC w" ace-window)
 (bind-evil-key "SPC n" avy-goto-char-timer)
+(bind-evil-key "SPC e" eww)
 
 (defun my/split (direction)
   (interactive)
