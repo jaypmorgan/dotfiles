@@ -188,6 +188,11 @@ nnoremap <silent> <leader>ow :VimwikiIndex<CR>
 nnoremap <silent> <leader>sv :split new<CR>
 nnoremap <silent> <leader>sh :vsplit new<CR>
 
+" List Buffers
+nnoremap <silent> <leader><leader> :BufExplorer<CR>
+nnoremap <silent> <leader>bh :BufExplorerHorizontalSplit<CR>
+nnoremap <silent> <leader>bv :BufExplorerVerticalSplit<CR>
+
 """""""""""""""""""""""""""
 "     PLUGIN SETTINGS     "
 """""""""""""""""""""""""""
