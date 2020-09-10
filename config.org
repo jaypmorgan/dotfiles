@@ -101,42 +101,39 @@ Q: What are your favourite programming languages?\\
 A: Clojure > Julia > C++ > Python
 
 #+BEGIN_SRC emacs-lisp
-(use-package clojure-mode
-  :init
-  (use-package cider))
+  (use-package clojure-mode :init (use-package cider))
+  (use-package markdown-mode)
+  (use-package htmlize)
+  (use-package slime)
+  (use-package ess)
+  (use-package rust-mode)
+  (use-package toml-mode)
+  (use-package cargo :hook (rust-mode . cargo-minor-mode))
 
-(use-package markdown-mode)
-(use-package htmlize)
-(use-package slime)
-(use-package ess)
-(use-package rust-mode)
-(use-package toml-mode)
-(use-package cargo
-  :hook (rust-mode . cargo-minor-mode))
-(use-package flycheck-rust
-  :config
-  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+  (use-package python-mode
+    :config
+    (use-package conda
+      :init
+      (conda-env-initialize-eshell)
+      (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
+            conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
-(use-package python-mode
-  :config
-  (use-package conda
+  (use-package julia-mode
     :init
-    (conda-env-initialize-eshell)
-    (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
-          conda-env-home-directory (expand-file-name "~/miniconda3/"))))
-
-(use-package julia-mode
-  :init
-  (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
-  (use-package julia-repl
-    :init
-    (add-hook 'julia-mode-hook 'julia-repl-mode)
-    (add-hook 'julia-repl-hook 'julia-repl-use-emacsclient)
-    (setenv "JULIA_NUM_THREADS" "4")
-    (setq julia-repl-executable-records
-          '((default "julia")
-            (master "/usr/bin/julia")
-            (chemistry "ssh -t chemistry.me julia")))))
+    (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
+    (use-package julia-repl
+      :quelpa ((julia-repl :fetcher github :repo "tpapp/julia-repl" :branch "tp/terminal-backends") :upgrade t)
+      :init
+      (add-hook 'julia-mode-hook 'julia-repl-mode)
+      (setenv "JULIA_NUM_THREADS" "4")
+      (setq julia-repl-executable-records
+            '((default "julia")
+              (master "/usr/bin/julia")
+              (chemistry "ssh -t chemistry.me julia")
+              (lis "ssh -t lis.me /home/jay.morgan/workspace/libs/julia/bin/julia")))))
+(require 'julia-repl)
+(require 'vterm)
+(julia-repl-set-terminal-backend 'vterm)
 #+END_SRC
 
 ** LanguageServer
@@ -293,7 +290,7 @@ possible.
   (setq olivetti-body-width 90)
   (defun set-editing-buffer ()
     (interactive)
-    (linum-relative-mode -1)
+    ;; (linum-relative-mode -1)
     (set-window-fringes (selected-window) 0 0)
     (hl-line-mode -1))
   (add-hook 'olivetti-mode-hook 'set-editing-buffer))
@@ -307,17 +304,6 @@ possible.
 (use-package flyspell
   :init
   (setq flyspell-default-dictionary "british"))
-
-(use-package flycheck
-  :init
-  (flycheck-add-mode 'proselint 'org-mode)
-  (add-hook 'python-mode-hook 'flycheck-mode)
-  (setq flycheck-check-syntax-automatically '(mode-enabled save)
-        flycheck-highlighting-mode 'lines
-        flycheck-indication-mode 'left-fringe
-        flycheck-checker-error-threshold 200
-        python-interp "~/miniconda3/bin/python"
-        flycheck-python-flake8-executable python-interp))
 #+END_SRC
 
 * Emacs Environment
@@ -359,9 +345,9 @@ A very simple modeline is configured with =doom-modeline=
 (use-package doom-modeline
   :init
   (doom-modeline-mode 1)
-  (setq doom-modeline-height 25
+  (setq doom-modeline-height 10
         doom-modeline-mu4e t
-        doom-modeline-icon t))
+        doom-modeline-icon nil))
 #+END_SRC
 
 Projects with =projectile=
@@ -425,6 +411,12 @@ And finally, helm for partial completions, searches, etc.
 
 (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))
 
+(defun my/queue ()
+  "run slurm's squeue command. Using eshell should run it on the
+   server if invoked in tramp buffer"
+  (interactive)
+  (eshell-command "squeue"))
+
 (defun my/bash ()
   "start a (or connect to existing) terminal emulator in a new window"
   (interactive)
@@ -449,6 +441,18 @@ And finally, helm for partial completions, searches, etc.
 
 (defmacro bind-evil-key (binding func)
   `(define-key evil-motion-state-map (kbd ,binding) (quote ,func)))
+
+(defmacro bind-global-key (binding func)
+  `(global-set-key (kbd ,binding) (quote, func)))
+
+
+(add-hook 'org-mode-hook (lambda () (local-unset-key (kbd "C-j"))
+                                (local-unset-key (kbd "C-k"))))
+(bind-global-key "C-l" evil-window-right)
+(bind-global-key "C-h" evil-window-left)
+(bind-global-key "C-j" evil-window-down)
+(bind-global-key "C-k" evil-window-up)
+(bind-global-key "M-h" help)
 
 (defhydra hydra-helm-files (:color blue :hint nil)
   "Helm Files"
@@ -599,12 +603,14 @@ disable-mouse package to disable all mouse operations in evil mode.
 ** Look & Feel (Theme)
 
 #+BEGIN_SRC emacs-lisp
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'base16-espresso t)
-(set-frame-font "Roboto Mono-10.5")
-(setq default-frame-alist '((font . "Roboto Mono-10.5")))
+(set-frame-font "Tamsyn-11")
+(setq default-frame-alist '((font . "Tamsyn-11")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
+(setq dired-listing-switches "-alh")
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
