@@ -142,114 +142,127 @@ A: Clojure > Julia > C++ > Python
 (use-package company
   :config
   (global-company-mode 1)
-  (setq company-idle-delay 0.001))
+  (setq company-idle-delay 0.001
+        company-minimum-prefix-length 3))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
-  :quelpa t
   :hook ((python-mode . lsp)
-         ;; (julia-mode . lsp)
-         (ess-julia-mode . lsp)
-         (rust-mode . lsp)
-         (sh-mode . lsp)
-         (lsp-mode . lsp-enable-which-key-integration))
+         (julia-mode . lsp))
   :commands lsp
-  :init
-  (require 'lsp-clients)
-  ;; (quelpa '(lsp-julia :fetcher github
-  ;;                     :repo "non-Jedi/lsp-julia"
-  ;;                     :files (:defaults "languageserver")))
-  ;; (require 'lsp-julia)
-  (setq lsp-diagnostics-modeline-scope :project
-        lsp-signature-auto-activate    nil)
-  (setq lsp-completion-show-detail t
-        lsp-completion-enable-additional-text-edit t)
-  (add-hook 'lsp-managed-mode-hook 'lsp-diagnostics-modeline-mode)
-  (add-hook 'lsp-managed-mode-hook 'lsp-modeline-code-actions-mode)
-  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-  ;; (use-package lsp-ui
-  ;;   :config
-  ;;   (setq lsp-ui-doc-enable t
-  ;;         lsp-ui-doc-position 'at-point
-  ;;         lsp-ui-sideline--code-actions nil
-  ;;         lsp-ui-sideline-show-code-actions nil
-  ;;         lsp-ui-peek-enable nil
-  ;;         lsp-ui-peek-show-directory nil)
-  ;;   (add-hook 'lsp-mode-hook 'lsp-ui-mode))
-  (use-package helm-lsp
-    :commands helm-lsp-workspace-symbol)
-  (use-package company-lsp
-    :requires company
-    :config
-    (push 'company-lsp company-backends)
-    (setq company-lsp-async t)))
+  :config
+  (setq lsp-auto-configure t
+        lsp-auto-guess-root t)
+  (quelpa '(lsp-julia :fetcher github
+                    :repo "non-Jedi/lsp-julia"
+                    :files (:defaults "languageserver")))
+  (require 'lsp-julia)
+  (lsp-register-client
+    (make-lsp-client :new-connection (lsp-tramp-connection "/home/jay.morgan/workspace/libs/julia/bin/julia")
+                     :major-modes '(julia-mode)
+                     :remote? t
+                     :server-id 'julia-remote)))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package lsp-mode
+  ;;   :quelpa t
+  ;;   :hook ((python-mode . lsp)
+  ;;          (julia-mode . lsp)
+  ;;          (rust-mode . lsp)
+  ;;          (sh-mode . lsp)
+  ;;          (lsp-mode . lsp-enable-which-key-integration))
+  ;;   :commands lsp
+  ;;   :init
+  ;;   (require 'lsp-clients)
+  ;;   (quelpa '(lsp-julia :fetcher github
+  ;;                       :repo "non-Jedi/lsp-julia"
+  ;;                       :files (:defaults "languageserver")))
+  ;;   (require 'lsp-julia))
+  ;;   ;; (setq lsp-diagnostics-modeline-scope :project
+  ;;   ;;       lsp-signature-auto-activate    nil)
+  ;;   ;; (setq lsp-completion-show-detail t
+  ;;   ;;       lsp-completion-enable-additional-text-edit t)
+  ;;   ;; (add-hook 'lsp-managed-mode-hook 'lsp-diagnostics-modeline-mode)
+  ;;   ;; (add-hook 'lsp-managed-mode-hook 'lsp-modeline-code-actions-mode)
+  ;;   ;; (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+  ;;   ;; (use-package helm-lsp
+  ;;   ;;   :commands helm-lsp-workspace-symbol)
+  ;;   ;; (use-package company-lsp
+  ;;   ;;   :requires company
+  ;;   ;;   :config
+  ;;   ;;   (push 'company-lsp company-backends)
+  ;;   ;;   (setq company-lsp-async t)))
 #+END_SRC
 
 ** Org-mode all the things!
 Once I learnt about org-mode, it would always be tough to leave Emacs.
 
 #+BEGIN_SRC emacs-lisp
-(use-package org
-  :after cider
-  :ensure org-plus-contrib
-  :init
-  (setq org-startup-indented t)
-  (add-hook 'org-mode-hook #'visual-line-mode)
-  (add-hook 'org-mode-hook '(lambda () (set-fill-column 70)))
-  (add-hook 'org-mode-hook #'auto-fill-mode)
-  (require 'ob-clojure)
-  (require 'cider)
-  ;; extensions on org-mode
-  (use-package ob-async)
-  (use-package ox-pandoc)
-  (use-package ox-gfm)
-  (use-package org-ref
+  (use-package org
+    :after cider
+    :ensure org-plus-contrib
     :init
-    (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
-  (use-package helm-bibtex
-    :init
-    (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          bibtex-completion-pdf-open-function 'org-open-file))
-  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-  (add-to-list 'org-latex-compilers "tectonic")
-  (add-hook 'org-mode-hook 'turn-on-auto-fill)
-  (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
+    (setq org-startup-indented t)
+    (setq org-src-tab-acts-natively t)
+    (setq org-edit-src-content-indentation 0)
+    (add-hook 'org-mode-hook #'visual-line-mode)
+    (add-hook 'org-mode-hook '(lambda () (set-fill-column 70)))
+    (add-hook 'org-mode-hook #'auto-fill-mode)
+    (require 'ob-clojure)
+    (require 'cider)
+    ;; extensions on org-mode
+    (use-package ob-async)
+    (use-package ox-pandoc)
+    (use-package ox-gfm)
+    (use-package org-ref
+      :init
+      (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+            org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
+    (use-package helm-bibtex
+      :init
+      (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+            bibtex-completion-pdf-open-function 'org-open-file))
+    (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+    (add-to-list 'org-latex-compilers "tectonic")
+    (add-hook 'org-mode-hook 'turn-on-auto-fill)
+    (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
-  (require 'ox-latex)
-  (add-to-list 'org-latex-classes
-               '("thesis"
-                 "\\documentclass{book}\n
-                  \\usepackage{amssymb}
-                  \\usepackage{gensymb}
-                  \\usepackage[margin=1.5in]{geometry}
-                  \\usepackage[T1]{fontenc}
-                  \\usepackage{kpfonts,baskervald}
-                  \\usepackage{units}
-                  \\setlength{\\parskip}{11pt}
-                  \\setlength{\\parindent}{0pt}"
-                 ("\\chapter{%s}" . "\\chapter*{%s}")
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+    (require 'ox-latex)
+    (add-to-list 'org-latex-classes
+                 '("thesis"
+                   "\\documentclass{book}\n
+                    \\usepackage{amssymb}
+                    \\usepackage{gensymb}
+                    \\usepackage[margin=1.5in]{geometry}
+                    \\usepackage[T1]{fontenc}
+                    \\usepackage{kpfonts,baskervald}
+                    \\usepackage{units}
+                    \\setlength{\\parskip}{11pt}
+                    \\setlength{\\parindent}{0pt}"
+                   ("\\chapter{%s}" . "\\chapter*{%s}")
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 
-  ;; set variables
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
-        inferior-julia-program-name "/usr/bin/julia"
-        org-confirm-babel-evaluate nil
-        org-babel-clojure-backend 'cider
-        org-fontify-done-headline t)
-        org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)"))
+    ;; set variables
+    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
+          inferior-julia-program-name "/usr/bin/julia"
+          org-confirm-babel-evaluate nil
+          org-babel-clojure-backend 'cider
+          org-fontify-done-headline t)
+          org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)"))
 
-  ;; list of languages for org-mode to support
-  (org-babel-do-load-languages 'org-babel-load-languages
-                               '((shell . t)
-                                 (emacs-lisp . t)
-                                 (julia . t)
-                                 (gnuplot . t)
-                                 (dot . t))))
+    ;; list of languages for org-mode to support
+    (org-babel-do-load-languages 'org-babel-load-languages
+                                 '((shell . t)
+                                   (emacs-lisp . t)
+                                   (julia . t)
+                                   (gnuplot . t)
+                                   (dot . t))))
 #+END_SRC
 
 Sometimes it is nice to have a table of contents inside the org-mode document,
@@ -278,6 +291,9 @@ possible.
 (use-package base16-theme)
 (use-package ace-window)
 (use-package focus)
+(use-package indent-guide
+  :init
+  (indent-guide-global-mode))
 
 (use-package yasnippet
   :config
@@ -304,6 +320,14 @@ possible.
 (use-package flyspell
   :init
   (setq flyspell-default-dictionary "british"))
+
+;; Prevent Helm from taking up random windows -- makes the UI more consistent
+;; and predictable.
+(use-package shackle
+  :after helm
+  :init
+  (shackle-mode 1)
+  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
 #+END_SRC
 
 * Emacs Environment
@@ -356,6 +380,7 @@ Projects with =projectile=
 (use-package projectile
   :config
   (projectile-mode 1)
+  (setq projectile-enable-caching t)
   (setq projectile-git-submodule-command nil)
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
@@ -511,8 +536,8 @@ And finally, helm for partial completions, searches, etc.
   "Open Buffer"
   ("s" my/bash "Shell")
   ("S" vterm "Big Shell")
-  ("d" (dired-at-point ".") "Dired")
-  ("D" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
+  ("d" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
+  ("D" (dired-at-point ".") "Dired")
   ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
@@ -605,8 +630,8 @@ disable-mouse package to disable all mouse operations in evil mode.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'base16-espresso t)
-(set-frame-font "Tamsyn-11")
-(setq default-frame-alist '((font . "Tamsyn-11")))
+(set-frame-font "Source Code Pro-9")
+(setq default-frame-alist '((font . "Source Code Pro-8")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
