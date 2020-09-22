@@ -45,6 +45,8 @@ packages from creating speed problems.
 (setq read-process-output-max (* 1024 1024))
 (setq evil-want-keybinding nil)
 (setq x-wait-for-event-timeout nil)
+(setq tramp-ssh-controlmaster-options ""
+      tramp-default-method "ssh")
 #+END_SRC
 
 A necessary configuration step of a customised Emacs setup is using melpa with
@@ -630,7 +632,7 @@ disable-mouse package to disable all mouse operations in evil mode.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'base16-espresso t)
-(set-frame-font "Source Code Pro-9")
+(set-frame-font "Source Code Pro-8")
 (setq default-frame-alist '((font . "Source Code Pro-8")))
 #+END_SRC
 
