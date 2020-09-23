@@ -57,13 +57,13 @@ A necessary configuration step of a customised Emacs setup is using melpa with
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
 
 ;; Setup package.el to work with MELPA
-(setq package-check-signature nil)
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
-(package-refresh-contents)
-(package-initialize)
+;; (setq package-check-signature nil)
+;; (require 'package)
+;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+;; (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
+;; (package-refresh-contents)
+;; (package-initialize)
 #+END_SRC
 
 Most, if not all, packages are managed using the =use-package= plugin. This
@@ -73,16 +73,16 @@ should be the only plugin that is install in the "normal" fashion.
 ;; Install function define a function to check if a package is
 ;; installed, if it not we can install it. From this, we may quickly
 ;; and easily install packages.
-(defun my/check-and-install (pkg)
-  (unless (package-installed-p pkg)
-    (package-install pkg))
-  (require pkg))
+;; (defun my/check-and-install (pkg)
+;;   (unless (package-installed-p pkg)
+;;     (package-install pkg))
+;;   (require pkg))
 
-(my/check-and-install 'use-package)
-;; Don't need a :ensure t in every package
-(setq use-package-always-ensure t)
-;; Makes it possible to install required binaries
-(use-package use-package-ensure-system-package)
+;; (my/check-and-install 'use-package)
+;; ;; Don't need a :ensure t in every package
+;; (setq use-package-always-ensure t)
+;; ;; Makes it possible to install required binaries
+;; (use-package use-package-ensure-system-package)
 #+END_SRC
 
 And quelpa
@@ -103,6 +103,13 @@ Q: What are your favourite programming languages?\\
 A: Clojure > Julia > C++ > Python
 
 #+BEGIN_SRC emacs-lisp
+(use-package elpy
+  :init
+  (elpy-enable)
+  (setq elpy-autodoc-delay 10000000000))
+
+(add-hook 'python-mode-hook 'flycheck-mode)
+
   (use-package clojure-mode :init (use-package cider))
   (use-package markdown-mode)
   (use-package htmlize)
@@ -135,7 +142,7 @@ A: Clojure > Julia > C++ > Python
               (lis "ssh -t lis.me /home/jay.morgan/workspace/libs/julia/bin/julia")))))
 (require 'julia-repl)
 (require 'vterm)
-(julia-repl-set-terminal-backend 'vterm)
+;; (julia-repl-set-terminal-backend 'vterm)
 #+END_SRC
 
 ** LanguageServer
@@ -144,28 +151,30 @@ A: Clojure > Julia > C++ > Python
 (use-package company
   :config
   (global-company-mode 1)
-  (setq company-idle-delay 0.001
-        company-minimum-prefix-length 3))
+  (setq company-idle-delay 0.0001
+        company-minimum-prefix-length 2))
+
+(global-eldoc-mode -1)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-(use-package lsp-mode
-  :hook ((python-mode . lsp)
-         (julia-mode . lsp))
-  :commands lsp
-  :config
-  (setq lsp-auto-configure t
-        lsp-auto-guess-root t)
-  (quelpa '(lsp-julia :fetcher github
-                    :repo "non-Jedi/lsp-julia"
-                    :files (:defaults "languageserver")))
-  (require 'lsp-julia)
-  (lsp-register-client
-    (make-lsp-client :new-connection (lsp-tramp-connection "/home/jay.morgan/workspace/libs/julia/bin/julia")
-                     :major-modes '(julia-mode)
-                     :remote? t
-                     :server-id 'julia-remote)))
-#+END_SRC
+# #+BEGIN_SRC emacs-lisp
+# (use-package lsp-mode
+#   :hook ((python-mode . lsp)
+#          (julia-mode . lsp))
+#   :commands lsp
+#   :config
+#   (setq lsp-auto-configure t
+#         lsp-auto-guess-root t)
+#   (quelpa '(lsp-julia :fetcher github
+#                     :repo "non-Jedi/lsp-julia"
+#                     :files (:defaults "languageserver")))
+#   (require 'lsp-julia)
+#   (lsp-register-client
+#     (make-lsp-client :new-connection (lsp-tramp-connection "/home/jay.morgan/workspace/libs/julia/bin/julia")
+#                      :major-modes '(julia-mode)
+#                      :remote? t
+#                      :server-id 'julia-remote)))
+# #+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
@@ -293,9 +302,6 @@ possible.
 (use-package base16-theme)
 (use-package ace-window)
 (use-package focus)
-(use-package indent-guide
-  :init
-  (indent-guide-global-mode))
 
 (use-package yasnippet
   :config
@@ -382,7 +388,6 @@ Projects with =projectile=
 (use-package projectile
   :config
   (projectile-mode 1)
-  (setq projectile-enable-caching t)
   (setq projectile-git-submodule-command nil)
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
@@ -481,6 +486,8 @@ And finally, helm for partial completions, searches, etc.
 (bind-global-key "C-k" evil-window-up)
 (bind-global-key "M-h" help)
 
+(bind-evil-key "SPC g d" elpy-goto-definition)
+
 (defhydra hydra-helm-files (:color blue :hint nil)
   "Helm Files"
   ("f" helm-find-files "Find Files")
@@ -496,7 +503,7 @@ And finally, helm for partial completions, searches, etc.
 (bind-evil-key "SPC h" hydra-helm/body)
 
 (bind-evil-key "SPC p" projectile-command-map)
-(bind-evil-key "SPC g" magit-status)
+(bind-evil-key "SPC g g" magit-status)
 (bind-evil-key "SPC a" org-agenda)
 (bind-evil-key "SPC w" ace-window)
 (bind-evil-key "SPC n" avy-goto-char-timer)
@@ -632,7 +639,7 @@ disable-mouse package to disable all mouse operations in evil mode.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'base16-espresso t)
-(set-frame-font "Source Code Pro-8")
+(set-frame-font "Source Code Pro-10")
 (setq default-frame-alist '((font . "Source Code Pro-8")))
 #+END_SRC
 
