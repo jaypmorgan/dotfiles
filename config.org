@@ -102,16 +102,19 @@ It's a constant struggle to not learn every programming language ever!
 Q: What are your favourite programming languages?\\
 A: Clojure > Julia > C++ > Python
 
+
 #+BEGIN_SRC emacs-lisp
+(use-package flycheck)
+
 ;; (use-package elpy
 ;;   :init
 ;;   (elpy-enable)
 ;;   (setq elpy-autodoc-delay 10000000000))
 
-;;(add-hook 'python-mode-hook (lambda ()
-  ;;                            (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
-  ;;                            (setq flycheck-check-syntax-automatically 'save)
-  ;;                            (flycheck-mode)))
+(add-hook 'python-mode-hook (lambda ()
+                             (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
+                             (setq flycheck-check-syntax-automatically '(mode-enabled save))
+                             (flycheck-mode)))
 
   (use-package clojure-mode :init (use-package cider))
   (use-package markdown-mode)
@@ -295,7 +298,9 @@ possible.
 #+BEGIN_SRC emacs-lisp
 (use-package docker :bind ("C-c d" . docker))
 (use-package avy)
-(use-package blacken)
+(use-package blacken
+  :init
+  (add-hook 'before-save-hook 'blacken-buffer))
 (use-package itail)
 (use-package diminish)
 (use-package magit)
@@ -305,6 +310,7 @@ possible.
 (use-package base16-theme)
 (use-package ace-window)
 (use-package focus)
+(use-package iedit)
 
 (use-package yasnippet
   :config
@@ -455,7 +461,9 @@ And finally, helm for partial completions, searches, etc.
   (split-window-below)
   (other-window 1)
   (if (get-buffer "vterm")
-      (switch-to-buffer "vterm")
+      (progn
+        (switch-to-buffer "vterm")
+        (shrink-window 20))
     (vterm)))
 
 (defvar dark-theme-p t)
@@ -477,14 +485,12 @@ And finally, helm for partial completions, searches, etc.
 (defmacro bind-global-key (binding func)
   `(global-set-key (kbd ,binding) (quote, func)))
 
-
-(add-hook 'org-mode-hook (lambda () (local-unset-key (kbd "C-j"))
-                                (local-unset-key (kbd "C-k"))))
-(bind-global-key "C-l" evil-window-right)
-(bind-global-key "C-h" evil-window-left)
-(bind-global-key "C-j" evil-window-down)
-(bind-global-key "C-k" evil-window-up)
-(bind-global-key "M-h" help)
+(with-eval-after-load 'evil-maps
+  (define-key evil-normal-state-map (kbd "C-n") nil))
+(bind-evil-key "C-n" (lambda ()
+                          (interactive)
+                          (iedit-mode)
+                          (iedit-restrict-current-line)))
 
 (bind-evil-key "SPC g d" elpy-goto-definition)
 
