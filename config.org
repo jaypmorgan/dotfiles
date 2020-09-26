@@ -11,6 +11,7 @@
   - [[#miscellaneous-packages][Miscellaneous Packages]]
 - [[#emacs-environment][Emacs Environment]]
 - [[#keybindings][Keybindings]]
+- [[#custom-functions][Custom Functions]]
 - [[#email-client][Email Client]]
 - [[#display-settings][Display Settings]]
   - [[#gui-elements][GUI Elements]]
@@ -102,50 +103,43 @@ It's a constant struggle to not learn every programming language ever!
 Q: What are your favourite programming languages?\\
 A: Clojure > Julia > C++ > Python
 
-
 #+BEGIN_SRC emacs-lisp
-(use-package flycheck)
+(use-package flycheck
+  :init
+  (add-hook 'sh-mode-hook 'flycheck-mode))
+(use-package clojure-mode :init (use-package cider))
+(use-package markdown-mode)
+(use-package htmlize)
+(use-package ess)
+(use-package rust-mode)
+(use-package toml-mode)
+(use-package cargo :hook (rust-mode . cargo-minor-mode))
 
-;; (use-package elpy
-;;   :init
-;;   (elpy-enable)
-;;   (setq elpy-autodoc-delay 10000000000))
-
-(add-hook 'python-mode-hook (lambda ()
-                             (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
-                             (setq flycheck-check-syntax-automatically '(mode-enabled save))
-                             (flycheck-mode)))
-
-  (use-package clojure-mode :init (use-package cider))
-  (use-package markdown-mode)
-  (use-package htmlize)
-  (use-package slime)
-  (use-package ess)
-  (use-package rust-mode)
-  (use-package toml-mode)
-  (use-package cargo :hook (rust-mode . cargo-minor-mode))
-
-  (use-package python-mode
+(use-package python-mode
     :config
+    (add-hook 'python-mode-hook (lambda ()
+                                   (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
+                                   (setq flycheck-check-syntax-automatically '(mode-enabled save))
+                                   (flycheck-mode)))
     (use-package conda
-      :init
-      (conda-env-initialize-eshell)
-      (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
-            conda-env-home-directory (expand-file-name "~/miniconda3/"))))
+        :init
+        (conda-env-initialize-eshell)
+        (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
+              conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
-  (use-package julia-mode
+(use-package julia-mode
     :init
     (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
     (use-package julia-repl
-      :quelpa ((julia-repl :fetcher github :repo "tpapp/julia-repl" :branch "tp/terminal-backends") :upgrade t)
-      :init
-      (add-hook 'julia-mode-hook 'julia-repl-mode)
-      (setenv "JULIA_NUM_THREADS" "4")
-      (setq julia-repl-executable-records
+        :quelpa ((julia-repl :fetcher github :repo "tpapp/julia-repl" :branch "tp/terminal-backends") :upgrade t)
+        :init
+        (add-hook 'julia-mode-hook 'julia-repl-mode)
+        (setenv "JULIA_NUM_THREADS" "4")
+        (setq julia-repl-executable-records
             '((default "julia")
-              (master "/usr/bin/julia")
-              (chemistry "ssh -t chemistry.me julia")
-              (lis "ssh -t lis.me /home/jay.morgan/workspace/libs/julia/bin/julia")))))
+                (master "/usr/bin/julia")
+                (chemistry "ssh -t chemistry.me julia")
+                (lis "ssh -t lis.me /home/jay.morgan/workspace/libs/julia/bin/julia")))))
 (require 'julia-repl)
 (require 'vterm)
 ;; (julia-repl-set-terminal-backend 'vterm)
@@ -218,68 +212,61 @@ A: Clojure > Julia > C++ > Python
 Once I learnt about org-mode, it would always be tough to leave Emacs.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org
-    :after cider
-    :ensure org-plus-contrib
+(use-package org
+  :after cider
+  :ensure org-plus-contrib
+  :init
+  (add-hook 'org-mode-hook #'visual-line-mode)
+  (add-hook 'org-mode-hook '(lambda () (set-fill-column 70)))
+  (add-hook 'org-mode-hook #'auto-fill-mode)
+  (require 'ob-clojure)
+  (require 'cider)
+  ;; extensions on org-mode
+  (use-package ob-async)
+  (use-package ox-pandoc)
+  (use-package ox-gfm)
+  (use-package org-ref
     :init
-    (setq org-startup-indented t)
-    (setq org-src-tab-acts-natively t)
-    (setq org-edit-src-content-indentation 0)
-    (add-hook 'org-mode-hook #'visual-line-mode)
-    (add-hook 'org-mode-hook '(lambda () (set-fill-column 70)))
-    (add-hook 'org-mode-hook #'auto-fill-mode)
-    (require 'ob-clojure)
-    (require 'cider)
-    ;; extensions on org-mode
-    (use-package ob-async)
-    (use-package ox-pandoc)
-    (use-package ox-gfm)
-    (use-package org-ref
-      :init
-      (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-            org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
-    (use-package helm-bibtex
-      :init
-      (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-            bibtex-completion-pdf-open-function 'org-open-file))
-    (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-    (add-to-list 'org-latex-compilers "tectonic")
-    (add-hook 'org-mode-hook 'turn-on-auto-fill)
-    (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
+    (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
+  (use-package helm-bibtex
+    :init
+    (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+          bibtex-completion-pdf-open-function 'org-open-file))
+  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+  (add-to-list 'org-latex-compilers "tectonic")
+  (add-hook 'org-mode-hook 'turn-on-auto-fill)
+  (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
-    (require 'ox-latex)
-    (add-to-list 'org-latex-classes
-                 '("thesis"
-                   "\\documentclass{book}\n
-                    \\usepackage{amssymb}
-                    \\usepackage{gensymb}
-                    \\usepackage[margin=1.5in]{geometry}
-                    \\usepackage[T1]{fontenc}
-                    \\usepackage{kpfonts,baskervald}
-                    \\usepackage{units}
-                    \\setlength{\\parskip}{11pt}
-                    \\setlength{\\parindent}{0pt}"
-                   ("\\chapter{%s}" . "\\chapter*{%s}")
-                   ("\\section{%s}" . "\\section*{%s}")
-                   ("\\subsection{%s}" . "\\subsection*{%s}")
-                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (require 'ox-latex)
 
-    ;; set variables
-    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
-          inferior-julia-program-name "/usr/bin/julia"
-          org-confirm-babel-evaluate nil
-          org-babel-clojure-backend 'cider
-          org-fontify-done-headline t)
-          org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)"))
+  ;; set variables
+  (setq org-startup-indented t
+        org-src-tab-acts-natively t
+        org-edit-src-content-indentation 0
+        org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
+        inferior-julia-program-name "/usr/bin/julia"
+        org-confirm-babel-evaluate nil
+        org-babel-clojure-backend 'cider
+        org-fontify-done-headline t
+        org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
+        org-todo-keyword-faces '(("TODO" . org-warning)
+                                 ("WAIT" . "yellow")
+                                 ("DONE" . "Palegreen")
+                                 ("CANC" . "red"))
+        org-log-done 'time)
 
-    ;; list of languages for org-mode to support
-    (org-babel-do-load-languages 'org-babel-load-languages
-                                 '((shell . t)
-                                   (emacs-lisp . t)
-                                   (julia . t)
-                                   (gnuplot . t)
-                                   (dot . t))))
+(custom-set-faces '(org-headline-done
+                        ((((class color) (min-colors 16) (background dark))
+                        (:strike-through t)))))
+
+  ;; list of languages for org-mode to support
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '((shell . t)
+                                 (emacs-lisp . t)
+                                 (julia . t)
+                                 (gnuplot . t)
+                                 (dot . t))))
 #+END_SRC
 
 Sometimes it is nice to have a table of contents inside the org-mode document,
@@ -298,9 +285,8 @@ possible.
 #+BEGIN_SRC emacs-lisp
 (use-package docker :bind ("C-c d" . docker))
 (use-package avy)
-(use-package blacken
-  :init
-  (add-hook 'before-save-hook 'blacken-buffer))
+(use-package swiper)
+(use-package blacken :init (add-hook 'before-save-hook 'blacken-buffer))
 (use-package itail)
 (use-package diminish)
 (use-package magit)
@@ -463,7 +449,7 @@ And finally, helm for partial completions, searches, etc.
   (if (get-buffer "vterm")
       (progn
         (switch-to-buffer "vterm")
-        (shrink-window 20))
+        (shrink-window 10))
     (vterm)))
 
 (defvar dark-theme-p t)
@@ -487,17 +473,19 @@ And finally, helm for partial completions, searches, etc.
 
 (with-eval-after-load 'evil-maps
   (define-key evil-normal-state-map (kbd "C-n") nil))
-(bind-evil-key "C-n" (lambda ()
-                          (interactive)
-                          (iedit-mode)
-                          (iedit-restrict-current-line)))
+(bind-evil-key "C-n"
+  (lambda ()
+    (interactive)
+    (iedit-mode)
+    (iedit-restrict-current-line)))
 
 (bind-evil-key "SPC g d" elpy-goto-definition)
 
 (defhydra hydra-helm-files (:color blue :hint nil)
   "Helm Files"
   ("f" helm-find-files "Find Files")
-  ("r" helm-recentf "File Recent Files"))
+  ("r" helm-recentf "File Recent Files")
+  ("b" swiper "Find in buffer"))
 (bind-evil-key "SPC f" hydra-helm-files/body)
 
 (defhydra hydra-helm (:color blue :hint nil)
@@ -585,6 +573,38 @@ And finally, helm for partial completions, searches, etc.
 (define-key evil-motion-state-map
   (kbd "SPC m") 'hydra-modify-buffers/body)
 #+END_SRC
+* Custom Functions
+#+BEGIN_SRC elisp
+(defun get-stats (user host format)
+  (eshell-command-result
+   (concat
+    "cd /ssh:" host ":/ && sacct -u" user " --format=" format)))
+
+(defun slurm-get-stats (user host format)
+  " Log into SLURM server and get current running/pending jobs "
+  (interactive)
+  (let ((stats (get-stats user host format))
+        (temp-buffer-name "*slurm-log*"))
+    (display-buffer
+        (get-buffer-create temp-buffer-name)
+        '((display-buffer-below-selected display-buffer-at-bottom)
+          (inhibit-same-window . t)
+          (window-height . 20)))
+    (switch-to-buffer-other-window temp-buffer-name)
+    (insert stats)
+    (special-mode)))
+
+(setq slurm-host "lis.me"
+      slurm-username "jay.morgan"
+      slurm-job-format "jobid,jobname%30,state,elapsed")
+
+(bind-evil-key "SPC l l" (lambda ()
+                           (interactive)
+                           (slurm-get-stats  slurm-username
+                                            slurm-host
+                                            slurm-job-format)))
+#+END_SRC
+
 
 * Email Client
 I use mu4e and offlinemap to manage my email.
