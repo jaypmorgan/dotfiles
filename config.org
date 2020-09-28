@@ -257,8 +257,10 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
         org-log-done 'time)
 
 (custom-set-faces '(org-headline-done
-                        ((((class color) (min-colors 16) (background dark))
-                        (:strike-through t)))))
+                    ((((class color)
+                       (min-colors 16)
+                       (background dark))
+                      (:foreground "dim gray" :strike-through t)))))
 
   ;; list of languages for org-mode to support
   (org-babel-do-load-languages 'org-babel-load-languages
@@ -284,6 +286,9 @@ possible.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker :bind ("C-c d" . docker))
+(use-package csv-mode
+  :init
+  (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode))
 (use-package avy)
 (use-package swiper)
 (use-package blacken :init (add-hook 'before-save-hook 'blacken-buffer))
@@ -497,6 +502,8 @@ And finally, helm for partial completions, searches, etc.
 (bind-evil-key "SPC h" hydra-helm/body)
 
 (bind-evil-key "SPC p" projectile-command-map)
+(bind-evil-key "SPC p p" helm-projectile-switch-project)
+(bind-evil-key "SPC p a" projectile-add-known-project)
 (bind-evil-key "SPC g g" magit-status)
 (bind-evil-key "SPC a" org-agenda)
 (bind-evil-key "SPC w" ace-window)
@@ -604,8 +611,6 @@ And finally, helm for partial completions, searches, etc.
                                             slurm-host
                                             slurm-job-format)))
 #+END_SRC
-
-
 * Email Client
 I use mu4e and offlinemap to manage my email.
 
