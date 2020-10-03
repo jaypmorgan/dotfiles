@@ -106,22 +106,16 @@ A: Clojure > Julia > C++ > Python
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :init
-  (add-hook 'sh-mode-hook 'flycheck-mode)
-  (add-hook 'c++-mode-hook 'flycheck-mode))
+  (add-hook 'sh-mode-hook 'flycheck-mode))
 (use-package clojure-mode :init (use-package cider))
 (use-package markdown-mode)
 (use-package htmlize)
-(use-package ess)
-(use-package rust-mode)
 (use-package toml-mode)
-(use-package cargo :hook (rust-mode . cargo-minor-mode))
 
 (use-package eglot
-  :quelpa ((eglot :fetcher github :repo "joaotavora/eglot") :upgrade t)
-  :init
+  :config
   (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
   (add-hook 'c++-mode-hook 'eglot-ensure))
-
 
 (use-package python-mode
     :config
@@ -148,8 +142,6 @@ A: Clojure > Julia > C++ > Python
                 (master "/usr/bin/julia")
                 (chemistry "ssh -t chemistry.me julia")
                 (lis "ssh -t lis.me /home/jay.morgan/workspace/libs/julia/bin/julia")))))
-(require 'julia-repl)
-;; (julia-repl-set-terminal-backend 'vterm)
 #+END_SRC
 
 ** LanguageServer
@@ -163,57 +155,6 @@ A: Clojure > Julia > C++ > Python
         company-show-numbers t))
 
 (global-eldoc-mode -1)
-#+END_SRC
-
-# #+BEGIN_SRC emacs-lisp
-# (use-package lsp-mode
-#   :hook ((python-mode . lsp)
-#          (julia-mode . lsp))
-#   :commands lsp
-#   :config
-#   (setq lsp-auto-configure t
-#         lsp-auto-guess-root t)
-#   (quelpa '(lsp-julia :fetcher github
-#                     :repo "non-Jedi/lsp-julia"
-#                     :files (:defaults "languageserver")))
-#   (require 'lsp-julia)
-#   (lsp-register-client
-#     (make-lsp-client :new-connection (lsp-tramp-connection "/home/jay.morgan/workspace/libs/julia/bin/julia")
-#                      :major-modes '(julia-mode)
-#                      :remote? t
-#                      :server-id 'julia-remote)))
-# #+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package lsp-mode
-  ;;   :quelpa t
-  ;;   :hook ((python-mode . lsp)
-  ;;          (julia-mode . lsp)
-  ;;          (rust-mode . lsp)
-  ;;          (sh-mode . lsp)
-  ;;          (lsp-mode . lsp-enable-which-key-integration))
-  ;;   :commands lsp
-  ;;   :init
-  ;;   (require 'lsp-clients)
-  ;;   (quelpa '(lsp-julia :fetcher github
-  ;;                       :repo "non-Jedi/lsp-julia"
-  ;;                       :files (:defaults "languageserver")))
-  ;;   (require 'lsp-julia))
-  ;;   ;; (setq lsp-diagnostics-modeline-scope :project
-  ;;   ;;       lsp-signature-auto-activate    nil)
-  ;;   ;; (setq lsp-completion-show-detail t
-  ;;   ;;       lsp-completion-enable-additional-text-edit t)
-  ;;   ;; (add-hook 'lsp-managed-mode-hook 'lsp-diagnostics-modeline-mode)
-  ;;   ;; (add-hook 'lsp-managed-mode-hook 'lsp-modeline-code-actions-mode)
-  ;;   ;; (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-  ;;   ;; (use-package helm-lsp
-  ;;   ;;   :commands helm-lsp-workspace-symbol)
-  ;;   ;; (use-package company-lsp
-  ;;   ;;   :requires company
-  ;;   ;;   :config
-  ;;   ;;   (push 'company-lsp company-backends)
-  ;;   ;;   (setq company-lsp-async t)))
 #+END_SRC
 
 ** Org-mode all the things!
@@ -252,6 +193,7 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   (setq org-startup-indented t
         org-src-tab-acts-natively t
         org-edit-src-content-indentation 0
+        org-startup-folded t
         org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
         org-confirm-babel-evaluate nil
@@ -294,12 +236,8 @@ possible.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker :bind ("C-c d" . docker))
-(use-package csv-mode
-  :init
-  (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
 (use-package avy)
 (use-package swiper)
-(use-package blacken :init (add-hook 'before-save-hook 'blacken-buffer))
 (use-package itail)
 (use-package diminish)
 (use-package magit)
@@ -310,6 +248,17 @@ possible.
 (use-package ace-window)
 (use-package focus)
 (use-package iedit)
+
+(use-package csv-mode
+  :init
+  (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
+
+(use-package blacken
+  :init
+  (defun blacken-python-hook ()
+    (when (eq major-mode 'python-mode)
+      (blacken-buffer)))
+  (add-hook 'before-save-hook 'blacken-python-hook))
 
 (use-package yasnippet
   :init
@@ -323,7 +272,6 @@ possible.
   (setq olivetti-body-width 90)
   (defun set-editing-buffer ()
     (interactive)
-    ;; (linum-relative-mode -1)
     (set-window-fringes (selected-window) 0 0)
     (hl-line-mode -1))
   (add-hook 'olivetti-mode-hook 'set-editing-buffer))
@@ -518,6 +466,7 @@ And finally, helm for partial completions, searches, etc.
 (bind-evil-key "SPC w" ace-window)
 (bind-evil-key "SPC n" avy-goto-char-timer)
 (bind-evil-key "SPC e" eww)
+(bind-global-key "C-x ," vterm) ;; new terminal in window
 
 (defun my/split (direction)
   (interactive)
@@ -589,7 +538,9 @@ And finally, helm for partial completions, searches, etc.
 (define-key evil-motion-state-map
   (kbd "SPC m") 'hydra-modify-buffers/body)
 #+END_SRC
+
 * Custom Functions
+
 #+BEGIN_SRC elisp
 (defun get-stats (user host format)
   (eshell-command-result
@@ -679,8 +630,8 @@ disable-mouse package to disable all mouse operations in evil mode.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'base16-espresso t)
-(set-frame-font "JetBrains Mono-9")
-(setq default-frame-alist '((font . "JetBrains Mono-9")))
+(set-frame-font "Tamsyn-11")
+(setq default-frame-alist '((font . "JetBrains Mono-10")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
