@@ -29,8 +29,8 @@ functionality pretty well).
 (defun my/add-to-exec (new-path)
   " Add the new-path (dir) to the PATH variable "
   (let ((new-path (expand-file-name new-path)))
-  (setq exec-path (push new-path exec-path))
-  (setenv "PATH" (format "%s:%s" (getenv "PATH") new-path))))
+    (setq exec-path (push new-path exec-path))
+    (setenv "PATH" (format "%s:%s" (getenv "PATH") new-path))))
 
 (my/add-to-exec "~/miniconda3/bin")
 (my/add-to-exec "~/.fzf/bin")
@@ -42,11 +42,11 @@ Over the time of configuring Emacs, I've found these variables help certain
 packages from creating speed problems.
 
 #+BEGIN_SRC emacs-lisp
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024))
-(setq evil-want-keybinding nil)
-(setq x-wait-for-event-timeout nil)
-(setq tramp-ssh-controlmaster-options ""
+(setq gc-cons-threshold 100000000
+      read-process-output-max (* 1024 1024)
+      evil-want-keybinding nil
+      x-wait-for-event-timeout nil
+      tramp-ssh-controlmaster-options ""
       tramp-default-method "ssh")
 #+END_SRC
 
@@ -119,10 +119,20 @@ A: Clojure > Julia > C++ > Python
 
 (use-package python-mode
     :config
-    (add-hook 'python-mode-hook (lambda ()
-                                   (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
-                                   (setq flycheck-check-syntax-automatically '(mode-enabled save))
-                                   (flycheck-mode)))
+    (setq python-shell-interpreter "ipython"
+          python-shell-interpreter-args "-i")
+    (use-package anaconda-mode)
+    (use-package blacken
+    :init
+    (defun blacken-python-hook ()
+        (when (eq major-mode 'python-mode)
+        (blacken-buffer)))
+    (add-hook 'before-save-hook 'blacken-python-hook))
+    ;; removed as lsp-mode handles linting in python
+    ;; (add-hook 'python-mode-hook (lambda ()
+    ;;                                (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
+    ;;                                (setq flycheck-check-syntax-automatically '(mode-enabled save))
+    ;;                                (flycheck-mode)))
     (use-package conda
         :init
         (conda-env-initialize-eshell)
@@ -141,20 +151,39 @@ A: Clojure > Julia > C++ > Python
             '((default "julia")
                 (master "/usr/bin/julia")
                 (chemistry "ssh -t chemistry.me julia")
-                (lis "ssh -t lis.me /home/jay.morgan/workspace/libs/julia/bin/julia")))))
+                (lis "ssh -t lis.me ~/workspace/libs/julia/bin/julia")))))
 #+END_SRC
 
 ** LanguageServer
 
+Use company-mode for completion at point and company box to improve
+the UI of the completion list in prog-modes.
+
 #+BEGIN_SRC emacs-lisp
 (use-package company
+  :hook (prog-mode . company-mode)
   :config
-  (global-company-mode 1)
-  (setq company-idle-delay 0.0001
-        company-minimum-prefix-length 2
-        company-show-numbers t))
+  (setq company-idle-delay 0.00001
+        company-minimum-prefix-length 2))
 
-(global-eldoc-mode -1)
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+#+END_SRC
+
+For our programming buffers, I use =lsp-mode= to connect to a specific
+LanguageServer.
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-mode
+  :hook ((python-mode . lsp-deferred)
+         (julia-mode . lsp-deferred))
+  :commands (lsp lsp-deferred)
+  :init (setq lsp-keymap-prefix "C-c l")
+  :config (lsp-enable-which-key-integration t))
+
+(use-package lsp-julia
+  :config
+  (setq lsp-julia-default-environment "~/.julia/environments/v1.4"))
 #+END_SRC
 
 ** Org-mode all the things!
@@ -204,17 +233,36 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
                                  ("WAIT" . "yellow")
                                  ("DONE" . "Palegreen")
                                  ("CANC" . "red"))
-        org-log-done 'time)
+        org-log-done 'time
+        (add-to-list 'org-latex-classes
+             '("book"
+               "\\documentclass{book}"
+               ("\\part{%s}" . "\\part*{%s}")
+               ("\\chapter{%s}" . "\\chapter*{%s}")
+               ("\\section{%s}" . "\\section*{%s}")
+               ("\\subsection{%s}" . "\\subsection*{%s}")
+               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+        (add-to-list 'org-latex-classes
+           '("book-noparts"
+              "\\documentclass{book}"
+              ("\\chapter{%s}" . "\\chapter*{%s}")
+              ("\\section{%s}" . "\\section*{%s}")
+              ("\\subsection{%s}" . "\\subsection*{%s}")
+              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+              ("\\paragraph{%s}" . "\\paragraph*{%s}")
+              ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
 
-(custom-set-faces '(org-headline-done
-                    ((((class color)
-                       (min-colors 16)
-                       (background dark))
-                      (:foreground "dim gray" :strike-through t)))))
+  (custom-set-faces '(org-headline-done
+                        ((((class color)
+                        (min-colors 16)
+                        (background dark))
+                        (:foreground "dim gray" :strike-through t)))))
 
   ;; list of languages for org-mode to support
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
+                                 (python . t)
+                                 (clojure . t)
                                  (emacs-lisp . t)
                                  (julia . t)
                                  (gnuplot . t)
@@ -235,16 +283,16 @@ possible.
 ** Miscellaneous Packages
 
 #+BEGIN_SRC emacs-lisp
-(use-package docker :bind ("C-c d" . docker))
 (use-package avy)
 (use-package swiper)
 (use-package itail)
-(use-package diminish)
 (use-package magit)
 (use-package disable-mouse)
 (use-package imenu-list)
 (use-package linum-relative)
 (use-package base16-theme)
+(use-package modus-operandi-theme)
+(use-package atom-one-dark-theme)
 (use-package ace-window)
 (use-package focus)
 (use-package iedit)
@@ -252,13 +300,6 @@ possible.
 (use-package csv-mode
   :init
   (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
-
-(use-package blacken
-  :init
-  (defun blacken-python-hook ()
-    (when (eq major-mode 'python-mode)
-      (blacken-buffer)))
-  (add-hook 'before-save-hook 'blacken-python-hook))
 
 (use-package yasnippet
   :init
@@ -272,6 +313,7 @@ possible.
   (setq olivetti-body-width 90)
   (defun set-editing-buffer ()
     (interactive)
+    (linum-mode -1)
     (set-window-fringes (selected-window) 0 0)
     (hl-line-mode -1))
   (add-hook 'olivetti-mode-hook 'set-editing-buffer))
@@ -350,7 +392,6 @@ Projects with =projectile=
   (setq projectile-project-search-path '("~/workspace/")))
 #+END_SRC
 
-
 Workspaces are created using =eyebrowse=
 
 #+BEGIN_SRC emacs-lisp
@@ -367,9 +408,10 @@ bells & whistles that eshell does, is vterm
 #+BEGIN_SRC emacs-lisp
 (use-package vterm
   :commands (vterm vterm-other-window)
-  :custom (vterm-kill-buffer-on-exit t))
+  :custom (vterm-kill-buffer-on-exit t)
+  :init
+  (add-hook 'vterm-mode-hook (lambda () (linum-mode -1))))
 #+END_SRC
-
 
 And finally, helm for partial completions, searches, etc.
 
@@ -413,6 +455,8 @@ And finally, helm for partial completions, searches, etc.
         (switch-to-buffer "vterm")
         (shrink-window 10))
     (vterm)))
+
+(add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
 
 (defvar dark-theme-p t)
 (defun my/toggle-theme ()
@@ -471,7 +515,7 @@ And finally, helm for partial completions, searches, etc.
 (defun my/split (direction)
   (interactive)
   (let ((p-name (projectile-project-name)))
-    (if (string-equal direction "vertical")
+    (if (string= direction "vertical")
         (evil-window-vsplit)
       (evil-window-split))
     (other-window 1)
@@ -494,11 +538,9 @@ And finally, helm for partial completions, searches, etc.
   ("7" eyebrowse-switch-to-window-config-7 "Workspace 7")
   ("8" eyebrowse-switch-to-window-config-8 "Workspace 8")
   ("9" eyebrowse-switch-to-window-config-9 "Workspace 9"))
-(define-key evil-motion-state-map
-  (kbd "SPC TAB") 'hydra-eyebrowse/body)
+(bind-evil-key "SPC TAB" hydra-eyebrowse/body)
 
-(define-key evil-motion-state-map
-  (kbd "SPC SPC") 'helm-buffers-list)
+(bind-evil-key "SPC SPC" helm-buffers-list)
 
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
@@ -511,14 +553,12 @@ And finally, helm for partial completions, searches, etc.
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("u" undo-tree-visualize "Undo-tree")
   ("m" mu4e "Open Mailbox"))
-(define-key evil-motion-state-map
-  (kbd "SPC o") 'hydra-openbuffer/body)
+(bind-evil-key "SPC o" hydra-openbuffer/body)
 
 (defhydra hydra-insert (:color blue :hint nil)
   "Insert into Buffer"
   ("s" yas-insert-snippet "Insert Snippet"))
-(define-key evil-motion-state-map
-  (kbd "SPC i") 'hydra-insert/body)
+(bind-evil-key "SPC i" hydra-insert/body)
 
 (defhydra hydra-remote-hosts (:color blue :hint nil)
   "Browse remote hosts"
@@ -526,8 +566,7 @@ And finally, helm for partial completions, searches, etc.
   ("s" (dired-at-point "/ssh:sunbird.me:~/workspace") "Sunbird Swansea")
   ("i" (dired-at-point "/ssh:ibex.me:~") "KAUST Ibex")
   ("c" (dired-at-point "/ssh:chemistry.me:~/workspace") "Chemistry Swanasea"))
-(define-key evil-motion-state-map
-  (kbd "SPC r") 'hydra-remote-hosts/body)
+(bind-evil-key "SPC r" hydra-remote-hosts/body)
 
 (defhydra hydra-modify-buffers (:color blue :hint nil)
   "Modify buffer"
@@ -535,8 +574,7 @@ And finally, helm for partial completions, searches, etc.
   ("o" olivetti-mode "Olivetti Mode")
   ("b" ibuffer "Edit Buffers")
   ("q" (kill-buffer-and-window) "Close"))
-(define-key evil-motion-state-map
-  (kbd "SPC m") 'hydra-modify-buffers/body)
+(bind-evil-key "SPC m" hydra-modify-buffers/body)
 #+END_SRC
 
 * Custom Functions
@@ -567,9 +605,12 @@ And finally, helm for partial completions, searches, etc.
 
 (bind-evil-key "SPC l l" (lambda ()
                            (interactive)
-                           (slurm-get-stats  slurm-username
+                           (slurm-get-stats slurm-username
                                             slurm-host
                                             slurm-job-format)))
+
+(defun dorsync (src dest)
+  (shell-command (concat "dorsync " src " " dest)))
 #+END_SRC
 * Email Client
 I use mu4e and offlinemap to manage my email.
@@ -629,9 +670,9 @@ disable-mouse package to disable all mouse operations in evil mode.
 
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'base16-espresso t)
-(set-frame-font "Tamsyn-11")
-(setq default-frame-alist '((font . "JetBrains Mono-10")))
+(load-theme 'atom-one-dark t)
+(set-frame-font "JetBrains Mono-9")
+(setq default-frame-alist '((font . "JetBrains Mono-9")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp

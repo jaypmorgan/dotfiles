@@ -207,9 +207,9 @@ let g:pymode_rope=0
 let g:jedi#completions_enabled=0      " use deoplete-vim as its async in neovim
 let g:deoplete#sources#jedi#show_docstring=1
 
-au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
-au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
-au VimEnter,BufRead,BufNewFile *.tex set wrap
+" au VimEnter,BufRead,BufNewFile *.tex set textwidth=75
+" au VimEnter,BufRead,BufNewFile *.tex set formatoptions+=a
+" au VimEnter,BufRead,BufNewFile *.tex set wrap
 
 " Syntastic Plugin Settings
 set statusline+=%#warningmsg#
