@@ -1,31 +1,3 @@
-#+TITLE: Emacs Config
-#+AUTHOR: Jay Morgan
-
-* Table of Contents :TOC:
-- [[#executable-path][Executable Path]]
-- [[#setup-package-environment][Setup Package Environment]]
-  - [[#initialisation][Initialisation]]
-  - [[#programming-modes][Programming Modes]]
-  - [[#languageserver][LanguageServer]]
-  - [[#org-mode-all-the-things][Org-mode all the things!]]
-  - [[#miscellaneous-packages][Miscellaneous Packages]]
-- [[#emacs-environment][Emacs Environment]]
-- [[#keybindings][Keybindings]]
-- [[#custom-functions][Custom Functions]]
-- [[#email-client][Email Client]]
-- [[#display-settings][Display Settings]]
-  - [[#gui-elements][GUI Elements]]
-  - [[#line-numbering][Line Numbering]]
-  - [[#look--feel-theme][Look & Feel (Theme)]]
-  - [[#splash-screen][Splash Screen]]
-
-* Executable Path
-There are a few directories I would like to include in the environment =PATH=
-variable. This includes anything binary install via Anaconda (sometimes it can be
-convenient), and fzf (though...I really don't use it, helm covers the functionality
-pretty well).
-
-#+BEGIN_SRC emacs-lisp
 (defun my/add-to-exec (new-path)
   " Add the new-path (dir) to the PATH variable "
   (let ((new-path (expand-file-name new-path)))
@@ -35,25 +7,14 @@ pretty well).
 (my/add-to-exec "~/miniconda3/bin")
 (my/add-to-exec "~/.fzf/bin")
 (my/add-to-exec "~/.cargo/bin")
-#+END_SRC
-* Setup Package Environment
-** Initialisation
-Over the time of configuring Emacs, I've found these variables help certain
-packages from creating speed problems.
 
-#+BEGIN_SRC emacs-lisp
 (setq gc-cons-threshold 100000000
       read-process-output-max (* 1024 1024)
       evil-want-keybinding nil
       x-wait-for-event-timeout nil
       tramp-ssh-controlmaster-options ""
       tramp-default-method "ssh")
-#+END_SRC
 
-A necessary configuration step of a customised Emacs setup is using melpa with
-=package.el=.
-
-#+BEGIN_SRC emacs-lisp
 ;; Manually installed plugins/packages
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
 
@@ -65,12 +26,7 @@ A necessary configuration step of a customised Emacs setup is using melpa with
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
 (package-refresh-contents)
 (package-initialize)
-#+END_SRC
 
-Most, if not all, packages are managed using the =use-package= plugin. This should be
-the only plugin that is install in the "normal" fashion.
-
-#+BEGIN_SRC emacs-lisp
 ;; Install function define a function to check if a package is
 ;; installed, if it not we can install it. From this, we may quickly
 ;; and easily install packages.
@@ -84,26 +40,14 @@ the only plugin that is install in the "normal" fashion.
 (setq use-package-always-ensure t)
 ;; Makes it possible to install required binaries
 (use-package use-package-ensure-system-package)
-#+END_SRC
 
-And quelpa
-
-#+BEGIN_SRC emacs-lisp
 (use-package quelpa)
 (quelpa
  '(quelpa-use-package
    :fetcher git
    :url "https://github.com/quelpa/quelpa-use-package.git"))
 (require 'quelpa-use-package)
-#+END_SRC
 
-** Programming Modes
-It's a constant struggle to not learn every programming language ever!
-
-Q: What are your favourite programming languages?\\
-A: Clojure > Julia > C++ > Python
-
-#+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :init
   (add-hook 'sh-mode-hook 'flycheck-mode))
@@ -152,14 +96,7 @@ A: Clojure > Julia > C++ > Python
                 (master "/usr/bin/julia")
                 (chemistry "ssh -t chemistry.me julia")
                 (lis "ssh -t lis.me ~/workspace/libs/julia/bin/julia")))))
-#+END_SRC
 
-** LanguageServer
-
-Use company-mode for completion at point and company box to improve the UI of the completion list in
-prog-modes.
-
-#+BEGIN_SRC emacs-lisp
 (use-package company
   :hook (prog-mode . company-mode)
   :config
@@ -168,11 +105,7 @@ prog-modes.
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
-#+END_SRC
 
-For our programming buffers, I use =lsp-mode= to connect to a specific LanguageServer.
-
-#+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :hook ((python-mode . lsp-deferred)
          (julia-mode . lsp-deferred))
@@ -186,12 +119,7 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 
 (use-package lsp-julia
   :quelpa ((lsp-julia :fetcher github :repo "non-Jedi/lsp-julia" :files (:defaults "languageserver")) :upgrade t))
-#+END_SRC
 
-** Org-mode all the things!
-Once I learnt about org-mode, it would always be tough to leave Emacs.
-
-#+BEGIN_SRC emacs-lisp
 (use-package org
   :after cider
   :ensure org-plus-contrib
@@ -269,22 +197,12 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
                                  (julia . t)
                                  (gnuplot . t)
                                  (dot . t))))
-#+END_SRC
 
-Sometimes it is nice to have a table of contents inside the org-mode document,
-or in the rendered version on GitHub/Gitlab. With =toc-org= this is easily
-possible.
-
-#+BEGIN_SRC emacs-lisp
 (use-package toc-org
   :init
   (add-hook 'markdown-mode-hook 'toc-org-mode)
   (add-hook 'org-mode-hook 'toc-org-mode))
-#+END_SRC
 
-** Miscellaneous Packages
-
-#+BEGIN_SRC emacs-lisp
 (use-package avy)
 (use-package swiper)
 (use-package itail)
@@ -337,15 +255,7 @@ possible.
   :init
   (shackle-mode 1)
   (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
-#+END_SRC
 
-* Emacs Environment
-A number of changes to the default config have been made to make the transition
-from VIM to Emacs a little easier. First and foremost is =evil-mode=. Another
-amendment is =evil-collection= with helps with propagating =evil-mode= to other
-non-evil environments such as mu4e.
-
-#+BEGIN_SRC emacs-lisp
 (use-package evil
   :init
   (evil-mode 1))
@@ -354,27 +264,14 @@ non-evil environments such as mu4e.
   :after (evil)
   :config
   (evil-collection-init))
-#+END_SRC
 
-Keybindings are managed via =hydra=
-
-#+BEGIN_SRC emacs-lisp
 (use-package hydra)
-#+END_SRC
 
-It is unnecessary to say that Emacs comes with a whole load of keybindings,
-=which-key= helps with easily being reminded.
-
-#+BEGIN_SRC emacs-lisp
 (use-package which-key
   :config
   (setq which-key-idle-delay 1)
   (which-key-mode 1))
-#+END_SRC
 
-A very simple modeline is configured with =doom-modeline=
-
-#+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
   :init
   (doom-modeline-mode 1)
@@ -382,44 +279,27 @@ A very simple modeline is configured with =doom-modeline=
         doom-modeline-mu4e t
         doom-modeline-icon nil
         doom-modeline-env-enable-python t))
-#+END_SRC
 
-Projects with =projectile=
-
-#+BEGIN_SRC emacs-lisp
 (use-package projectile
   :config
   (projectile-mode 1)
   (setq projectile-git-submodule-command nil)
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
-#+END_SRC
 
-Workspaces are created using =eyebrowse=
-
-#+BEGIN_SRC emacs-lisp
 (use-package eyebrowse
   :config
   (eyebrowse-mode 1)
   ;; new workspaces are always empty
   (setq eyebrowse-new-workspace t))
-#+END_SRC
 
-The best terminal I've yet to come across, even if it doesn't have the elisp
-bells & whistles that eshell does, is vterm
-
-#+BEGIN_SRC emacs-lisp
 (use-package vterm
   :commands (vterm vterm-other-window)
   :custom (vterm-kill-buffer-on-exit t)
   :init
   (add-hook 'vterm-mode-hook (lambda () (linum-mode -1)))
   (setq term-prompt-regexp "^[^#$%>\n]*$ *"))
-#+END_SRC
 
-And finally, helm for partial completions, searches, etc.
-
-#+BEGIN_SRC emacs-lisp
 (use-package helm
   :config
   (helm-mode 1)
@@ -431,10 +311,7 @@ And finally, helm for partial completions, searches, etc.
         helm-display-function 'pop-to-buffer
         helm-idle-delay 0.0
         helm-input-idle-delay 0.01))
-#+END_SRC
-* Keybindings
 
-#+BEGIN_SRC emacs-lisp
 (require 'hydra)
 (require 'evil)
 (require 'ace-window)
@@ -580,11 +457,7 @@ And finally, helm for partial completions, searches, etc.
   ("b" ibuffer "Edit Buffers")
   ("q" (kill-buffer-and-window) "Close"))
 (bind-evil-key "SPC m" hydra-modify-buffers/body)
-#+END_SRC
 
-* Custom Functions
-
-#+BEGIN_SRC emacs-lisp
 (defun get-stats (user host format)
   (eshell-command-result
    (concat
@@ -616,16 +489,7 @@ And finally, helm for partial completions, searches, etc.
 
 (defun dorsync (src dest)
   (shell-command (concat "dorsync " src " " dest)))
-#+END_SRC
-* Email Client
-I use mu4e and offlinemap to manage my email.
 
-For the most part, the mu4e configuration is as default. The exception to this is to
-use the =mail-add-attachment= function that doesn't prompt for the type of file
-you're trying to attach. The second is =org-store-link= which allows me to easily
-reference the email from my TODO list.
-
-#+BEGIN_SRC emacs-lisp
 (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
   ;; define some custom keybindings
@@ -639,48 +503,26 @@ reference the email from my TODO list.
 (use-package mu4e-alert
   :init
   (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
-#+END_SRC
 
-* Display Settings
-** GUI Elements
-Keep the frame clean by removing all such GUI elements.
-
-#+BEGIN_SRC emacs-lisp
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
-#+END_SRC
 
-Disable mouse!!\\
-While it may be nice to use the mouse, I find it more preferable to use emacs as a
-'cmd-line' application, rather than graphical point-and-click. I use disable-mouse
-package to disable all mouse operations in evil mode.
-
-#+BEGIN_SRC emacs-lisp
 (global-disable-mouse-mode)
 (mapc #'disable-mouse-in-keymap
   (list evil-motion-state-map
         evil-normal-state-map
         evil-visual-state-map
         evil-insert-state-map))
-#+END_SRC
 
-** Line Numbering
-#+BEGIN_SRC emacs-lisp
 (global-linum-mode)
 (linum-relative-on)
-#+END_SRC
 
-** Look & Feel (Theme)
-
-#+BEGIN_SRC emacs-lisp
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'atom-one-dark t)
 (set-frame-font "JetBrains Mono-9")
 (setq default-frame-alist '((font . "JetBrains Mono-9")))
-#+END_SRC
 
-#+BEGIN_SRC emacs-lisp
 (setq dired-listing-switches "-alh")
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
@@ -724,15 +566,8 @@ package to disable all mouse operations in evil mode.
       recentf-max-saved-items 50)
 
 (global-prettify-symbols-mode +1)
-#+END_SRC
 
-** Splash Screen
-In my workflow, I don't find the splash screen useful, thus I prefer to supress it
-and use the scratch buffer as the initial state.
-
-#+BEGIN_SRC emacs-lisp
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 (setq initial-scratch-message "")
-#+END_SRC
