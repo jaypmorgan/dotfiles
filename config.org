@@ -1,7 +1,7 @@
 #+TITLE: Emacs Config
 #+AUTHOR: Jay Morgan
 
-* Table of Contents :TOC:
+* Table of Contents                                                     :TOC:
 - [[#executable-path][Executable Path]]
 - [[#setup-package-environment][Setup Package Environment]]
   - [[#initialisation][Initialisation]]
@@ -36,6 +36,7 @@ pretty well).
 (my/add-to-exec "~/.fzf/bin")
 (my/add-to-exec "~/.cargo/bin")
 #+END_SRC
+
 * Setup Package Environment
 ** Initialisation
 Over the time of configuring Emacs, I've found these variables help certain
@@ -163,8 +164,9 @@ prog-modes.
 (use-package company
   :hook (prog-mode . company-mode)
   :config
-  (setq company-idle-delay 0.00001
-        company-minimum-prefix-length 2))
+  (setq company-idle-delay 0.0000001
+        company-minimum-prefix-length 2
+        company-candidates-cache t))
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
@@ -180,12 +182,11 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
   :init (setq lsp-keymap-prefix "C-c l")
   :config (lsp-enable-which-key-integration t))
 
-;; (use-package lsp-julia
-;;   :config
-;;   (setq lsp-julia-default-environment "~/.julia/environments/v1.4"))
-
 (use-package lsp-julia
-  :quelpa ((lsp-julia :fetcher github :repo "non-Jedi/lsp-julia" :files (:defaults "languageserver")) :upgrade t))
+  :quelpa ((lsp-julia :fetcher github
+                      :repo "non-Jedi/lsp-julia"
+                      :files (:defaults "languageserver"))
+           :upgrade t))
 #+END_SRC
 
 ** Org-mode all the things!
@@ -201,7 +202,7 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   (add-hook 'org-mode-hook #'auto-fill-mode)
   (require 'ob-clojure)
   (require 'cider)
-  ;; extensions on org-mode
+  (use-package org-trello)
   (use-package ob-async)
   (use-package ox-pandoc)
   (use-package ox-gfm)
@@ -292,12 +293,22 @@ possible.
 (use-package disable-mouse)
 (use-package imenu-list)
 (use-package linum-relative)
-(use-package base16-theme)
-(use-package modus-operandi-theme)
-(use-package atom-one-dark-theme)
 (use-package ace-window)
 (use-package focus)
 (use-package iedit)
+(use-package ripgrep)
+
+(use-package elfeed
+  :init
+  (use-package elfeed-org
+    :config
+    (elfeed-org)
+    (setq rmh-elfeed-org-files '("~/Dropbox/Notes/feeds.org"))))
+
+(use-package undo-tree
+  :init
+  (setq undo-tree-visualizer-timestamps t)
+  (global-undo-tree-mode))
 
 (use-package csv-mode
   :init
@@ -414,6 +425,7 @@ bells & whistles that eshell does, is vterm
   :custom (vterm-kill-buffer-on-exit t)
   :init
   (add-hook 'vterm-mode-hook (lambda () (linum-mode -1)))
+  (add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
   (setq term-prompt-regexp "^[^#$%>\n]*$ *"))
 #+END_SRC
 
@@ -432,6 +444,7 @@ And finally, helm for partial completions, searches, etc.
         helm-idle-delay 0.0
         helm-input-idle-delay 0.01))
 #+END_SRC
+
 * Keybindings
 
 #+BEGIN_SRC emacs-lisp
@@ -440,8 +453,6 @@ And finally, helm for partial completions, searches, etc.
 (require 'ace-window)
 (define-key evil-motion-state-map " " nil)
 (global-set-key (kbd "M-x") 'helm-M-x)
-
-(add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))
 
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
@@ -460,13 +471,11 @@ And finally, helm for partial completions, searches, etc.
         (shrink-window 10))
     (vterm)))
 
-(add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
-
 (defvar dark-theme-p t)
 (defun my/toggle-theme ()
   (interactive)
-  (let ((light-theme 'base16-default-light)
-        (dark-theme 'base16-espresso))
+  (let ((light-theme 'modus-operandi)
+        (dark-theme 'atom-one-dark))
     (if (eq dark-theme-p t)
         (progn
           (load-theme light-theme t)
@@ -549,15 +558,16 @@ And finally, helm for partial completions, searches, etc.
 
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
+  ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
+  ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
+  ("D" (dired-jump) "Dired")
+  ("e" elfeed "Elfeed")
+  ("i" imenu-list-smart-toggle "Open Menu Buffer")
+  ("m" mu4e "Open Mailbox")
   ("s" my/bash "Shell")
   ("S" vterm "Big Shell")
-  ("d" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
-  ("D" (dired-at-point ".") "Dired")
-  ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
-  ("i" imenu-list-smart-toggle "Open Menu Buffer")
-  ("u" undo-tree-visualize "Undo-tree")
-  ("m" mu4e "Open Mailbox"))
+  ("u" undo-tree-visualize "Undo-tree"))
 (bind-evil-key "SPC o" hydra-openbuffer/body)
 
 (defhydra hydra-insert (:color blue :hint nil)
@@ -586,12 +596,13 @@ And finally, helm for partial completions, searches, etc.
 
 #+BEGIN_SRC emacs-lisp
 (defun get-stats (user host format)
+  "Get SLURM status from remote server"
   (eshell-command-result
    (concat
     "cd /ssh:" host ":/ && sacct -u" user " --format=" format)))
 
 (defun slurm-get-stats (user host format)
-  " Log into SLURM server and get current running/pending jobs "
+  "Log into SLURM server and get current running/pending jobs"
   (interactive)
   (let ((stats (get-stats user host format))
         (temp-buffer-name "*slurm-log*"))
@@ -614,9 +625,26 @@ And finally, helm for partial completions, searches, etc.
                                             slurm-host
                                             slurm-job-format)))
 
+;; Projectile level syncing between local and remote hosts
+;; set the initial variables to nil
+;; .dir-local.el should set these at a project level
+(setq rsync-source nil
+      rsync-destination nil)
+
 (defun dorsync (src dest)
-  (shell-command (concat "dorsync " src " " dest)))
+  "Launch an asynchronuous rsync command"
+  (interactive)
+  (let ((async-value async-shell-command-display-buffer))
+    (setq async-shell-command-display-buffer nil)
+    (async-shell-command (concat "rsync -a " src " " dest))
+    (setq async-shell-command-display-buffer async-value)))
+
+;; Bind a local key to launch rsync
+(bind-evil-key "SPC l ;" (lambda ()
+                           (interactive)
+                           (dorsync rsync-source rsync-destination)))
 #+END_SRC
+
 * Email Client
 I use mu4e and offlinemap to manage my email.
 
@@ -634,7 +662,8 @@ reference the email from my TODO list.
   (define-key mu4e-view-mode-map (kbd "C-c C-s") 'org-store-link)
   ;; load the configuration details
   (when (file-exists-p "~/.emacs.d/mu4e-init.el")
-      (load "~/.emacs.d/mu4e-init.el")))
+    (load "~/.emacs.d/mu4e-init.el")
+    (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))))
 
 (use-package mu4e-alert
   :init
@@ -674,17 +703,21 @@ package to disable all mouse operations in evil mode.
 ** Look & Feel (Theme)
 
 #+BEGIN_SRC emacs-lisp
+(use-package base16-theme)
+(use-package modus-operandi-theme)
+(use-package atom-one-dark-theme)
+
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'atom-one-dark t)
-(set-frame-font "JetBrains Mono-9")
-(setq default-frame-alist '((font . "JetBrains Mono-9")))
+(load-theme 'modus-operandi t)
+(set-frame-font "JetBrains Mono-10")
+(setq default-frame-alist '((font . "JetBrains Mono-10")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-(setq dired-listing-switches "-alh")
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
+
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
@@ -706,6 +739,10 @@ package to disable all mouse operations in evil mode.
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
+
+(use-package dired-single)
+(use-package dired-open)
+(setq dired-listing-switches "-alhgo --group-directories-first")
 
 ;; Close the compilation window if there was no error at all.
 (setq compilation-exit-message-function

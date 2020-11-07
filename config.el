@@ -100,8 +100,9 @@
 (use-package company
   :hook (prog-mode . company-mode)
   :config
-  (setq company-idle-delay 0.00001
-        company-minimum-prefix-length 2))
+  (setq company-idle-delay 0.0000001
+        company-minimum-prefix-length 2
+        company-candidates-cache t))
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
@@ -129,7 +130,7 @@
   (add-hook 'org-mode-hook #'auto-fill-mode)
   (require 'ob-clojure)
   (require 'cider)
-  ;; extensions on org-mode
+  (use-package org-trello)
   (use-package ob-async)
   (use-package ox-pandoc)
   (use-package ox-gfm)
@@ -216,6 +217,12 @@
 (use-package ace-window)
 (use-package focus)
 (use-package iedit)
+(use-package ripgrep)
+
+(use-package undo-tree
+  :init
+  (setq undo-tree-visualizer-timestamps t)
+  (global-undo-tree-mode))
 
 (use-package csv-mode
   :init
@@ -342,8 +349,8 @@
 (defvar dark-theme-p t)
 (defun my/toggle-theme ()
   (interactive)
-  (let ((light-theme 'base16-default-light)
-        (dark-theme 'base16-espresso))
+  (let ((light-theme 'modus-operandi)
+        (dark-theme 'atom-one-dark))
     (if (eq dark-theme-p t)
         (progn
           (load-theme light-theme t)
@@ -428,8 +435,8 @@
   "Open Buffer"
   ("s" my/bash "Shell")
   ("S" vterm "Big Shell")
-  ("d" (progn (split-window-sensibly) (dired-at-point ".")) "Dired in another window")
-  ("D" (dired-at-point ".") "Dired")
+  ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
+  ("D" (dired-jump) "Dired")
   ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
   ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
@@ -487,8 +494,24 @@
                                             slurm-host
                                             slurm-job-format)))
 
+;; Projectile level syncing between local and remote hosts
+;; set the initial variables to nil
+;; .dir-local.el should set these at a project level
+(setq rsync-source nil
+      rsync-destination nil)
+
 (defun dorsync (src dest)
-  (shell-command (concat "dorsync " src " " dest)))
+  " Launch an asynchronuous rsync command "
+  (interactive)
+  (let ((async-value async-shell-command-display-buffer))
+    (setq async-shell-command-display-buffer nil)
+    (async-shell-command (concat "rsync -a " src " " dest))
+    (setq async-shell-command-display-buffer async-value)))
+
+;; Bind a local key to launch rsync
+(bind-evil-key "SPC l ;" (lambda ()
+                           (interactive)
+                           (dorsync rsync-source rsync-destination)))
 
 (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
@@ -519,9 +542,9 @@
 (linum-relative-on)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'atom-one-dark t)
-(set-frame-font "JetBrains Mono-9")
-(setq default-frame-alist '((font . "JetBrains Mono-9")))
+(load-theme 'modus-operandi t)
+(set-frame-font "JetBrains Mono-10")
+(setq default-frame-alist '((font . "JetBrains Mono-10")))
 
 (setq dired-listing-switches "-alh")
 (global-auto-revert-mode t)
@@ -548,6 +571,10 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
+
+(use-package dired-single)
+(use-package dired-open)
+(setq dired-listing-switches "-alhgo --group-directories-first")
 
 ;; Close the compilation window if there was no error at all.
 (setq compilation-exit-message-function
