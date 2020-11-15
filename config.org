@@ -1,6 +1,10 @@
 #+TITLE: Emacs Config
 #+AUTHOR: Jay Morgan
 
+# Local Variables:
+# eval: (add-hook 'after-save-hook (lambda nil (org-babel-tangle)) nil t)
+# End:
+
 * Table of Contents                                                     :TOC:
 - [[#executable-path][Executable Path]]
 - [[#setup-package-environment][Setup Package Environment]]
@@ -112,6 +116,7 @@ A: Clojure > Julia > C++ > Python
 (use-package markdown-mode)
 (use-package htmlize)
 (use-package toml-mode)
+(use-package haskell-mode)
 
 (use-package eglot
   :config
@@ -197,63 +202,56 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   :after cider
   :ensure org-plus-contrib
   :init
-  (add-hook 'org-mode-hook #'visual-line-mode)
-  (add-hook 'org-mode-hook '(lambda () (set-fill-column 85)))
-  (add-hook 'org-mode-hook #'auto-fill-mode)
+  (add-hook 'org-mode-hook '(lambda ()
+                              (set-fill-column 85)
+                              (visual-line-mode 1)
+                              (auto-fill-mode 1)))
   (require 'ob-clojure)
+  (require 'ox-latex)
   (require 'cider)
-  (use-package org-trello)
-  (use-package ob-async)
+
   (use-package ox-pandoc)
   (use-package ox-gfm)
+  (use-package jupyter
+    :quelpa ((jupyter :fetcher github :repo "nnicandro/emacs-jupyter" :branch "master") :upgrade t))
+
   (use-package org-ref
     :init
     (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
           org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
+
   (use-package helm-bibtex
     :init
     (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
           bibtex-completion-pdf-open-function 'org-open-file))
-  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-  (add-to-list 'org-latex-compilers "tectonic")
-  (add-hook 'org-mode-hook 'turn-on-auto-fill)
-  (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
-  (require 'ox-latex)
+  ;; enable tikzpictures in latex export
+  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+  (eval-after-load "preview" '
+    (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
   ;; set variables
   (setq org-startup-indented t
-        org-src-tab-acts-natively t
-        org-edit-src-content-indentation 0
         org-startup-folded t
+        org-src-tab-acts-natively t
+        org-hide-leading-stars t
+        org-edit-src-content-indentation 0
+        org-latex-listings 'minted   ;; color highlighting for source blocks
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process
+            '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+            "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
         org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
-        org-confirm-babel-evaluate nil
         org-babel-clojure-backend 'cider
+        org-confirm-babel-evaluate nil
         org-fontify-done-headline t
+        org-log-done 'time
         org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
         org-todo-keyword-faces '(("TODO" . org-warning)
                                  ("WAIT" . "yellow")
                                  ("DONE" . "Palegreen")
-                                 ("CANC" . "red"))
-        org-log-done 'time
-        (add-to-list 'org-latex-classes
-             '("book"
-               "\\documentclass{book}"
-               ("\\part{%s}" . "\\part*{%s}")
-               ("\\chapter{%s}" . "\\chapter*{%s}")
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\subsection{%s}" . "\\subsection*{%s}")
-               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-        (add-to-list 'org-latex-classes
-           '("book-noparts"
-              "\\documentclass{book}"
-              ("\\chapter{%s}" . "\\chapter*{%s}")
-              ("\\section{%s}" . "\\section*{%s}")
-              ("\\subsection{%s}" . "\\subsection*{%s}")
-              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-              ("\\paragraph{%s}" . "\\paragraph*{%s}")
-              ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
+                                 ("CANC" . "red")))
 
   (custom-set-faces '(org-headline-done
                         ((((class color)
@@ -265,6 +263,7 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (python . t)
+                                 (jupyter . t)
                                  (clojure . t)
                                  (emacs-lisp . t)
                                  (julia . t)
@@ -709,8 +708,8 @@ package to disable all mouse operations in evil mode.
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
-(set-frame-font "JetBrains Mono-10")
-(setq default-frame-alist '((font . "JetBrains Mono-10")))
+(set-frame-font "JetBrains Mono-12")
+(setq default-frame-alist '((font . "JetBrains Mono-12")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp

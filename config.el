@@ -55,6 +55,7 @@
 (use-package markdown-mode)
 (use-package htmlize)
 (use-package toml-mode)
+(use-package haskell-mode)
 
 (use-package eglot
   :config
@@ -114,74 +115,66 @@
   :init (setq lsp-keymap-prefix "C-c l")
   :config (lsp-enable-which-key-integration t))
 
-;; (use-package lsp-julia
-;;   :config
-;;   (setq lsp-julia-default-environment "~/.julia/environments/v1.4"))
-
 (use-package lsp-julia
-  :quelpa ((lsp-julia :fetcher github :repo "non-Jedi/lsp-julia" :files (:defaults "languageserver")) :upgrade t))
+  :quelpa ((lsp-julia :fetcher github
+                      :repo "non-Jedi/lsp-julia"
+                      :files (:defaults "languageserver"))
+           :upgrade t))
 
 (use-package org
   :after cider
   :ensure org-plus-contrib
   :init
-  (add-hook 'org-mode-hook #'visual-line-mode)
-  (add-hook 'org-mode-hook '(lambda () (set-fill-column 85)))
-  (add-hook 'org-mode-hook #'auto-fill-mode)
+  (add-hook 'org-mode-hook '(lambda ()
+                              (set-fill-column 85)
+                              (visual-line-mode 1)
+                              (auto-fill-mode 1)))
   (require 'ob-clojure)
+  (require 'ox-latex)
   (require 'cider)
-  (use-package org-trello)
-  (use-package ob-async)
+
   (use-package ox-pandoc)
   (use-package ox-gfm)
+  (use-package jupyter
+    :quelpa ((jupyter :fetcher github :repo "nnicandro/emacs-jupyter" :branch "master") :upgrade t))
+
   (use-package org-ref
     :init
     (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
           org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
+
   (use-package helm-bibtex
     :init
     (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
           bibtex-completion-pdf-open-function 'org-open-file))
-  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-  (add-to-list 'org-latex-compilers "tectonic")
-  (add-hook 'org-mode-hook 'turn-on-auto-fill)
-  (eval-after-load "preview" '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
-  (require 'ox-latex)
+  ;; enable tikzpictures in latex export
+  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+  (eval-after-load "preview" '
+    (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
   ;; set variables
   (setq org-startup-indented t
-        org-src-tab-acts-natively t
-        org-edit-src-content-indentation 0
         org-startup-folded t
+        org-src-tab-acts-natively t
+        org-hide-leading-stars t
+        org-edit-src-content-indentation 0
+        org-latex-listings 'minted   ;; color highlighting for source blocks
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process
+            '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+            "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
         org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
-        org-confirm-babel-evaluate nil
         org-babel-clojure-backend 'cider
+        org-confirm-babel-evaluate nil
         org-fontify-done-headline t
+        org-log-done 'time
         org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
         org-todo-keyword-faces '(("TODO" . org-warning)
                                  ("WAIT" . "yellow")
                                  ("DONE" . "Palegreen")
-                                 ("CANC" . "red"))
-        org-log-done 'time
-        (add-to-list 'org-latex-classes
-             '("book"
-               "\\documentclass{book}"
-               ("\\part{%s}" . "\\part*{%s}")
-               ("\\chapter{%s}" . "\\chapter*{%s}")
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\subsection{%s}" . "\\subsection*{%s}")
-               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-        (add-to-list 'org-latex-classes
-           '("book-noparts"
-              "\\documentclass{book}"
-              ("\\chapter{%s}" . "\\chapter*{%s}")
-              ("\\section{%s}" . "\\section*{%s}")
-              ("\\subsection{%s}" . "\\subsection*{%s}")
-              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-              ("\\paragraph{%s}" . "\\paragraph*{%s}")
-              ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
+                                 ("CANC" . "red")))
 
   (custom-set-faces '(org-headline-done
                         ((((class color)
@@ -193,6 +186,7 @@
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (python . t)
+                                 (jupyter . t)
                                  (clojure . t)
                                  (emacs-lisp . t)
                                  (julia . t)
@@ -211,13 +205,17 @@
 (use-package disable-mouse)
 (use-package imenu-list)
 (use-package linum-relative)
-(use-package base16-theme)
-(use-package modus-operandi-theme)
-(use-package atom-one-dark-theme)
 (use-package ace-window)
 (use-package focus)
 (use-package iedit)
 (use-package ripgrep)
+
+(use-package elfeed
+  :init
+  (use-package elfeed-org
+    :config
+    (elfeed-org)
+    (setq rmh-elfeed-org-files '("~/Dropbox/Notes/feeds.org"))))
 
 (use-package undo-tree
   :init
@@ -305,6 +303,7 @@
   :custom (vterm-kill-buffer-on-exit t)
   :init
   (add-hook 'vterm-mode-hook (lambda () (linum-mode -1)))
+  (add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
   (setq term-prompt-regexp "^[^#$%>\n]*$ *"))
 
 (use-package helm
@@ -325,8 +324,6 @@
 (define-key evil-motion-state-map " " nil)
 (global-set-key (kbd "M-x") 'helm-M-x)
 
-(add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))
-
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
    server if invoked in tramp buffer"
@@ -343,8 +340,6 @@
         (switch-to-buffer "vterm")
         (shrink-window 10))
     (vterm)))
-
-(add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
 
 (defvar dark-theme-p t)
 (defun my/toggle-theme ()
@@ -433,15 +428,16 @@
 
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
-  ("s" my/bash "Shell")
-  ("S" vterm "Big Shell")
+  ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
-  ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
-  ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
+  ("e" elfeed "Elfeed")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
-  ("u" undo-tree-visualize "Undo-tree")
-  ("m" mu4e "Open Mailbox"))
+  ("m" mu4e "Open Mailbox")
+  ("s" my/bash "Shell")
+  ("S" vterm "Big Shell")
+  ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
+  ("u" undo-tree-visualize "Undo-tree"))
 (bind-evil-key "SPC o" hydra-openbuffer/body)
 
 (defhydra hydra-insert (:color blue :hint nil)
@@ -466,12 +462,13 @@
 (bind-evil-key "SPC m" hydra-modify-buffers/body)
 
 (defun get-stats (user host format)
+  "Get SLURM status from remote server"
   (eshell-command-result
    (concat
     "cd /ssh:" host ":/ && sacct -u" user " --format=" format)))
 
 (defun slurm-get-stats (user host format)
-  " Log into SLURM server and get current running/pending jobs "
+  "Log into SLURM server and get current running/pending jobs"
   (interactive)
   (let ((stats (get-stats user host format))
         (temp-buffer-name "*slurm-log*"))
@@ -501,7 +498,7 @@
       rsync-destination nil)
 
 (defun dorsync (src dest)
-  " Launch an asynchronuous rsync command "
+  "Launch an asynchronuous rsync command"
   (interactive)
   (let ((async-value async-shell-command-display-buffer))
     (setq async-shell-command-display-buffer nil)
@@ -521,7 +518,8 @@
   (define-key mu4e-view-mode-map (kbd "C-c C-s") 'org-store-link)
   ;; load the configuration details
   (when (file-exists-p "~/.emacs.d/mu4e-init.el")
-      (load "~/.emacs.d/mu4e-init.el")))
+    (load "~/.emacs.d/mu4e-init.el")
+    (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))))
 
 (use-package mu4e-alert
   :init
@@ -541,15 +539,19 @@
 (global-linum-mode)
 (linum-relative-on)
 
+(use-package base16-theme)
+(use-package modus-operandi-theme)
+(use-package atom-one-dark-theme)
+
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
-(set-frame-font "JetBrains Mono-10")
-(setq default-frame-alist '((font . "JetBrains Mono-10")))
+(set-frame-font "JetBrains Mono-12")
+(setq default-frame-alist '((font . "JetBrains Mono-12")))
 
-(setq dired-listing-switches "-alh")
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
+
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
