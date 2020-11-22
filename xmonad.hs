@@ -13,6 +13,8 @@ import System.Exit
 import XMonad.Util.SpawnOnce
 import XMonad.Util.Run
 import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.DynamicLog
+import XMonad.Hooks.SetWMName
 import System.IO
 
 import qualified XMonad.StackSet as W
@@ -56,7 +58,9 @@ myWorkspaces    = ["1","2","3","4","5","6","7","8","9"]
 -- Border colors for unfocused and focused windows, respectively.
 --
 myNormalBorderColor  = "#dddddd"
-myFocusedBorderColor = "#ff0000"
+myFocusedBorderColor = "#000000"
+xmobarCurrentWorkspaceColor = "#CEFFAC"
+xmobarTitleColor = "#FFB6B0"
 
 ------------------------------------------------------------------------
 -- Key bindings. Add, modify or remove key bindings here.
@@ -67,10 +71,10 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     [ ((modm .|. shiftMask, xK_Return), spawn $ XMonad.terminal conf)
 
     -- launch dmenu
-    , ((modm .|. shiftMask,               xK_space     ), spawn "dmenu_run")
+    , ((modm .|. shiftMask, xK_space ), spawn "dmenu_run")
 
     -- launch rofi
-    , ((modm, xK_space     ), spawn "rofi -show drun")
+    , ((modm,               xK_space     ), spawn "rofi -show drun")
 
     -- launch emacs
     , ((modm,               xK_e     ), spawn "emacsclient -c")
@@ -149,8 +153,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((0                     , 0x1008FF13), spawn "amixer -D pulse set Master 2%+")    -- volume up
 
     -- Adjust monitor brightness
-    , ((0                     , 0x1008FF03), spawn "xbacklight -dec 5")
-    , ((0                     , 0x1008FF02), spawn "xbacklight -inc 5")
+    , ((0                     , 0x1008FF03), spawn "xbacklight -dec 2")
+    , ((0                     , 0x1008FF02), spawn "xbacklight -inc 2")
 
     ]
     ++
@@ -268,6 +272,7 @@ myLogHook = return ()
 myStartupHook = do
   spawnOnce "nitrogen --restore &"
   spawnOnce "compton &"
+  spawnOnce "dropbox start"
 
 ------------------------------------------------------------------------
 -- Now run xmonad with all the defaults we set up.
@@ -275,9 +280,19 @@ myStartupHook = do
 -- Run xmonad with the settings you specify. No need to modify this.
 --
 main = do
-  xmproc <- spawnPipe "xmobar -x 0 /home/jaymorgan/.config/xmobar/xmobar.config"
-  xmonad $ docks defaults
-
+  xmproc <- spawnPipe ("xmobar -x 0 $HOME/.config/xmobar/xmobar.config")
+  xmonad $ defaults {
+      logHook = dynamicLogWithPP $ xmobarPP {
+            ppOutput = hPutStrLn xmproc
+          , ppTitle = xmobarColor xmobarTitleColor "" . shorten 100
+          , ppCurrent = xmobarColor xmobarCurrentWorkspaceColor ""
+          , ppSep = "   "
+      }
+      , manageHook = manageDocks <+> myManageHook
+--      , startupHook = docksStartupHook <+> setWMName "LG3D"
+      , startupHook = setWMName "LG3D"
+      , handleEventHook = docksEventHook
+  }
 -- A structure containing your configuration settings, overriding
 -- fields in the default config. Any you don't override, will
 -- use the defaults defined in xmonad/XMonad/Config.hs

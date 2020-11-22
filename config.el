@@ -133,6 +133,11 @@
   (require 'ox-latex)
   (require 'cider)
 
+  (use-package ox-latex-subfigure
+    :load-path "plugins/ox-latex-subfigure"
+    :init
+    (setq org-latex-prefer-user-labels t)
+    :config (require 'ox-latex-subfigure))
   (use-package ox-pandoc)
   (use-package ox-gfm)
   (use-package jupyter
@@ -161,9 +166,10 @@
         org-edit-src-content-indentation 0
         org-latex-listings 'minted   ;; color highlighting for source blocks
         org-latex-packages-alist '(("" "minted"))
-        org-latex-pdf-process
-            '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-            "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
+        org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
+        ;; org-latex-pdf-process
+        ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
         org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
         org-babel-clojure-backend 'cider
@@ -176,6 +182,14 @@
                                  ("DONE" . "Palegreen")
                                  ("CANC" . "red")))
 
+    (add-to-list 'org-latex-classes
+            '("book-no-parts"
+                "\\documentclass{book}"
+                ("\\chapter{%s}" . "\\chapter*{%s}")
+                ("\\section{%s}" . "\\section*{%s}")
+                ("\\subsection{%s}" . "\\subsection*{%s}")
+                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                ("\\paragraph{%s}" . "\\paragraph*{%s}")))
   (custom-set-faces '(org-headline-done
                         ((((class color)
                         (min-colors 16)
@@ -426,9 +440,14 @@
 
 (bind-evil-key "SPC SPC" helm-buffers-list)
 
+(defhydra hydra-open-config (:color blue :hint nil)
+  "Open Config"
+  ("e" (find-file "~/.emacs.d/config.org") "Emacs Config")
+  ("x" (find-file "~/.xmonad/xmonad.hs") "Xmonad Config"))
+
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
-  ("c" (find-file "~/.emacs.d/config.org") "Open Emacs Config")
+  ("c" hydra-open-config/body "Config files")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
   ("e" elfeed "Elfeed")
@@ -541,16 +560,31 @@
 
 (use-package base16-theme)
 (use-package modus-operandi-theme)
+(use-package modus-vivendi-theme
+  :init
+  (setq modus-operandi-theme-org-blocks 'grayscale
+        modus-operandi-theme-mode-line 'moody)
+  (set-face-attribute 'default nil :family "Lilex Regular" :height 110)
+  (set-face-attribute 'variable-pitch nil :family "Lilex Regular" :height 1.1)
+  (set-face-attribute 'fixed-pitch nil :family "Lilex Regular" :height 1.0))
 (use-package atom-one-dark-theme)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
-(set-frame-font "JetBrains Mono-12")
-(setq default-frame-alist '((font . "JetBrains Mono-12")))
+(set-frame-font "Lilex-12.5")
+(setq default-frame-alist '((font . "Lilex-12.5")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
+(add-hook 'image-mode-hook (lambda () (linum-mode -1)))
+
+(use-package ligature
+  :load-path "plugins/ligature.el"
+  :config
+  ;; Enable ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("->" "==" "===" "<=" ">=" "<-" "!=" "/>"))
+  (global-ligature-mode t))
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
