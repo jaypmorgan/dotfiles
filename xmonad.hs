@@ -68,7 +68,7 @@ xmobarTitleColor = "#FFB6B0"
 myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- launch a terminal
-    [ ((modm .|. shiftMask, xK_Return), spawn $ XMonad.terminal conf)
+    [ ((modm              , xK_Return), spawn $ XMonad.terminal conf)
 
     -- launch dmenu
     , ((modm .|. shiftMask, xK_space ), spawn "dmenu_run")
@@ -107,7 +107,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm,               xK_m     ), windows W.focusMaster  )
 
     -- Swap the focused window and the master window
-    , ((modm,               xK_Return), windows W.swapMaster)
+    , ((modm .|. shiftMask, xK_Return), windows W.swapMaster)
 
     -- Swap the focused window with the next window
     , ((modm .|. shiftMask, xK_j     ), windows W.swapDown  )
@@ -148,9 +148,9 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- Keyboard shortcuts for interfaces (audio, visual)
     -- Keymaps can be found in "/usr/include/X11/XF86keysym.h"
     -- Audio controls
-    , ((0                     , 0x1008FF11), spawn "amixer -D pulse set Master 2%-")    -- volume down
+    , ((0                     , 0x1008FF11), spawn "pactl set-sink-volume 0 -2%")    -- volume down
     , ((0                     , 0x1008FF12), spawn "amixer -D pulse set Master toggle") -- mute
-    , ((0                     , 0x1008FF13), spawn "amixer -D pulse set Master 2%+")    -- volume up
+    , ((0                     , 0x1008FF13), spawn "pactl set-sink-volume 0 +2%")    -- volume up
 
     -- Adjust monitor brightness
     , ((0                     , 0x1008FF03), spawn "xbacklight -dec 2")
@@ -272,7 +272,7 @@ myLogHook = return ()
 myStartupHook = do
   spawnOnce "nitrogen --restore &"
   spawnOnce "compton &"
-  spawnOnce "dropbox start"
+  spawnOnce "dropbox start &"
 
 ------------------------------------------------------------------------
 -- Now run xmonad with all the defaults we set up.

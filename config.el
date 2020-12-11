@@ -8,6 +8,22 @@
 (my/add-to-exec "~/.fzf/bin")
 (my/add-to-exec "~/.cargo/bin")
 
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+(straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
+
 (setq gc-cons-threshold 100000000
       read-process-output-max (* 1024 1024)
       evil-want-keybinding nil
@@ -19,13 +35,13 @@
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
 
 ;; Setup package.el to work with MELPA
-(setq package-check-signature nil)
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
-(package-refresh-contents)
-(package-initialize)
+;;(setq package-check-signature nil)
+;;(require 'package)
+;;(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;;(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+;;(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
+;;(package-refresh-contents)
+;;(package-initialize)
 
 ;; Install function define a function to check if a package is
 ;; installed, if it not we can install it. From this, we may quickly
@@ -35,11 +51,11 @@
     (package-install pkg))
   (require pkg))
 
-(my/check-and-install 'use-package)
+;; (my/check-and-install 'use-package)
 ;; Don't need a :ensure t in every package
-(setq use-package-always-ensure t)
+;;(setq use-package-always-ensure t)
 ;; Makes it possible to install required binaries
-(use-package use-package-ensure-system-package)
+;;(use-package use-package-ensure-system-package)
 
 (use-package quelpa)
 (quelpa
@@ -112,17 +128,20 @@
   :hook ((python-mode . lsp-deferred)
          (julia-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
-  :init (setq lsp-keymap-prefix "C-c l")
-  :config (lsp-enable-which-key-integration t))
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  (setq lsp-disabled-clients '(mypls)))
 
-(use-package lsp-julia
-  :quelpa ((lsp-julia :fetcher github
-                      :repo "non-Jedi/lsp-julia"
-                      :files (:defaults "languageserver"))
-           :upgrade t))
+;;(use-package lsp-julia
+;;  :quelpa ((lsp-julia :fetcher github
+;;                      :repo "non-Jedi/lsp-julia"
+;;                      :files (:defaults "languageserver"))
+;;           :upgrade t))
 
+(straight-override-recipe
+   '(org :type git :host github :repo "emacsmirror/org" :no-build t))
 (use-package org
-  :after cider
+  :ensure t
   :ensure org-plus-contrib
   :init
   (add-hook 'org-mode-hook '(lambda ()
@@ -140,8 +159,12 @@
     :config (require 'ox-latex-subfigure))
   (use-package ox-pandoc)
   (use-package ox-gfm)
-  (use-package jupyter
-    :quelpa ((jupyter :fetcher github :repo "nnicandro/emacs-jupyter" :branch "master") :upgrade t))
+  (use-package ess)
+
+  ;;(use-package jupyter
+  ;;  :quelpa ((jupyter :fetcher github :repo "nnicandro/emacs-jupyter" :branch "master") :upgrade t))
+  ;;(straight-use-package
+  ;; '(ob-julia :type git :host github :repo "gjkerns/ob-julia.git"))
 
   (use-package org-ref
     :init
@@ -163,6 +186,7 @@
         org-startup-folded t
         org-src-tab-acts-natively t
         org-hide-leading-stars t
+        org-image-actual-width nil
         org-edit-src-content-indentation 0
         org-latex-listings 'minted   ;; color highlighting for source blocks
         org-latex-packages-alist '(("" "minted"))
@@ -200,10 +224,11 @@
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (python . t)
-                                 (jupyter . t)
+    ;;                             (jupyter . t)
                                  (clojure . t)
+                                 (R . t)
                                  (emacs-lisp . t)
-                                 (julia . t)
+   ;;                              (julia . t)
                                  (gnuplot . t)
                                  (dot . t))))
 
@@ -306,6 +331,14 @@
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
 
+;; group buffers from the same projectile project
+(use-package ibuffer-vc
+  :init
+  (defun my/ibuffer-hook ()
+    (interactive)
+    (ibuffer-vc-generate-filter-groups-by-vc-root))
+  (add-hook 'ibuffer-mode-hook 'my/ibuffer-hook))
+
 (use-package eyebrowse
   :config
   (eyebrowse-mode 1)
@@ -324,8 +357,6 @@
   :config
   (helm-mode 1)
   (use-package helm-projectile)
-  (use-package helm-ag
-    :ensure-system-package (ag . silversearcher-ag))
   (setq helm-use-frame-when-more-than-two-windows nil
         helm-split-window-in-side nil
         helm-display-function 'pop-to-buffer
@@ -337,6 +368,10 @@
 (require 'ace-window)
 (define-key evil-motion-state-map " " nil)
 (global-set-key (kbd "M-x") 'helm-M-x)
+
+(define-key org-mode-map (kbd "C-c C-c")
+  (lambda () (interactive) (org-ctrl-c-ctrl-c)
+                           (org-display-inline-images)))
 
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
@@ -558,33 +593,31 @@
 (global-linum-mode)
 (linum-relative-on)
 
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+
 (use-package base16-theme)
-(use-package modus-operandi-theme)
-(use-package modus-vivendi-theme
+(use-package modus-vivendi-theme)
+(use-package modus-operandi-theme
   :init
   (setq modus-operandi-theme-org-blocks 'grayscale
-        modus-operandi-theme-mode-line 'moody)
+	modus-operandi-theme-mode-line 'moody)
   (set-face-attribute 'default nil :family "Lilex Regular" :height 110)
-  (set-face-attribute 'variable-pitch nil :family "Lilex Regular" :height 1.1)
+  (set-face-attribute 'variable-pitch nil :family "Open Sans" :height 1.0)
   (set-face-attribute 'fixed-pitch nil :family "Lilex Regular" :height 1.0))
-(use-package atom-one-dark-theme)
 
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
-(set-frame-font "Lilex-12.5")
+(set-face-attribute 'default nil :font "Lilex-12.5")
 (setq default-frame-alist '((font . "Lilex-12.5")))
+
+;; Enable font ligatures. If the font-face does not support any element in the
+;; list of ligatures, emacs may stall...
+(straight-use-package
+ '(ligature :type git :host github :repo "mickeynp/ligature.el"))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'image-mode-hook (lambda () (linum-mode -1)))
-
-(use-package ligature
-  :load-path "plugins/ligature.el"
-  :config
-  ;; Enable ligatures in programming modes
-  (ligature-set-ligatures 'prog-mode '("->" "==" "===" "<=" ">=" "<-" "!=" "/>"))
-  (global-ligature-mode t))
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
