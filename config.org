@@ -104,7 +104,15 @@ A: Clojure > Julia > C++ > Python
 (use-package flycheck
   :init
   (add-hook 'sh-mode-hook 'flycheck-mode))
-(use-package clojure-mode :init (use-package cider))
+
+(use-package clojure-mode
+  :init
+  (use-package smartparens
+    :hook (clojure-mode . smartparens-mode))
+  (use-package cider)
+  (use-package clj-refactor
+    :hook (clojure-mode . clj-refactor-mode)))
+
 (use-package markdown-mode)
 (use-package htmlize)
 (use-package toml-mode)
@@ -180,92 +188,94 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 Once I learnt about org-mode, it would always be tough to leave Emacs.
 
 #+BEGIN_SRC emacs-lisp
-  (straight-override-recipe
-     '(org :type git :host github :repo "emacsmirror/org" :no-build t))
-  (use-package org
-    :ensure t
-    :ensure org-plus-contrib
+(straight-override-recipe
+   '(org :type git :host github :repo "emacsmirror/org" :no-build t))
+(use-package org
+  :ensure t
+  :ensure org-plus-contrib
+  :init
+  (add-hook 'org-mode-hook '(lambda ()
+                              (set-fill-column 85)
+                              (visual-line-mode 1)
+                              (auto-fill-mode 1)))
+  (require 'ob-clojure)
+  (require 'ox-latex)
+  (require 'cider)
+  (use-package ob-ipython)
+
+  (use-package ox-latex-subfigure
+    :load-path "plugins/ox-latex-subfigure"
     :init
-    (add-hook 'org-mode-hook '(lambda ()
-                                (set-fill-column 85)
-                                (visual-line-mode 1)
-                                (auto-fill-mode 1)))
-    (require 'ob-clojure)
-    (require 'ox-latex)
-    (require 'cider)
+    (setq org-latex-prefer-user-labels t)
+    :config (require 'ox-latex-subfigure))
+  (use-package ox-pandoc)
+  (use-package ox-gfm)
+  (use-package ess)
 
-    (use-package ox-latex-subfigure
-      :load-path "plugins/ox-latex-subfigure"
-      :init
-      (setq org-latex-prefer-user-labels t)
-      :config (require 'ox-latex-subfigure))
-    (use-package ox-pandoc)
-    (use-package ox-gfm)
-    (use-package ess)
+  (use-package org-ref
+    :init
+    (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
 
-    (use-package org-ref
-      :init
-      (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-            org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
+  (use-package helm-bibtex
+    :init
+    (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+          bibtex-completion-pdf-open-function 'org-open-file))
 
-    (use-package helm-bibtex
-      :init
-      (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-            bibtex-completion-pdf-open-function 'org-open-file))
+  ;; enable tikzpictures in latex export
+  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+  (eval-after-load "preview" '
+    (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
-    ;; enable tikzpictures in latex export
-    (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-    (eval-after-load "preview" '
-      (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
+  ;; set variables
+  (setq org-startup-indented t
+        org-startup-folded t
+        org-src-tab-acts-natively t
+        org-hide-leading-stars t
+        org-image-actual-width nil
+        org-edit-src-content-indentation 0
+        org-latex-listings 'minted   ;; color highlighting for source blocks
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
+        ;; org-latex-pdf-process
+        ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
+        org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
+        inferior-julia-program-name "/usr/bin/julia"
+        org-babel-clojure-backend 'cider
+        org-confirm-babel-evaluate nil
+        org-fontify-done-headline t
+        org-log-done 'time
+        org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
+        org-todo-keyword-faces '(("TODO" . org-warning)
+                                 ("WAIT" . "yellow")
+                                 ("DONE" . "Palegreen")
+                                 ("CANC" . "red")))
 
-    ;; set variables
-    (setq org-startup-indented t
-          org-startup-folded t
-          org-src-tab-acts-natively t
-          org-hide-leading-stars t
-          org-image-actual-width nil
-          org-edit-src-content-indentation 0
-          org-latex-listings 'minted   ;; color highlighting for source blocks
-          org-latex-packages-alist '(("" "minted"))
-          org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
-          ;; org-latex-pdf-process
-          ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-          ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
-          org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
-          inferior-julia-program-name "/usr/bin/julia"
-          org-babel-clojure-backend 'cider
-          org-confirm-babel-evaluate nil
-          org-fontify-done-headline t
-          org-log-done 'time
-          org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
-          org-todo-keyword-faces '(("TODO" . org-warning)
-                                   ("WAIT" . "yellow")
-                                   ("DONE" . "Palegreen")
-                                   ("CANC" . "red")))
+    (add-to-list 'org-latex-classes
+            '("book-no-parts"
+                "\\documentclass{book}"
+                ("\\chapter{%s}" . "\\chapter*{%s}")
+                ("\\section{%s}" . "\\section*{%s}")
+                ("\\subsection{%s}" . "\\subsection*{%s}")
+                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+  (custom-set-faces '(org-headline-done
+                        ((((class color)
+                        (min-colors 16)
+                        (background dark))
+                        (:foreground "dim gray" :strike-through t)))))
 
-      (add-to-list 'org-latex-classes
-              '("book-no-parts"
-                  "\\documentclass{book}"
-                  ("\\chapter{%s}" . "\\chapter*{%s}")
-                  ("\\section{%s}" . "\\section*{%s}")
-                  ("\\subsection{%s}" . "\\subsection*{%s}")
-                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                  ("\\paragraph{%s}" . "\\paragraph*{%s}")))
-    (custom-set-faces '(org-headline-done
-                          ((((class color)
-                          (min-colors 16)
-                          (background dark))
-                          (:foreground "dim gray" :strike-through t)))))
-
-    ;; list of languages for org-mode to support
-    (org-babel-do-load-languages 'org-babel-load-languages
-                                 '((shell . t)
-                                   (python . t)
-                                   (clojure . t)
-                                   (R . t)
-                                   (emacs-lisp . t)
-                                   (gnuplot . t)
-                                   (dot . t))))
+  ;; list of languages for org-mode to support
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '((shell . t)
+                                 (python . t)
+                                 (ipython . t)
+                                 (clojure . t)
+                                 (R . t)
+                                 (emacs-lisp . t)
+                                 (gnuplot . t)
+                                 (dot . t))))
 #+END_SRC
 
 Sometimes it is nice to have a table of contents inside the org-mode document,

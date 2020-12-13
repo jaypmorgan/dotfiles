@@ -23,6 +23,7 @@
 
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
 
 (setq gc-cons-threshold 100000000
       read-process-output-max (* 1024 1024)
@@ -30,32 +31,6 @@
       x-wait-for-event-timeout nil
       tramp-ssh-controlmaster-options ""
       tramp-default-method "ssh")
-
-;; Manually installed plugins/packages
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
-
-;; Setup package.el to work with MELPA
-;;(setq package-check-signature nil)
-;;(require 'package)
-;;(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-;;(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-;;(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
-;;(package-refresh-contents)
-;;(package-initialize)
-
-;; Install function define a function to check if a package is
-;; installed, if it not we can install it. From this, we may quickly
-;; and easily install packages.
-(defun my/check-and-install (pkg)
-  (unless (package-installed-p pkg)
-    (package-install pkg))
-  (require pkg))
-
-;; (my/check-and-install 'use-package)
-;; Don't need a :ensure t in every package
-;;(setq use-package-always-ensure t)
-;; Makes it possible to install required binaries
-;;(use-package use-package-ensure-system-package)
 
 (use-package quelpa)
 (quelpa
@@ -89,11 +64,6 @@
         (when (eq major-mode 'python-mode)
         (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
-    ;; removed as lsp-mode handles linting in python
-    ;; (add-hook 'python-mode-hook (lambda ()
-    ;;                                (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
-    ;;                                (setq flycheck-check-syntax-automatically '(mode-enabled save))
-    ;;                                (flycheck-mode)))
     (use-package conda
         :init
         (conda-env-initialize-eshell)
@@ -132,12 +102,6 @@
   (setq lsp-keymap-prefix "C-c l")
   (setq lsp-disabled-clients '(mypls)))
 
-;;(use-package lsp-julia
-;;  :quelpa ((lsp-julia :fetcher github
-;;                      :repo "non-Jedi/lsp-julia"
-;;                      :files (:defaults "languageserver"))
-;;           :upgrade t))
-
 (straight-override-recipe
    '(org :type git :host github :repo "emacsmirror/org" :no-build t))
 (use-package org
@@ -151,6 +115,7 @@
   (require 'ob-clojure)
   (require 'ox-latex)
   (require 'cider)
+  (use-package ob-ipython)
 
   (use-package ox-latex-subfigure
     :load-path "plugins/ox-latex-subfigure"
@@ -160,11 +125,6 @@
   (use-package ox-pandoc)
   (use-package ox-gfm)
   (use-package ess)
-
-  ;;(use-package jupyter
-  ;;  :quelpa ((jupyter :fetcher github :repo "nnicandro/emacs-jupyter" :branch "master") :upgrade t))
-  ;;(straight-use-package
-  ;; '(ob-julia :type git :host github :repo "gjkerns/ob-julia.git"))
 
   (use-package org-ref
     :init
@@ -224,11 +184,10 @@
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (python . t)
-    ;;                             (jupyter . t)
+                                 (ipython . t)
                                  (clojure . t)
                                  (R . t)
                                  (emacs-lisp . t)
-   ;;                              (julia . t)
                                  (gnuplot . t)
                                  (dot . t))))
 
