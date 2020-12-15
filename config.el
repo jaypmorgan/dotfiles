@@ -8,29 +8,38 @@
 (my/add-to-exec "~/.fzf/bin")
 (my/add-to-exec "~/.cargo/bin")
 
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
-(straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
-
 (setq gc-cons-threshold 100000000
       read-process-output-max (* 1024 1024)
       evil-want-keybinding nil
       x-wait-for-event-timeout nil
       tramp-ssh-controlmaster-options ""
       tramp-default-method "ssh")
+
+;; Manually installed plugins/packages
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
+
+;; Setup package.el to work with MELPA
+(setq package-check-signature nil)
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
+(package-refresh-contents)
+(package-initialize)
+
+;; Install function define a function to check if a package is
+;; installed, if it not we can install it. From this, we may quickly
+;; and easily install packages.
+(defun my/check-and-install (pkg)
+  (unless (package-installed-p pkg)
+    (package-install pkg))
+  (require pkg))
+
+(my/check-and-install 'use-package)
+;; Don't need a :ensure t in every package
+(setq use-package-always-ensure t)
+;; Makes it possible to install required binaries
+(use-package use-package-ensure-system-package)
 
 (use-package quelpa)
 (quelpa
@@ -64,6 +73,11 @@
         (when (eq major-mode 'python-mode)
         (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
+    ;; removed as lsp-mode handles linting in python
+    ;; (add-hook 'python-mode-hook (lambda ()
+    ;;                                (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
+    ;;                                (setq flycheck-check-syntax-automatically '(mode-enabled save))
+    ;;                                (flycheck-mode)))
     (use-package conda
         :init
         (conda-env-initialize-eshell)
@@ -98,14 +112,17 @@
   :hook ((python-mode . lsp-deferred)
          (julia-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  (setq lsp-disabled-clients '(mypls)))
+  :init (setq lsp-keymap-prefix "C-c l")
+  :config (lsp-enable-which-key-integration t))
 
-(straight-override-recipe
-   '(org :type git :host github :repo "emacsmirror/org" :no-build t))
+(use-package lsp-julia
+  :quelpa ((lsp-julia :fetcher github
+                      :repo "non-Jedi/lsp-julia"
+                      :files (:defaults "languageserver"))
+           :upgrade t))
+
 (use-package org
-  :ensure t
+  :after cider
   :ensure org-plus-contrib
   :init
   (add-hook 'org-mode-hook '(lambda ()
@@ -115,6 +132,7 @@
   (require 'ob-clojure)
   (require 'ox-latex)
   (require 'cider)
+  (use-package ess)
   (use-package ob-ipython)
 
   (use-package ox-latex-subfigure
@@ -124,17 +142,15 @@
     :config (require 'ox-latex-subfigure))
   (use-package ox-pandoc)
   (use-package ox-gfm)
-  (use-package ess)
-
   (use-package org-ref
     :init
     (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
-
-  (use-package helm-bibtex
-    :init
-    (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          bibtex-completion-pdf-open-function 'org-open-file))
+          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib"
+          org-ref-completion-library 'org-ref-ivy-cite)))
+  ;;   (use-package ivy-bibtex
+  ;;       :init
+  ;;       (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+  ;;           bibtex-completion-pdf-open-function 'org-open-file)))
 
   ;; enable tikzpictures in latex export
   (add-to-list 'org-latex-packages-alist '("" "tikz" t))
@@ -146,7 +162,6 @@
         org-startup-folded t
         org-src-tab-acts-natively t
         org-hide-leading-stars t
-        org-image-actual-width nil
         org-edit-src-content-indentation 0
         org-latex-listings 'minted   ;; color highlighting for source blocks
         org-latex-packages-alist '(("" "minted"))
@@ -184,10 +199,11 @@
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((shell . t)
                                  (python . t)
+                                 (R . t)
                                  (ipython . t)
                                  (clojure . t)
-                                 (R . t)
                                  (emacs-lisp . t)
+                                 (julia . t)
                                  (gnuplot . t)
                                  (dot . t))))
 
@@ -253,11 +269,11 @@
 
 ;; Prevent Helm from taking up random windows -- makes the UI more consistent
 ;; and predictable.
-(use-package shackle
-  :after helm
-  :init
-  (shackle-mode 1)
-  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+;; (use-package shackle
+;;   :after helm
+;;   :init
+;;   (shackle-mode 1)
+;;   (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
 
 (use-package evil
   :init
@@ -290,14 +306,6 @@
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("~/workspace/")))
 
-;; group buffers from the same projectile project
-(use-package ibuffer-vc
-  :init
-  (defun my/ibuffer-hook ()
-    (interactive)
-    (ibuffer-vc-generate-filter-groups-by-vc-root))
-  (add-hook 'ibuffer-mode-hook 'my/ibuffer-hook))
-
 (use-package eyebrowse
   :config
   (eyebrowse-mode 1)
@@ -312,25 +320,36 @@
   (add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
   (setq term-prompt-regexp "^[^#$%>\n]*$ *"))
 
-(use-package helm
-  :config
-  (helm-mode 1)
-  (use-package helm-projectile)
-  (setq helm-use-frame-when-more-than-two-windows nil
-        helm-split-window-in-side nil
-        helm-display-function 'pop-to-buffer
-        helm-idle-delay 0.0
-        helm-input-idle-delay 0.01))
+;; (use-package helm
+;;   :config
+;;   (helm-mode 1)
+;;   (use-package helm-projectile)
+;;   (use-package helm-ag
+;;     :ensure-system-package (ag . silversearcher-ag))
+;;   (setq helm-use-frame-when-more-than-two-windows nil
+;;         helm-split-window-in-side nil
+;;         helm-display-function 'pop-to-buffer
+;;         helm-idle-delay 0.0
+;;         helm-input-idle-delay 0.01))
+
+(use-package counsel
+  :init
+  (use-package counsel-projectile))
+
+  (use-package ivy-posframe
+    :after counsel
+    :init
+    (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
+    (setq ivy-posframe-parameters
+        '((left-fringe . 8)
+          (right-fringe . 8)))
+    (ivy-posframe-mode 1))
 
 (require 'hydra)
 (require 'evil)
 (require 'ace-window)
 (define-key evil-motion-state-map " " nil)
-(global-set-key (kbd "M-x") 'helm-M-x)
-
-(define-key org-mode-map (kbd "C-c C-c")
-  (lambda () (interactive) (org-ctrl-c-ctrl-c)
-                           (org-display-inline-images)))
+(global-set-key (kbd "M-x") 'counsel-M-x)
 
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
@@ -379,23 +398,15 @@
 (bind-evil-key "SPC g d" elpy-goto-definition)
 (bind-global-key "C-/" (lambda () (interactive) (comment-or-uncomment-region (line-beginning-position) (line-end-position))))
 
-(defhydra hydra-helm-files (:color blue :hint nil)
-  "Helm Files"
-  ("f" helm-find-files "Find Files")
-  ("r" helm-recentf "File Recent Files")
+(defhydra hydra-ivy-files (:color blue :hint nil)
+  "Ivy Files"
+  ("f" counsel-find-file "Find Files")
+  ("r" counsel-recentf "File Recent Files")
   ("b" swiper "Find in buffer"))
-(bind-evil-key "SPC f" hydra-helm-files/body)
-
-(defhydra hydra-helm (:color blue :hint nil)
-  "Helm"
-  ("r" helm-regexp "Regex")
-  ("i" helm-imenu "Imenu")
-  ("f" helm-find "Find")
-  ("g" helm-do-ag "AG Search"))
-(bind-evil-key "SPC h" hydra-helm/body)
+(bind-evil-key "SPC f" hydra-ivy-files/body)
 
 (bind-evil-key "SPC p" projectile-command-map)
-(bind-evil-key "SPC p p" helm-projectile-switch-project)
+(bind-evil-key "SPC p p" counsel-projectile-switch-project)
 (bind-evil-key "SPC p a" projectile-add-known-project)
 (bind-evil-key "SPC g g" magit-status)
 (bind-evil-key "SPC a" org-agenda)
@@ -412,7 +423,7 @@
       (evil-window-split))
     (other-window 1)
     (if p-name
-        (helm-projectile-find-file)
+        (projectile-find-file)
       (switch-to-buffer "*scratch*"))))
 
 (bind-evil-key "SPC s v" (lambda () (interactive) (my/split "vertical")))
@@ -432,7 +443,7 @@
   ("9" eyebrowse-switch-to-window-config-9 "Workspace 9"))
 (bind-evil-key "SPC TAB" hydra-eyebrowse/body)
 
-(bind-evil-key "SPC SPC" helm-buffers-list)
+(bind-evil-key "SPC SPC" ivy-switch-buffer)
 
 (defhydra hydra-open-config (:color blue :hint nil)
   "Open Config"
@@ -552,31 +563,33 @@
 (global-linum-mode)
 (linum-relative-on)
 
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-
 (use-package base16-theme)
-(use-package modus-vivendi-theme)
-(use-package modus-operandi-theme
+(use-package modus-operandi-theme)
+(use-package modus-vivendi-theme
   :init
-  (setq modus-operandi-theme-org-blocks 'grayscale
-	modus-operandi-theme-mode-line 'moody)
+  (setq modus-operandi-theme-org-blocks 'greyscale
+        modus-operandi-theme-mode-line 'moody)
   (set-face-attribute 'default nil :family "Lilex Regular" :height 110)
-  (set-face-attribute 'variable-pitch nil :family "Open Sans" :height 1.0)
+  (set-face-attribute 'variable-pitch nil :family "Lilex Regular" :height 1.1)
   (set-face-attribute 'fixed-pitch nil :family "Lilex Regular" :height 1.0))
+(use-package atom-one-dark-theme)
 
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
-(set-face-attribute 'default nil :font "Lilex-12.5")
+(set-frame-font "Lilex-12.5")
 (setq default-frame-alist '((font . "Lilex-12.5")))
-
-;; Enable font ligatures. If the font-face does not support any element in the
-;; list of ligatures, emacs may stall...
-(straight-use-package
- '(ligature :type git :host github :repo "mickeynp/ligature.el"))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'image-mode-hook (lambda () (linum-mode -1)))
+
+(use-package ligature
+  :load-path "plugins/ligature.el"
+  :config
+  ;; Enable ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("->" "==" "===" "<=" ">=" "<-" "!=" "/>"))
+  (global-ligature-mode t))
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
