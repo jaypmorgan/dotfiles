@@ -208,28 +208,44 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
                               (set-fill-column 85)
                               (visual-line-mode 1)
                               (auto-fill-mode 1)))
+  (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
   (require 'ob-clojure)
   (require 'ox-latex)
   (require 'cider)
   (use-package ess)
   (use-package ob-ipython)
 
+  ;; notes/wiki/journal
+  (use-package deft
+    :init
+    (setq deft-extensions '("txt" "tex" "org" "md")
+          deft-directory "~/Dropbox/Notes/"
+          deft-recursive t
+         deft-use-filename-as-title t))
+  (use-package org-journal
+    :init
+    (setq org-journal-dir "~/Dropbox/Notes/"
+          org-journal-date-format "%A, %d %B %Y"
+          org-journal-file-format "%Y%m%d-journal-entry.org"))
+  (use-package org-roam
+    :hook (after-init . org-roam-mode)
+    :custom (org-roam-directory "~/Dropbox/Notes/"))
+
   (use-package ox-latex-subfigure
     :load-path "plugins/ox-latex-subfigure"
+    :config (require 'ox-latex-subfigure))
     :init
     (setq org-latex-prefer-user-labels t)
-    :config (require 'ox-latex-subfigure))
   (use-package ox-pandoc)
   (use-package ox-gfm)
   (use-package org-ref
     :init
     (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib")))
-
-  ;;   (use-package ivy-bibtex
-  ;;       :init
-  ;;       (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-  ;;           bibtex-completion-pdf-open-function 'org-open-file)))
+          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib"))
+    (use-package ivy-bibtex
+        :init
+        (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+            bibtex-completion-pdf-open-function 'org-open-file)))
 
   ;; enable tikzpictures in latex export
   (add-to-list 'org-latex-packages-alist '("" "tikz" t))
@@ -421,6 +437,9 @@ Projects with =projectile=
   (setq projectile-project-search-path '("~/workspace/")))
 #+END_SRC
 
+#+RESULTS:
+: t
+
 Workspaces are created using =eyebrowse=
 
 #+BEGIN_SRC emacs-lisp
@@ -463,7 +482,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
   :init
   (use-package counsel-projectile
     :init
-    (counsel-projectile-mode 1))
+    (counsel-projectile-mode 1)))
 
   (use-package ivy-posframe
     :after counsel
@@ -474,6 +493,8 @@ And finally, ivy/counsel for partial completions, searches, etc.
           (right-fringe . 8)))
     (ivy-posframe-mode 1))
 #+END_SRC
+
+#+RESULTS:
 
 * Keybindings
 
@@ -532,6 +553,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
   "Ivy Files"
   ("f" counsel-find-file "Find Files")
   ("r" counsel-recentf "File Recent Files")
+  ("d" deft "Deft Find File")
   ("b" swiper "Find in buffer"))
 (bind-evil-key "SPC f" hydra-ivy-files/body)
 
@@ -581,6 +603,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
 (bind-evil-key "SPC TAB" hydra-eyebrowse/body)
 
 (bind-evil-key "SPC SPC" ivy-switch-buffer)
+(bind-global-key "C-x b" ivy-switch-buffer)
 
 (defhydra hydra-open-config (:color blue :hint nil)
   "Open Config"
@@ -590,9 +613,11 @@ And finally, ivy/counsel for partial completions, searches, etc.
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
+  ("b" org-roam-buffer-toggle-display "Org-roam buffer")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
   ("e" elfeed "Elfeed")
+  ("g" org-roam-graph "Open Org Roam Graph")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("m" mu4e "Open Mailbox")
   ("s" my/bash "Shell")
@@ -603,7 +628,9 @@ And finally, ivy/counsel for partial completions, searches, etc.
 
 (defhydra hydra-insert (:color blue :hint nil)
   "Insert into Buffer"
-  ("s" yas-insert-snippet "Insert Snippet"))
+  ("s" yas-insert-snippet "Insert Snippet")
+  ("r" org-roam-insert "Org Roam Insert")
+  ("j" org-journal-new-entry "Insert New Journal Entry"))
 (bind-evil-key "SPC i" hydra-insert/body)
 
 (defhydra hydra-remote-hosts (:color blue :hint nil)
@@ -621,9 +648,6 @@ And finally, ivy/counsel for partial completions, searches, etc.
   ("q" (kill-buffer-and-window) "Close"))
 (bind-evil-key "SPC m" hydra-modify-buffers/body)
 #+END_SRC
-
-#+RESULTS:
-: hydra-modify-buffers/body
 
 * Custom Functions
 

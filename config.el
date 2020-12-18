@@ -129,28 +129,44 @@
                               (set-fill-column 85)
                               (visual-line-mode 1)
                               (auto-fill-mode 1)))
+  (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
   (require 'ob-clojure)
   (require 'ox-latex)
   (require 'cider)
   (use-package ess)
   (use-package ob-ipython)
 
+  ;; notes/wiki/journal
+  (use-package deft
+    :init
+    (setq deft-extensions '("txt" "tex" "org" "md")
+          deft-directory "~/Dropbox/Notes/"
+          deft-recursive t
+          deft-use-filename-as-title t))
+  (use-package org-journal
+    :init
+    (setq org-journal-dir "~/Dropbox/Notes/"
+          org-journal-date-format "%A, %d %B %Y"
+          org-journal-file-format "%Y%m%d-journal-entry.org"))
+  (use-package org-roam
+    :hook (after-init . org-roam-mode)
+    :custom (org-roam-directory "~/Dropbox/Notes/"))
+
   (use-package ox-latex-subfigure
     :load-path "plugins/ox-latex-subfigure"
+    :config (require 'ox-latex-subfigure))
     :init
     (setq org-latex-prefer-user-labels t)
-    :config (require 'ox-latex-subfigure))
   (use-package ox-pandoc)
   (use-package ox-gfm)
   (use-package org-ref
     :init
     (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib"
-          org-ref-completion-library 'org-ref-ivy-cite)))
-  ;;   (use-package ivy-bibtex
-  ;;       :init
-  ;;       (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-  ;;           bibtex-completion-pdf-open-function 'org-open-file)))
+          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib"))
+    (use-package ivy-bibtex
+        :init
+        (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+            bibtex-completion-pdf-open-function 'org-open-file)))
 
   ;; enable tikzpictures in latex export
   (add-to-list 'org-latex-packages-alist '("" "tikz" t))
@@ -334,7 +350,9 @@
 
 (use-package counsel
   :init
-  (use-package counsel-projectile))
+  (use-package counsel-projectile
+    :init
+    (counsel-projectile-mode 1)))
 
   (use-package ivy-posframe
     :after counsel
@@ -395,20 +413,18 @@
     (iedit-mode)
     (iedit-restrict-current-line)))
 
-(bind-evil-key "SPC g d" elpy-goto-definition)
-(bind-global-key "C-/" (lambda () (interactive) (comment-or-uncomment-region (line-beginning-position) (line-end-position))))
-
 (defhydra hydra-ivy-files (:color blue :hint nil)
   "Ivy Files"
   ("f" counsel-find-file "Find Files")
   ("r" counsel-recentf "File Recent Files")
+  ("d" deft "Deft Find File")
   ("b" swiper "Find in buffer"))
 (bind-evil-key "SPC f" hydra-ivy-files/body)
 
 (bind-evil-key "SPC p" projectile-command-map)
-(bind-evil-key "SPC p p" counsel-projectile-switch-project)
+(bind-evil-key "SPC p h" counsel-projectile-find-file)
 (bind-evil-key "SPC p a" projectile-add-known-project)
-(bind-evil-key "SPC g g" magit-status)
+(bind-evil-key "SPC g" magit-status)
 (bind-evil-key "SPC a" org-agenda)
 (bind-evil-key "SPC w" ace-window)
 (bind-evil-key "SPC n" avy-goto-char-timer)
@@ -426,8 +442,15 @@
         (projectile-find-file)
       (switch-to-buffer "*scratch*"))))
 
-(bind-evil-key "SPC s v" (lambda () (interactive) (my/split "vertical")))
-(bind-evil-key "SPC s h" (lambda () (interactive) (my/split "horizontal")))
+(defun my/split-vertical ()
+  (interactive)
+  (my/split "vertical"))
+(defun my/split-horizontal ()
+  (interactive)
+  (my/split "horizontal"))
+
+(bind-evil-key "SPC s v" my/split-vertical)
+(bind-evil-key "SPC s h" my/split-horizontal)
 
 (defhydra hydra-eyebrowse (:color blue :hint nil)
   "Workspaces"
@@ -444,6 +467,7 @@
 (bind-evil-key "SPC TAB" hydra-eyebrowse/body)
 
 (bind-evil-key "SPC SPC" ivy-switch-buffer)
+(bind-global-key "C-x b" ivy-switch-buffer)
 
 (defhydra hydra-open-config (:color blue :hint nil)
   "Open Config"
@@ -453,9 +477,11 @@
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
+  ("b" org-roam-buffer-toggle-display "Org-roam buffer")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
   ("e" elfeed "Elfeed")
+  ("g" org-roam-graph "Open Org Roam Graph")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("m" mu4e "Open Mailbox")
   ("s" my/bash "Shell")
@@ -466,14 +492,15 @@
 
 (defhydra hydra-insert (:color blue :hint nil)
   "Insert into Buffer"
-  ("s" yas-insert-snippet "Insert Snippet"))
+  ("s" yas-insert-snippet "Insert Snippet")
+  ("r" org-roam-insert "Org Roam Insert")
+  ("j" org-journal-new-entry "Insert New Journal Entry"))
 (bind-evil-key "SPC i" hydra-insert/body)
 
 (defhydra hydra-remote-hosts (:color blue :hint nil)
   "Browse remote hosts"
   ("l" (dired-at-point "/ssh:lis.me:~/workspace") "LIS Lab")
   ("s" (dired-at-point "/ssh:sunbird.me:~/workspace") "Sunbird Swansea")
-  ("i" (dired-at-point "/ssh:ibex.me:~") "KAUST Ibex")
   ("c" (dired-at-point "/ssh:chemistry.me:~/workspace") "Chemistry Swanasea"))
 (bind-evil-key "SPC r" hydra-remote-hosts/body)
 
