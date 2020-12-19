@@ -56,6 +56,7 @@
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
+(use-package ess) ;; Emacs speaks statistics (R)
 
 (use-package eglot
   :config
@@ -133,7 +134,6 @@
   (require 'ob-clojure)
   (require 'ox-latex)
   (require 'cider)
-  (use-package ess)
   (use-package ob-ipython)
 
   ;; notes/wiki/journal
@@ -142,7 +142,7 @@
     (setq deft-extensions '("txt" "tex" "org" "md")
           deft-directory "~/Dropbox/Notes/"
           deft-recursive t
-          deft-use-filename-as-title t))
+         deft-use-filename-as-title t))
   (use-package org-journal
     :init
     (setq org-journal-dir "~/Dropbox/Notes/"
@@ -472,7 +472,8 @@
 (defhydra hydra-open-config (:color blue :hint nil)
   "Open Config"
   ("e" (find-file "~/.emacs.d/config.org") "Emacs Config")
-  ("x" (find-file "~/.xmonad/xmonad.hs") "Xmonad Config"))
+  ("x" (find-file "~/.xmonad/xmonad.hs") "Xmonad Config")
+  ("m" (find-file "~/.emacs.d/mu4e-init.el") "Mail Config"))
 
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
