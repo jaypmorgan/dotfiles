@@ -193,8 +193,8 @@
         org-log-done 'time
         org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
         org-todo-keyword-faces '(("TODO" . org-warning)
-                                 ("WAIT" . "yellow")
-                                 ("DONE" . "Palegreen")
+                                 ("WAIT" . "Firebrick")
+                                 ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
                                  ("CANC" . "red")))
 
     (add-to-list 'org-latex-classes
@@ -207,8 +207,7 @@
                 ("\\paragraph{%s}" . "\\paragraph*{%s}")))
   (custom-set-faces '(org-headline-done
                         ((((class color)
-                        (min-colors 16)
-                        (background dark))
+                        (min-colors 16))
                         (:foreground "dim gray" :strike-through t)))))
 
   ;; list of languages for org-mode to support

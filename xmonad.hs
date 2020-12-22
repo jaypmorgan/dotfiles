@@ -16,6 +16,8 @@ import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
 import System.IO
+import XMonad.Layout.Gaps
+import XMonad.Layout.Spacing
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -68,13 +70,13 @@ xmobarTitleColor = "#FFB6B0"
 myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- launch a terminal
-    [ ((modm              , xK_Return), spawn $ XMonad.terminal conf)
+    [ ((modm              , xK_Return), spawn "emacsclient -ce \"(vterm)\"")
 
     -- launch dmenu
-    , ((modm .|. shiftMask, xK_space ), spawn "dmenu_run")
+    , ((modm              , xK_space ), spawn "dmenu_run -fn 'Source Code Pro-13'")
 
     -- launch rofi
-    , ((modm,               xK_space     ), spawn "rofi -show drun")
+    , ((modm .|. shiftMask, xK_space ), spawn "rofi -show drun")
 
     -- launch emacs
     , ((modm,               xK_e     ), spawn "emacsclient -c")
@@ -148,13 +150,18 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- Keyboard shortcuts for interfaces (audio, visual)
     -- Keymaps can be found in "/usr/include/X11/XF86keysym.h"
     -- Audio controls
-    , ((0                     , 0x1008FF11), spawn "pactl set-sink-volume 0 -2%")    -- volume down
+    , ((0                     , 0x1008FF11), spawn "pactl set-sink-volume 0 -5%")    -- volume down
     , ((0                     , 0x1008FF12), spawn "amixer -D pulse set Master toggle") -- mute
-    , ((0                     , 0x1008FF13), spawn "pactl set-sink-volume 0 +2%")    -- volume up
+    , ((0                     , 0x1008FF13), spawn "pactl set-sink-volume 0 +5%")    -- volume up
 
     -- Adjust monitor brightness
     , ((0                     , 0x1008FF03), spawn "xbacklight -dec 2")
     , ((0                     , 0x1008FF02), spawn "xbacklight -inc 2")
+
+    , ((modm .|. controlMask, xK_g), sendMessage $ ToggleGaps)  -- toggle all gaps
+    , ((modm .|. controlMask, xK_t), sendMessage $ ToggleGap U) -- toggle the top gap
+    , ((modm .|. controlMask, xK_w), sendMessage $ IncGap 5 R)  -- increment the right-hand gap
+    , ((modm .|. controlMask, xK_q), sendMessage $ DecGap 5 R)  -- decrement the right-hand gap
 
     ]
     ++
@@ -207,7 +214,7 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 -- The available layouts.  Note that each layout is separated by |||,
 -- which denotes layout choice.
 --
-myLayout = avoidStruts (tiled ||| Mirror tiled ||| Full)
+myLayout = spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $ avoidStruts (tiled ||| Mirror tiled ||| Full)
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled   = Tall nmaster delta ratio
@@ -272,7 +279,11 @@ myLogHook = return ()
 -- By default, do nothing.
 myStartupHook = do
   spawnOnce "nitrogen --restore &"
-  spawnOnce "compton &"
+  spawnOnce "picom --experimental-backend --conifg ~/.config/picom.conf &"
+  spawnOnce "nm-applet &"
+  spawnOnce "volumeicon &"
+  spawnOnce "dropbox start &"
+  setWMName "LG3D"
 
 ------------------------------------------------------------------------
 -- Now run xmonad with all the defaults we set up.
@@ -289,8 +300,7 @@ main = do
           , ppSep = "   "
       }
       , manageHook = manageDocks <+> myManageHook
---      , startupHook = docksStartupHook <+> setWMName "LG3D"
-      , startupHook = setWMName "LG3D"
+      , startupHook = myStartupHook
       , handleEventHook = docksEventHook
   }
 -- A structure containing your configuration settings, overriding
