@@ -362,6 +362,12 @@
           (right-fringe . 8)))
     (ivy-posframe-mode 1))
 
+(use-package prescient
+  :after counsel
+  :init
+  (use-package ivy-prescient :init (ivy-prescient-mode 1))
+  (use-package company-prescient :init (company-prescient-mode 1)))
+
 (require 'hydra)
 (require 'evil)
 (require 'ace-window)

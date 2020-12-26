@@ -18,6 +18,7 @@ import XMonad.Hooks.SetWMName
 import System.IO
 import XMonad.Layout.Gaps
 import XMonad.Layout.Spacing
+import XMonad.Hooks.ManageHelpers
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -136,7 +137,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- Use this binding with avoidStruts from Hooks.ManageDocks.
     -- See also the statusBar function from Hooks.DynamicLog.
     --
-    -- , ((modm              , xK_b     ), sendMessage ToggleStruts)
+    , ((modm              , xK_b     ), sendMessage ToggleStruts)
 
     -- Quit xmonad
     , ((modm .|. shiftMask, xK_e     ), io (exitWith ExitSuccess))
@@ -248,7 +249,8 @@ myManageHook = composeAll
     , className =? "Gimp"           --> doFloat
     , className =? "R_x11" <&&> resource =? "r_x11"     --> doFloat
     , resource  =? "desktop_window" --> doIgnore
-    , resource  =? "kdesktop"       --> doIgnore ]
+    , resource  =? "kdesktop"       --> doIgnore
+    , isFullscreen --> doFullFloat ]
 
 ------------------------------------------------------------------------
 -- Event handling
@@ -283,6 +285,7 @@ myStartupHook = do
   spawnOnce "nm-applet &"
   spawnOnce "volumeicon &"
   spawnOnce "dropbox start &"
+  spawnOnce "stalonetray &"
   setWMName "LG3D"
 
 ------------------------------------------------------------------------
