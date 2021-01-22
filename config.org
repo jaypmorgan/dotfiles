@@ -121,27 +121,24 @@ A: Clojure > Julia > C++ > Python
 (use-package haskell-mode)
 (use-package ess) ;; Emacs speaks statistics (R)
 
-(use-package eglot
-  :config
-  (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
-  (add-hook 'c++-mode-hook 'eglot-ensure))
-
 (use-package python-mode
     :config
     (setq python-shell-interpreter "ipython"
-          python-shell-interpreter-args "-i")
-    (use-package anaconda-mode)
+          python-shell-interpreter-args "--simple-prompt -i"
+          python-indent-offset 4)
+    (defun my/py-send-line ()
+      (interactive)
+      (when (eq evil-state 'visual)
+        (py-execute-region-ipython (region-beginning) (region-end)))
+      (when (eq evil-state 'normal)
+        (py-execute-line-ipython)))
+    (define-key python-mode-map (kbd "C-c C-c") 'my/py-send-line)
     (use-package blacken
-    :init
-    (defun blacken-python-hook ()
-        (when (eq major-mode 'python-mode)
-        (blacken-buffer)))
+      :init
+      (defun blacken-python-hook ()
+          (when (eq major-mode 'python-mode)
+            (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
-    ;; removed as lsp-mode handles linting in python
-    ;; (add-hook 'python-mode-hook (lambda ()
-    ;;                                (setq flycheck-pylintrc "/home/jaymorgan/.pylintrc")
-    ;;                                (setq flycheck-check-syntax-automatically '(mode-enabled save))
-    ;;                                (flycheck-mode)))
     (use-package conda
         :init
         (conda-env-initialize-eshell)
@@ -149,18 +146,14 @@ A: Clojure > Julia > C++ > Python
               conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
 (use-package julia-mode
+  :init
+  (use-package julia-repl
+    :quelpa (julia-repl :fetcher github :repo "tpapp/julia-repl")
     :init
-    (add-to-list 'auto-mode-alist '("\\.jmd\\'" . markdown-mode))
-    (use-package julia-repl
-        :quelpa ((julia-repl :fetcher github :repo "tpapp/julia-repl" :branch "tp/terminal-backends") :upgrade t)
-        :init
-        (add-hook 'julia-mode-hook 'julia-repl-mode)
-        (setenv "JULIA_NUM_THREADS" "4")
-        (setq julia-repl-executable-records
-            '((default "julia")
-                (master "/usr/bin/julia")
-                (chemistry "ssh -t chemistry.me julia")
-                (lis "ssh -t lis.me ~/workspace/libs/julia/bin/julia")))))
+    (require 'julia-repl)
+    (julia-repl-set-terminal-backend 'vterm)
+    (setq vterm-kill-buffer-on-exit nil)
+    (add-hook 'julia-mode-hook #'julia-repl-mode)))
 #+END_SRC
 
 ** LanguageServer
@@ -185,16 +178,17 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :hook ((python-mode . lsp-deferred)
-         (julia-mode . lsp-deferred))
+         (julia-mode . lsp-deferred)
+         (r-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
-  :init (setq lsp-keymap-prefix "C-c l")
-  :config (lsp-enable-which-key-integration t))
+  :config (lsp-enable-which-key-integration t)
+  :init
+  (setq lsp-keymap-prefix "C-c l"
+        lsp-file-watch-threshold 10000))
 
 (use-package lsp-julia
-  :quelpa ((lsp-julia :fetcher github
-                      :repo "non-Jedi/lsp-julia"
-                      :files (:defaults "languageserver"))
-           :upgrade t))
+  :config
+  (setq lsp-julia-default-environment "~/.julia/environments/v1.5"))
 #+END_SRC
 
 ** Org-mode all the things!
@@ -232,11 +226,11 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
     :custom (org-roam-directory "~/Dropbox/Notes/"))
 
   (use-package ox-latex-subfigure
-    :load-path "plugins/ox-latex-subfigure"
-    :config (require 'ox-latex-subfigure))
-    :init
-    (setq org-latex-prefer-user-labels t)
-  (use-package ox-pandoc)
+   :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
+   :config (require 'ox-latex-subfigure)
+   :init
+   (setq org-latex-prefer-user-labels t))
+  ;; (use-package ox-pandoc :defer t)
   (use-package ox-gfm)
   (use-package org-ref
     :init
@@ -258,6 +252,7 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
         org-src-tab-acts-natively t
         org-hide-leading-stars t
         org-edit-src-content-indentation 0
+        org-footnote-auto-adjust t
         org-latex-listings 'minted   ;; color highlighting for source blocks
         org-latex-packages-alist '(("" "minted"))
         org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
@@ -433,7 +428,7 @@ Projects with =projectile=
   (projectile-mode 1)
   (setq projectile-git-submodule-command nil)
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
-  (setq projectile-project-search-path '("~/workspace/")))
+  (setq projectile-project-search-path '("/media/hdd/workspace/")))
 #+END_SRC
 
 #+RESULTS:
@@ -490,7 +485,8 @@ And finally, ivy/counsel for partial completions, searches, etc.
     (setq ivy-posframe-parameters
         '((left-fringe . 8)
           (right-fringe . 8)))
-    (ivy-posframe-mode 1))
+    (ivy-posframe-mode 1)
+    (add-hook 'ivy-posframe-mode #'linum-relative-mode))
 
 (use-package prescient
   :after counsel
@@ -631,7 +627,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
   ("m" mu4e "Open Mailbox")
   ("s" my/bash "Shell")
   ("S" vterm "Big Shell")
-  ("t" (find-file "~/Dropbox/Notes/tasks.org") "Open tasks")
+  ("t" (find-file "~/Nextcloud/Notes/tasks.org") "Open tasks")
   ("u" undo-tree-visualize "Undo-tree"))
 (bind-evil-key "SPC o" hydra-openbuffer/body)
 
@@ -731,9 +727,10 @@ reference the email from my TODO list.
     (load "~/.emacs.d/mu4e-init.el")
     (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))))
 
-(use-package mu4e-alert
-  :init
-  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
+;; (use-package mu4e-alert
+;;  :defer t
+;;  :init
+;;  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
 #+END_SRC
 
 * Display Settings
@@ -769,21 +766,35 @@ package to disable all mouse operations in evil mode.
 ** Look & Feel (Theme)
 
 #+BEGIN_SRC emacs-lisp
+(defun font-existsp (font)
+    (if (string-equal (describe-font font)
+                    "No matching font found")
+        nil
+        t))
+
 (use-package base16-theme)
 (use-package modus-operandi-theme)
 (use-package modus-vivendi-theme
-  :init
-  (setq modus-operandi-theme-org-blocks 'greyscale
-        modus-operandi-theme-mode-line 'moody)
-  (set-face-attribute 'default nil :family "Lilex Regular" :height 110)
-  (set-face-attribute 'variable-pitch nil :family "Lilex Regular" :height 1.1)
-  (set-face-attribute 'fixed-pitch nil :family "Lilex Regular" :height 1.0))
+ :init
+ (setq modus-operandi-theme-org-blocks 'greyscale
+       modus-operandi-theme-mode-line 'moody)
+   (set-face-attribute 'variable-pitch nil :family "Gentium" :height 1.2)
+   (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
 (use-package atom-one-dark-theme)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
-(set-frame-font "Lilex-12.5")
-(setq default-frame-alist '((font . "Lilex-12.5")))
+
+(set-frame-font "Jetbrains Mono-9.5")
+(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
+
+;; enable ligatures for the Lilex font set
+;;(use-package ligature
+;; :quelpa (ligature :fetcher github :repo "mickeynp/ligature.el")
+;; :config
+;; ;; Enable ligatures in programming modes
+;; (ligature-set-ligatures 'prog-mode '("->" "==" "===" "<=" ">=" "<-" "!=" "/>"))
+;; (global-ligature-mode t))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -792,12 +803,6 @@ package to disable all mouse operations in evil mode.
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'image-mode-hook (lambda () (linum-mode -1)))
 
-(use-package ligature
-  :load-path "plugins/ligature.el"
-  :config
-  ;; Enable ligatures in programming modes
-  (ligature-set-ligatures 'prog-mode '("->" "==" "===" "<=" ">=" "<-" "!=" "/>"))
-  (global-ligature-mode t))
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
