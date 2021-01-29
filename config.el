@@ -57,7 +57,13 @@
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
-(use-package ess) ;; Emacs speaks statistics (R)
+(use-package ess ;; Emacs speaks statistics (R)
+  :init
+  ;; scroll to the end of R shell automatically when
+  ;; new input is entered.
+  (setq comint-scroll-to-bottom-on-input t)
+  (setq comint-scroll-to-bottom-on-output t)
+  (setq comint-move-point-for-output t))
 
 (use-package python-mode
     :config
@@ -173,6 +179,7 @@
   (setq org-startup-indented t
         org-startup-folded t
         org-src-tab-acts-natively t
+        org-src-window-setup 'split-window-below
         org-hide-leading-stars t
         org-edit-src-content-indentation 0
         org-footnote-auto-adjust t
