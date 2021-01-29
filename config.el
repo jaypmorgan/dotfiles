@@ -21,11 +21,12 @@
 ;; Setup package.el to work with MELPA
 (setq package-check-signature nil)
 (require 'package)
+(package-initialize)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
-(package-refresh-contents)
-(package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
 
 ;; Install function define a function to check if a package is
 ;; installed, if it not we can install it. From this, we may quickly
@@ -125,6 +126,7 @@
                               (visual-line-mode 1)
                               (auto-fill-mode 1)))
   (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
+  (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
   (require 'ob-clojure)
   (require 'ox-latex)
   (require 'cider)
@@ -277,13 +279,10 @@
   :init
   (setq flyspell-default-dictionary "british"))
 
-;; Prevent Helm from taking up random windows -- makes the UI more consistent
-;; and predictable.
-;; (use-package shackle
-;;   :after helm
-;;   :init
-;;   (shackle-mode 1)
-;;   (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+(use-package shackle
+  :init
+  (shackle-mode 1)
+  (setq shackle-rules '(("\\`\\*rsession*?\\*\\'" :regexp t :align t :ratio 0.3))))
 
 (use-package evil
   :init
@@ -495,11 +494,18 @@
   ("u" undo-tree-visualize "Undo-tree"))
 (bind-evil-key "SPC o" hydra-openbuffer/body)
 
+(defun new-org-note ()
+  (interactive)
+  (let ((buffer (generate-new-buffer "untitled")))
+    (switch-to-buffer buffer)
+    (org-mode)))
+
 (defhydra hydra-insert (:color blue :hint nil)
   "Insert into Buffer"
   ("s" yas-insert-snippet "Insert Snippet")
   ("r" org-roam-insert "Org Roam Insert")
-  ("j" org-journal-new-entry "Insert New Journal Entry"))
+  ("j" org-journal-new-entry "Insert New Journal Entry")
+  ("n" new-org-note "New Org-mode note"))
 (bind-evil-key "SPC i" hydra-insert/body)
 
 (defhydra hydra-remote-hosts (:color blue :hint nil)
@@ -612,8 +618,15 @@
    (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
 (use-package atom-one-dark-theme)
 
+(defun toggle-variable-pitch ()
+  (interactive)
+  (if (variable-pitch-mode)
+      (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 0.8)
+    (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
+
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'modus-operandi t)
+(when (display-graphic-p)
+  (load-theme 'modus-operandi t))
 
 (set-frame-font "Jetbrains Mono-9.5")
 (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
