@@ -99,6 +99,18 @@
     (setq vterm-kill-buffer-on-exit nil)
     (add-hook 'julia-mode-hook #'julia-repl-mode)))
 
+(use-package julia-staticlint
+  ;; https://github.com/dmalyuta/julia-staticlint
+  ;; Emacs Flycheck support for StaticLint.jl
+  :ensure nil
+  :quelpa ((julia-staticlint :fetcher github
+			       :repo "dmalyuta/julia-staticlint"
+			       :files (:defaults "julia_staticlint_server.jl"
+						 "julia_staticlint_client.jl")))
+  :hook ((julia-mode . julia-staticlint-activate))
+  :config
+  (julia-staticlint-init))
+
 (use-package company
   :hook (prog-mode . company-mode)
   :config
@@ -350,6 +362,9 @@
 
 (use-package counsel
   :init
+  (ido-mode 1)
+  (setq ido-enable-flex-matching t)
+  (setq ido-everywhere t)
   (use-package counsel-projectile
     :init
     (counsel-projectile-mode 1)))
@@ -488,6 +503,7 @@
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
+  ("C" cfw:open-calendar-buffer "Open calendar")
   ("b" org-roam-buffer-toggle-display "Org-roam buffer")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
@@ -589,6 +605,9 @@
   (when (file-exists-p "~/.emacs.d/mu4e-init.el")
     (load "~/.emacs.d/mu4e-init.el")
     (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))))
+
+(use-package calfw
+  :quelpa ((calfw :fetcher github :repo "kiwanami/emacs-calfw")))
 
 ;; (use-package mu4e-alert
 ;;  :defer t
