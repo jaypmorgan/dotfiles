@@ -154,17 +154,17 @@
   (use-package deft
     :init
     (setq deft-extensions '("txt" "tex" "org" "md")
-          deft-directory "/media/hdd/Nextcloud/Notes/"
+          deft-directory notes-dir
           deft-recursive t
          deft-use-filename-as-title t))
   (use-package org-journal
     :init
-    (setq org-journal-dir "/media/hdd/Nextcloud/Notes/"
+    (setq org-journal-dir notes-dir
           org-journal-date-format "%A, %d %B %Y"
           org-journal-file-format "%Y%m%d-journal-entry.org"))
   (use-package org-roam
     :hook (after-init . org-roam-mode)
-    :custom (org-roam-directory "/media/hdd/Nextcloud/Notes/"))
+    :custom (org-roam-directory notes-dir))
 
   (use-package ox-latex-subfigure
    :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
@@ -175,11 +175,11 @@
   (use-package ox-gfm)
   (use-package org-ref
     :init
-    (setq reftex-default-bibliography "/media/hdd/Nextcloud/Wiki/library.bib"
-          org-ref-default-bibliography '("/media/hdd/Nextcloud/Wiki/library.bib"))
+    (setq reftex-default-bibliography bib-file-loc
+          org-ref-default-bibliography '(bib-file-loc))
     (use-package helm-bibtex
         :init
-        (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Wiki/library.bib"
+        (setq bibtex-completion-bibliography bib-file-loc
             bibtex-completion-pdf-open-function 'org-open-file)))
 
   ;; enable tikzpictures in latex export
@@ -254,13 +254,6 @@
 (use-package focus)
 (use-package iedit)
 (use-package ripgrep)
-
-(use-package elfeed
-  :init
-  (use-package elfeed-org
-    :config
-    (elfeed-org)
-    (setq rmh-elfeed-org-files '("/media/hdd/Nextcloud/Notes/feeds.org"))))
 
 (use-package undo-tree
   :init
@@ -522,7 +515,7 @@
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("m" mu4e "Open Mailbox")
   ("s" hydra-shell-buffer/body "Open shell")
-  ("t" (find-file "~/Nextcloud/Notes/tasks.org") "Open tasks")
+  ("t" (find-file tasks-loc) "Open tasks")
   ("u" undo-tree-visualize "Undo-tree"))
 (bind-evil-key "SPC o" hydra-openbuffer/body)
 
