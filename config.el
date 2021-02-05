@@ -154,7 +154,7 @@
   (use-package deft
     :init
     (setq deft-extensions '("txt" "tex" "org" "md")
-          deft-directory "~/Dropbox/Notes/"
+          deft-directory "/media/hdd/Nextcloud/Notes/"
           deft-recursive t
          deft-use-filename-as-title t))
   (use-package org-journal
@@ -177,7 +177,7 @@
     :init
     (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
           org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib"))
-    (use-package ivy-bibtex
+    (use-package helm-bibtex
         :init
         (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
             bibtex-completion-pdf-open-function 'org-open-file)))
@@ -298,10 +298,13 @@
   :init
   (setq flyspell-default-dictionary "british"))
 
+;; Prevent Helm from taking up random windows -- makes the UI more consistent
+;; and predictable.
 (use-package shackle
+  :after helm
   :init
   (shackle-mode 1)
-  (setq shackle-rules '(("\\`\\*rsession*?\\*\\'" :regexp t :align t :ratio 0.3))))
+  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
 
 (use-package evil
   :init
@@ -348,42 +351,42 @@
   (add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
   (setq term-prompt-regexp "^[^#$%>\n]*$ *"))
 
-;; (use-package helm
-;;   :config
-;;   (helm-mode 1)
-;;   (use-package helm-projectile)
-;;   (use-package helm-ag
-;;     :ensure-system-package (ag . silversearcher-ag))
-;;   (setq helm-use-frame-when-more-than-two-windows nil
-;;         helm-split-window-in-side nil
-;;         helm-display-function 'pop-to-buffer
-;;         helm-idle-delay 0.0
-;;         helm-input-idle-delay 0.01))
+(use-package helm
+  :config
+  (helm-mode 1)
+  (use-package helm-projectile)
+  (use-package helm-ag
+    :ensure-system-package (ag . silversearcher-ag))
+  (setq helm-use-frame-when-more-than-two-windows nil
+        helm-split-window-in-side nil
+        helm-display-function 'pop-to-buffer
+        helm-idle-delay 0.0
+        helm-input-idle-delay 0.01))
 
-(use-package counsel
-  :init
-  (ido-mode 1)
-  (setq ido-enable-flex-matching t)
-  (setq ido-everywhere t)
-  (use-package counsel-projectile
-    :init
-    (counsel-projectile-mode 1)))
+;; (use-package counsel
+;;   :init
+;;   (ido-mode 1)
+;;   (setq ido-enable-flex-matching t)
+;;   (setq ido-everywhere t)
+;;   (use-package counsel-projectile
+;;     :init
+;;     (counsel-projectile-mode 1)))
 
-  (use-package ivy-posframe
-    :after counsel
-    :init
-    (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
-    (setq ivy-posframe-parameters
-        '((left-fringe . 8)
-          (right-fringe . 8)))
-    (ivy-posframe-mode 1)
-    (add-hook 'ivy-posframe-mode #'linum-relative-mode))
+;;   (use-package ivy-posframe
+;;     :after counsel
+;;     :init
+;;     (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
+;;     (setq ivy-posframe-parameters
+;;         '((left-fringe . 8)
+;;           (right-fringe . 8)))
+;;     (ivy-posframe-mode 1)
+;;     (add-hook 'ivy-posframe-mode #'linum-relative-mode))
 
-(use-package prescient
-  :after counsel
-  :init
-  (use-package ivy-prescient :init (ivy-prescient-mode 1))
-  (use-package company-prescient :init (company-prescient-mode 1)))
+;; (use-package prescient
+;;   :after counsel
+;;   :init
+;;   (use-package ivy-prescient :init (ivy-prescient-mode 1))
+;;   (use-package company-prescient :init (company-prescient-mode 1)))
 
 (use-package cheat-sh)
 
@@ -437,16 +440,15 @@
     (iedit-mode)
     (iedit-restrict-current-line)))
 
-(defhydra hydra-ivy-files (:color blue :hint nil)
+(defhydra hydra-helm-files (:color blue :hint nil)
   "Ivy Files"
-  ("f" counsel-find-file "Find Files")
-  ("r" counsel-recentf "File Recent Files")
+  ("f" helm-find-files "Find Files")
+  ("r" helm-recentf "File Recent Files")
   ("d" deft "Deft Find File")
   ("b" swiper "Find in buffer"))
-(bind-evil-key "SPC f" hydra-ivy-files/body)
+(bind-evil-key "SPC f" hydra-helm-files/body)
 
 (bind-evil-key "SPC p" projectile-command-map)
-(bind-evil-key "SPC p h" counsel-projectile-find-file)
 (bind-evil-key "SPC p a" projectile-add-known-project)
 (bind-evil-key "SPC g" magit-status)
 (bind-evil-key "SPC a" org-agenda)
@@ -464,7 +466,7 @@
       (evil-window-split))
     (other-window 1)
     (if p-name
-        (projectile-find-file)
+        (helm-projectile-find-file)
       (switch-to-buffer "*scratch*"))))
 
 (defun my/split-vertical ()
@@ -491,14 +493,22 @@
   ("9" eyebrowse-switch-to-window-config-9 "Workspace 9"))
 (bind-evil-key "SPC TAB" hydra-eyebrowse/body)
 
-(bind-evil-key "SPC SPC" ivy-switch-buffer)
-(bind-global-key "C-x b" ivy-switch-buffer)
+(bind-evil-key "SPC SPC" helm-buffers-list)
+(bind-global-key "C-x b" helm-buffers-list)
 
 (defhydra hydra-open-config (:color blue :hint nil)
   "Open Config"
   ("e" (find-file "~/.emacs.d/config.org") "Emacs Config")
   ("x" (find-file "~/.xmonad/xmonad.hs") "Xmonad Config")
   ("m" (find-file "~/.emacs.d/mu4e-init.el") "Mail Config"))
+
+(defhydra hydra-shell-buffer (:color blue :hint nil)
+  "Open Shell"
+  ("s" my/bash "Shell")
+  ("S" vterm "Big shell")
+  ("j" julia-repl "Julia repl")
+  ("r" R "R repl")
+  ("p" python "Python repl"))
 
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
@@ -511,8 +521,7 @@
   ("g" org-roam-graph "Open Org Roam Graph")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("m" mu4e "Open Mailbox")
-  ("s" my/bash "Shell")
-  ("S" vterm "Big Shell")
+  ("s" hydra-shell-buffer/body "Open shell")
   ("t" (find-file "~/Nextcloud/Notes/tasks.org") "Open tasks")
   ("u" undo-tree-visualize "Undo-tree"))
 (bind-evil-key "SPC o" hydra-openbuffer/body)
@@ -526,7 +535,8 @@
 (defhydra hydra-insert (:color blue :hint nil)
   "Insert into Buffer"
   ("s" yas-insert-snippet "Insert Snippet")
-  ("r" org-roam-insert "Org Roam Insert")
+  ("r" org-ref-insert-cite-with-completion "Insert citation")
+  ("l" org-roam-insert "Org Roam link")
   ("j" org-journal-new-entry "Insert New Journal Entry")
   ("n" new-org-note "New Org-mode note"))
 (bind-evil-key "SPC i" hydra-insert/body)
