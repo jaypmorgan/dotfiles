@@ -159,12 +159,12 @@
          deft-use-filename-as-title t))
   (use-package org-journal
     :init
-    (setq org-journal-dir "~/Dropbox/Notes/"
+    (setq org-journal-dir "/media/hdd/Nextcloud/Notes/"
           org-journal-date-format "%A, %d %B %Y"
           org-journal-file-format "%Y%m%d-journal-entry.org"))
   (use-package org-roam
     :hook (after-init . org-roam-mode)
-    :custom (org-roam-directory "~/Dropbox/Notes/"))
+    :custom (org-roam-directory "/media/hdd/Nextcloud/Notes/"))
 
   (use-package ox-latex-subfigure
    :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
@@ -175,11 +175,11 @@
   (use-package ox-gfm)
   (use-package org-ref
     :init
-    (setq reftex-default-bibliography "~/Dropbox/Notes/Wiki/library.bib"
-          org-ref-default-bibliography '("~/Dropbox/Notes/Wiki/library.bib"))
+    (setq reftex-default-bibliography "/media/hdd/Nextcloud/Wiki/library.bib"
+          org-ref-default-bibliography '("/media/hdd/Nextcloud/Wiki/library.bib"))
     (use-package helm-bibtex
         :init
-        (setq bibtex-completion-bibliography "~/Dropbox/Notes/Wiki/library.bib"
+        (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Wiki/library.bib"
             bibtex-completion-pdf-open-function 'org-open-file)))
 
   ;; enable tikzpictures in latex export
@@ -260,7 +260,7 @@
   (use-package elfeed-org
     :config
     (elfeed-org)
-    (setq rmh-elfeed-org-files '("~/Dropbox/Notes/feeds.org"))))
+    (setq rmh-elfeed-org-files '("/media/hdd/Nextcloud/Notes/feeds.org"))))
 
 (use-package undo-tree
   :init
