@@ -57,13 +57,46 @@
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
+
+(defun r-workspace ()
+  (interactive)
+  (split-window-right)
+  (other-window 1)
+  (split-window-below)
+  (other-window 1)
+  (switch-to-buffer "*rsession*")
+  (other-frame -1)
+  (switch-to-buffer "*rsession*")
+  (ess-rdired)
+  (ess-rdired-mode))
+
 (use-package ess ;; Emacs speaks statistics (R)
   :init
   ;; scroll to the end of R shell automatically when
   ;; new input is entered.
-  (setq comint-scroll-to-bottom-on-input t)
-  (setq comint-scroll-to-bottom-on-output t)
-  (setq comint-move-point-for-output t))
+  (setq comint-scroll-to-bottom-on-input t
+        comint-scroll-to-bottom-on-output t
+        comint-move-point-for-output t
+        ess-eval-visibly 'nowait)
+  ;; (setq display-buffer-alist
+  ;;       `(("*R Dired"
+  ;;          (display-buffer-reuse-window display-buffer-in-side-window)
+  ;;          (side . right)
+  ;;          (slot . -1)
+  ;;          (window-width . 0.33)
+  ;;          (reusable-frames . nil))
+  ;;         ("*R"
+  ;;          (display-buffer-reuse-window display-buffer-in-side-window)
+  ;;          (side . right)
+  ;;          (window-width . 0.5)
+  ;;          (reusable-frames . nil))
+  ;;         ("*Help"
+  ;;          (display-buffer-reuse-window display-buffer-below-selected)
+  ;;          (side . left)
+  ;;          (slot . 1)
+  ;;          (window-width . 0.33)
+  ;;          (reusable-frames . nil)))))
+  )
 
 (use-package python-mode
     :config

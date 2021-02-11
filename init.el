@@ -3,6 +3,8 @@
 ;; Author: Jay Morgan
 ;;--------------------------
 
+(load (concat user-emacs-directory "hiddens.el") 'noerror)
+
 ;; Config settings are available in an org-mode
 ;; file. This function call loads them.
 (require 'org)

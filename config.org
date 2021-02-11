@@ -8,8 +8,6 @@
 # eval: (add-hook 'after-save-hook (lambda nil (org-babel-tangle)) nil t)
 # End:
 
-#+INCLUDE: "hiddens.org"
-
 * Table of Contents                                                     :TOC:
 - [[#executable-path][Executable Path]]
 - [[#setup-package-environment][Setup Package Environment]]
@@ -123,13 +121,40 @@ A: Clojure > Julia > C++ > Python
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
+
+(defun open-r-workspace ()
+  (interactive)
+  (if (< (window-total-width) 200)
+      (split-window-right)
+    (split-window-right -120))
+  (other-window 1)
+  (switch-to-buffer "*R*")
+  (split-window-below)
+  (switch-to-buffer "*R*")
+  (ess-rdired)
+  (ess-rdired-mode)
+  (other-window -1)
+  (set-window-dedicated-p (nth 1 (window-list)) t)
+  (set-window-dedicated-p (nth 2 (window-list)) t))
+(define-key org-mode-map (kbd "<f7>") 'open-r-workspace)
+
 (use-package ess ;; Emacs speaks statistics (R)
   :init
   ;; scroll to the end of R shell automatically when
   ;; new input is entered.
-  (setq comint-scroll-to-bottom-on-input t)
-  (setq comint-scroll-to-bottom-on-output t)
-  (setq comint-move-point-for-output t))
+  (setq comint-scroll-to-bottom-on-input t
+        comint-scroll-to-bottom-on-output t
+        comint-move-point-for-output t
+        ess-eval-visibly 'nowait)
+  (setq display-buffer-alist
+        `(("*R Dired"
+           (display-buffer-reuse-window display-buffer-same-window)
+           (reusable-frames . nil))
+          ("*R"
+           (display-buffer-reuse-window display-buffer-in-side-window)
+           (side . bottom)
+           (window-width . 0.33)
+           (reusable-frames . nil)))))
 
 (use-package python-mode
     :config
