@@ -58,69 +58,75 @@
 (use-package toml-mode)
 (use-package haskell-mode)
 
-(defun r-workspace ()
+(defun r/open-workspace ()
+  " Open side panel containing r-dired and r console "
   (interactive)
-  (split-window-right)
+  (if (< (window-total-width) 200)
+      (split-window-right)
+    (split-window-right -120))
   (other-window 1)
+  (switch-to-buffer "*R*")
   (split-window-below)
-  (other-window 1)
-  (switch-to-buffer "*rsession*")
-  (other-frame -1)
-  (switch-to-buffer "*rsession*")
+  (switch-to-buffer "*R*")
   (ess-rdired)
-  (ess-rdired-mode))
+  (ess-rdired-mode)
+  (other-window -1)
+  (set-window-dedicated-p (nth 1 (window-list)) t)
+  (set-window-dedicated-p (nth 2 (window-list)) t))
+(define-key org-mode-map (kbd "<f7>") 'open-r-workspace)
 
 (use-package ess ;; Emacs speaks statistics (R)
   :init
   ;; scroll to the end of R shell automatically when
   ;; new input is entered.
+  (require 'ess-r-mode)
+  (defun r/insert (key)
+    " Insert key into buffer "
+    (interactive)
+    (insert key))
+    (defun r/insert-variable () (interactive) (r/insert "<- "))
+    (defun r/insert-pipe () (interactive) (r/insert " %>%\n    "))
+  (define-key ess-mode-map (kbd "C-,") 'r/insert-variable)
+  (define-key ess-mode-map (kbd "C-5") 'r/insert-pipe)
+
   (setq comint-scroll-to-bottom-on-input t
-        comint-scroll-to-bottom-on-output t
-        comint-move-point-for-output t
-        ess-eval-visibly 'nowait)
-  ;; (setq display-buffer-alist
-  ;;       `(("*R Dired"
-  ;;          (display-buffer-reuse-window display-buffer-in-side-window)
-  ;;          (side . right)
-  ;;          (slot . -1)
-  ;;          (window-width . 0.33)
-  ;;          (reusable-frames . nil))
-  ;;         ("*R"
-  ;;          (display-buffer-reuse-window display-buffer-in-side-window)
-  ;;          (side . right)
-  ;;          (window-width . 0.5)
-  ;;          (reusable-frames . nil))
-  ;;         ("*Help"
-  ;;          (display-buffer-reuse-window display-buffer-below-selected)
-  ;;          (side . left)
-  ;;          (slot . 1)
-  ;;          (window-width . 0.33)
-  ;;          (reusable-frames . nil)))))
-  )
+	comint-scroll-to-bottom-on-output t
+	comint-move-point-for-output t
+	ess-eval-visibly 'nowait)
+
+  (setq display-buffer-alist
+	`(("*R Dired"
+	   (display-buffer-reuse-window display-buffer-same-window)
+	   (reusable-frames . nil))
+	  ("*R"
+	   (display-buffer-reuse-window display-buffer-in-side-window)
+	   (side . bottom)
+	   (window-width . 0.33)
+	   (reusable-frames . nil)))))
 
 (use-package python-mode
     :config
     (setq python-shell-interpreter "ipython"
-          python-shell-interpreter-args "--simple-prompt -i"
-          python-indent-offset 4)
+	  python-shell-interpreter-args "--simple-prompt -i"
+	  python-indent-offset 4)
     (defun my/py-send-line ()
       (interactive)
       (when (eq evil-state 'visual)
-        (py-execute-region-ipython (region-beginning) (region-end)))
+	(py-execute-region-ipython (region-beginning) (region-end)))
       (when (eq evil-state 'normal)
-        (py-execute-line-ipython)))
+	(py-execute-line-ipython)))
     (define-key python-mode-map (kbd "C-c C-c") 'my/py-send-line)
     (use-package blacken
       :init
       (defun blacken-python-hook ()
-          (when (eq major-mode 'python-mode)
-            (blacken-buffer)))
+	  (when (eq major-mode 'python-mode)
+	    (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
     (use-package conda
-        :init
-        (conda-env-initialize-eshell)
-        (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
-              conda-env-home-directory (expand-file-name "~/miniconda3/"))))
+	:init
+	(conda-env-initialize-eshell)
+	(setq conda-anaconda-home (expand-file-name "~/miniconda3/")
+	      conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
 (use-package julia-mode
   :init
