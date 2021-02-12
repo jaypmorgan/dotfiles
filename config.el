@@ -58,51 +58,68 @@
 (use-package toml-mode)
 (use-package haskell-mode)
 
-(defun r/open-workspace ()
-  " Open side panel containing r-dired and r console "
-  (interactive)
-  (if (< (window-total-width) 200)
-      (split-window-right)
-    (split-window-right -120))
-  (other-window 1)
-  (switch-to-buffer "*R*")
-  (split-window-below)
-  (switch-to-buffer "*R*")
-  (ess-rdired)
-  (ess-rdired-mode)
-  (other-window -1)
-  (set-window-dedicated-p (nth 1 (window-list)) t)
-  (set-window-dedicated-p (nth 2 (window-list)) t))
-(define-key org-mode-map (kbd "<f7>") 'open-r-workspace)
 
 (use-package ess ;; Emacs speaks statistics (R)
   :init
-  ;; scroll to the end of R shell automatically when
-  ;; new input is entered.
   (require 'ess-r-mode)
+
+  (defun r/open-workspace ()
+    " Open side panel containing r-dired and r console "
+    (interactive)
+    (if (< (window-total-width) 200)
+        (split-window-right)
+        (split-window-right -120))
+    (other-window 1)
+    (switch-to-buffer "*R*")
+    (split-window-below)
+    (switch-to-buffer "*R*")
+    (ess-rdired)
+    (ess-rdired-mode)
+    (other-window -1)
+    (set-window-dedicated-p (nth 1 (window-list)) t)
+    (set-window-dedicated-p (nth 2 (window-list)) t))
+
+  (define-key org-mode-map (kbd "<f7>") 'r/open-workspace)
+  (define-key ess-r-mode-map (kbd "<f7>") 'r/open-workspace)
+
   (defun r/insert (key)
     " Insert key into buffer "
     (interactive)
     (insert key))
     (defun r/insert-variable () (interactive) (r/insert "<- "))
     (defun r/insert-pipe () (interactive) (r/insert " %>%\n    "))
-  (define-key ess-mode-map (kbd "C-,") 'r/insert-variable)
-  (define-key ess-mode-map (kbd "C-5") 'r/insert-pipe)
 
+  (define-key ess-r-mode-map (kbd "C-,") 'ess-insert-assign)
+  (define-key ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
+  (define-key inferior-ess-r-mode-map (kbd "C-,") 'ess-insert-assign)
+  (define-key inferior-ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
+
+  (require 'ess-rdired)
+  (define-key ess-rdired-mode-map (kbd "C-c p") 'ess-rdired-plot)
+  (define-key ess-rdired-mode-map (kbd "C-c e") 'ess-rdired-edit)
+  (define-key ess-rdired-mode-map (kbd "C-c v") 'ess-rdired-view)
+
+  ;; define variables scroll to the end of R shell automatically when
+  ;; new input is entered.
   (setq comint-scroll-to-bottom-on-input t
 	comint-scroll-to-bottom-on-output t
 	comint-move-point-for-output t
 	ess-eval-visibly 'nowait)
 
+  ;; setup window management
   (setq display-buffer-alist
-	`(("*R Dired"
+	`(("\\*R dired\\*"
 	   (display-buffer-reuse-window display-buffer-same-window)
 	   (reusable-frames . nil))
-	  ("*R"
+	  ("\\*R"
 	   (display-buffer-reuse-window display-buffer-in-side-window)
 	   (side . bottom)
 	   (window-width . 0.33)
-	   (reusable-frames . nil)))))
+	   (reusable-frames . nil))
+          ("\\*help"
+           (display-buffer-reuse-window display-buffer-in-side-window)
+           (side . bottom)
+           (reusable-frames . nil)))))
 
 (use-package python-mode
     :config
@@ -175,20 +192,36 @@
   (setq lsp-julia-default-environment "~/.julia/environments/v1.5"))
 
 (use-package org
-  :after cider
+  :after (cider pdf-view)
   :ensure org-plus-contrib
   :init
+  (require 'pdf-view)
+  (require 'ob-clojure)
+  (require 'ox-latex)
+  (require 'cider)
+
   (add-hook 'org-mode-hook '(lambda ()
                               (set-fill-column 85)
                               (visual-line-mode 1)
                               (auto-fill-mode 1)))
   (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
   (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
-  (require 'ob-clojure)
-  (require 'ox-latex)
-  (require 'cider)
-  (use-package ob-ipython)
 
+
+  ;; swap between exported PDF and Org document by pressing F4
+  (defun my/toggle-pdf (extension)
+    (interactive)
+    (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
+      (find-file (concat filename extension))))
+  (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
+  (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
+  (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
+  (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
+
+  (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
+
+  (use-package ob-ipython)
   ;; notes/wiki/journal
   (use-package deft
     :init

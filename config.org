@@ -141,10 +141,11 @@ A: Clojure > Julia > C++ > Python
     (ess-rdired-mode)
     (other-window -1)
     (set-window-dedicated-p (nth 1 (window-list)) t)
-    (set-window-dedicated-p (nth 2 (window-list)) t))
+    (set-window-dedicated-p (nth 2 (window-list)) t)
+    (imenu-list))
 
-  (define-key org-mode-map (kbd "<f7>") 'open-r-workspace)
-  (define-key ess-r-mode-map (kbd "<f7>") 'open-r-workspace)
+  (define-key org-mode-map (kbd "<f7>") 'r/open-workspace)
+  (define-key ess-r-mode-map (kbd "<f7>") 'r/open-workspace)
 
   (defun r/insert (key)
     " Insert key into buffer "
@@ -159,9 +160,9 @@ A: Clojure > Julia > C++ > Python
   (define-key inferior-ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
 
   (require 'ess-rdired)
-  (define-key ess-rdired-mode-map (kbd "p") 'ess-rdired-plot)
-  (define-key ess-rdired-mode-map (kbd "e") 'ess-rdired-edit)
-  (define-key ess-rdired-mode-map (kbd "v") 'ess-rdired-view)
+  (define-key ess-rdired-mode-map (kbd "C-c p") 'ess-rdired-plot)
+  (define-key ess-rdired-mode-map (kbd "C-c e") 'ess-rdired-edit)
+  (define-key ess-rdired-mode-map (kbd "C-c v") 'ess-rdired-view)
 
   ;; define variables scroll to the end of R shell automatically when
   ;; new input is entered.
@@ -172,15 +173,15 @@ A: Clojure > Julia > C++ > Python
 
   ;; setup window management
   (setq display-buffer-alist
-	`(("*R Dired"
+	`(("\\*R dired\\*"
 	   (display-buffer-reuse-window display-buffer-same-window)
 	   (reusable-frames . nil))
-	  ("*R"
+	  ("\\*R"
 	   (display-buffer-reuse-window display-buffer-in-side-window)
 	   (side . bottom)
 	   (window-width . 0.33)
 	   (reusable-frames . nil))
-          ("*Help"
+          ("\\*help"
            (display-buffer-reuse-window display-buffer-in-side-window)
            (side . bottom)
            (reusable-frames . nil)))))
@@ -271,118 +272,124 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 Once I learnt about org-mode, it would always be tough to leave Emacs.
 
 #+BEGIN_SRC emacs-lisp
-(use-package org
-  :after cider
-  :ensure org-plus-contrib
-  :init
-  (add-hook 'org-mode-hook '(lambda ()
-                              (set-fill-column 85)
-                              (visual-line-mode 1)
-                              (auto-fill-mode 1)))
-  (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
-  (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
-
-  (defun my/toggle-pdf (extension)
-    (interactive)
-    (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
-      (find-file (concat filename extension))))
-  (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
-  (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
-  (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
-  (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
-
-  (require 'ob-clojure)
-  (require 'ox-latex)
-  (require 'cider)
-  (use-package ob-ipython)
-
-  ;; notes/wiki/journal
-  (use-package deft
+  (use-package org
+    :after (cider pdf-view)
+    :ensure org-plus-contrib
     :init
-    (setq deft-extensions '("txt" "tex" "org" "md")
-          deft-directory notes-dir
-          deft-recursive t
-         deft-use-filename-as-title t))
-  (use-package org-journal
-    :init
-    (setq org-journal-dir notes-dir
-          org-journal-date-format "%A, %d %B %Y"
-          org-journal-file-format "%Y%m%d-journal-entry.org"))
-  (use-package org-roam
-    :hook (after-init . org-roam-mode)
-    :custom (org-roam-directory notes-dir))
+    (require 'pdf-view)
+    (require 'ob-clojure)
+    (require 'ox-latex)
+    (require 'cider)
 
-  (use-package ox-latex-subfigure
-   :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
-   :config (require 'ox-latex-subfigure)
-   :init
-   (setq org-latex-prefer-user-labels t))
-  ;; (use-package ox-pandoc :defer t)
-  (use-package ox-gfm)
-  (use-package org-ref
-    :init
-    (setq reftex-default-bibliography bib-file-loc
-          org-ref-default-bibliography '(bib-file-loc))
-    (use-package helm-bibtex
-        :init
-        (setq bibtex-completion-bibliography bib-file-loc
-            bibtex-completion-pdf-open-function 'org-open-file)))
+    (add-hook 'org-mode-hook '(lambda ()
+                                (set-fill-column 85)
+                                (visual-line-mode 1)
+                                (auto-fill-mode 1)))
+    (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
+    (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
 
-  ;; enable tikzpictures in latex export
-  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-  (eval-after-load "preview" '
-    (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
-  ;; set variables
-  (setq org-startup-indented t
-        org-startup-folded t
-        org-src-tab-acts-natively t
-        org-src-window-setup 'split-window-below
-        org-hide-leading-stars t
-        org-edit-src-content-indentation 0
-        org-footnote-auto-adjust t
-        org-latex-listings 'minted   ;; color highlighting for source blocks
-        org-latex-packages-alist '(("" "minted"))
-        org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
-        ;; org-latex-pdf-process
-        ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-        ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
-        org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
-        inferior-julia-program-name "/usr/bin/julia"
-        org-babel-clojure-backend 'cider
-        org-confirm-babel-evaluate nil
-        org-fontify-done-headline t
-        org-log-done 'time
-        org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
-        org-todo-keyword-faces '(("TODO" . org-warning)
-                                 ("WAIT" . "Firebrick")
-                                 ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
-                                 ("CANC" . "red")))
+    ;; swap between exported PDF and Org document by pressing F4
+    (defun my/toggle-pdf (extension)
+      (interactive)
+      (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
+        (find-file (concat filename extension))))
+    (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
+    (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
+    (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
+    (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
 
-    (add-to-list 'org-latex-classes
-            '("book-no-parts"
-                "\\documentclass{book}"
-                ("\\chapter{%s}" . "\\chapter*{%s}")
-                ("\\section{%s}" . "\\section*{%s}")
-                ("\\subsection{%s}" . "\\subsection*{%s}")
-                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                ("\\paragraph{%s}" . "\\paragraph*{%s}")))
-  (custom-set-faces '(org-headline-done
-                        ((((class color)
-                        (min-colors 16))
-                        (:foreground "dim gray" :strike-through t)))))
+    (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
+    (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
 
-  ;; list of languages for org-mode to support
-  (org-babel-do-load-languages 'org-babel-load-languages
-                               '((shell . t)
-                                 (python . t)
-                                 (R . t)
-                                 (ipython . t)
-                                 (clojure . t)
-                                 (emacs-lisp . t)
-                                 (julia . t)
-                                 (gnuplot . t)
-                                 (dot . t))))
+    (use-package ob-ipython)
+    ;; notes/wiki/journal
+    (use-package deft
+      :init
+      (setq deft-extensions '("txt" "tex" "org" "md")
+            deft-directory notes-dir
+            deft-recursive t
+           deft-use-filename-as-title t))
+    (use-package org-journal
+      :init
+      (setq org-journal-dir notes-dir
+            org-journal-date-format "%A, %d %B %Y"
+            org-journal-file-format "%Y%m%d-journal-entry.org"))
+    (use-package org-roam
+      :hook (after-init . org-roam-mode)
+      :custom (org-roam-directory notes-dir))
+
+    (use-package ox-latex-subfigure
+     :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
+     :config (require 'ox-latex-subfigure)
+     :init
+     (setq org-latex-prefer-user-labels t))
+    ;; (use-package ox-pandoc :defer t)
+    (use-package ox-gfm)
+    (use-package org-ref
+      :init
+      (setq reftex-default-bibliography bib-file-loc
+            org-ref-default-bibliography '(bib-file-loc))
+      (use-package helm-bibtex
+          :init
+          (setq bibtex-completion-bibliography bib-file-loc
+              bibtex-completion-pdf-open-function 'org-open-file)))
+
+    ;; enable tikzpictures in latex export
+    (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+    (eval-after-load "preview" '
+      (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
+
+    ;; set variables
+    (setq org-startup-indented t
+          org-startup-folded t
+          org-src-tab-acts-natively t
+          org-src-window-setup 'split-window-below
+          org-hide-leading-stars t
+          org-edit-src-content-indentation 0
+          org-footnote-auto-adjust t
+          org-latex-listings 'minted   ;; color highlighting for source blocks
+          org-latex-packages-alist '(("" "minted"))
+          org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
+          ;; org-latex-pdf-process
+          ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+          ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
+          org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
+          inferior-julia-program-name "/usr/bin/julia"
+          org-babel-clojure-backend 'cider
+          org-confirm-babel-evaluate nil
+          org-fontify-done-headline t
+          org-log-done 'time
+          org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
+          org-todo-keyword-faces '(("TODO" . org-warning)
+                                   ("WAIT" . "Firebrick")
+                                   ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
+                                   ("CANC" . "red")))
+
+      (add-to-list 'org-latex-classes
+              '("book-no-parts"
+                  "\\documentclass{book}"
+                  ("\\chapter{%s}" . "\\chapter*{%s}")
+                  ("\\section{%s}" . "\\section*{%s}")
+                  ("\\subsection{%s}" . "\\subsection*{%s}")
+                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                  ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+    (custom-set-faces '(org-headline-done
+                          ((((class color)
+                          (min-colors 16))
+                          (:foreground "dim gray" :strike-through t)))))
+
+    ;; list of languages for org-mode to support
+    (org-babel-do-load-languages 'org-babel-load-languages
+                                 '((shell . t)
+                                   (python . t)
+                                   (R . t)
+                                   (ipython . t)
+                                   (clojure . t)
+                                   (emacs-lisp . t)
+                                   (julia . t)
+                                   (gnuplot . t)
+                                   (dot . t))))
 #+END_SRC
 
 Sometimes it is nice to have a table of contents inside the org-mode document,
@@ -404,12 +411,16 @@ possible.
 (use-package itail)
 (use-package magit)
 (use-package disable-mouse)
-(use-package imenu-list)
 (use-package linum-relative)
 (use-package ace-window)
 (use-package focus)
 (use-package iedit)
 (use-package ripgrep)
+
+(use-package imenu-list
+  :init
+  (setq imenu-list-size 0.1
+        imenu-list-position 'left))
 
 (use-package undo-tree
   :init
