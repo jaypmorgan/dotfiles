@@ -116,7 +116,10 @@ A: Clojure > Julia > C++ > Python
 (use-package flycheck
   :init
   (add-hook 'sh-mode-hook 'flycheck-mode))
-(use-package clojure-mode :init (use-package cider))
+
+(use-package clojure-mode
+  :init (use-package cider))
+
 (use-package markdown-mode)
 (use-package htmlize)
 (use-package toml-mode)
@@ -142,7 +145,7 @@ A: Clojure > Julia > C++ > Python
     (other-window -1)
     (set-window-dedicated-p (nth 1 (window-list)) t)
     (set-window-dedicated-p (nth 2 (window-list)) t)
-    (imenu-list))
+    (imenu-list-smart-toggle))
 
   (define-key org-mode-map (kbd "<f7>") 'r/open-workspace)
   (define-key ess-r-mode-map (kbd "<f7>") 'r/open-workspace)
@@ -272,124 +275,128 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 Once I learnt about org-mode, it would always be tough to leave Emacs.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org
-    :after (cider pdf-view)
-    :ensure org-plus-contrib
+(use-package org
+  :after (cider pdf-view)
+  :ensure org-plus-contrib
+  :init
+  (require 'pdf-view)
+  (require 'ob-clojure)
+  (require 'ox-latex)
+  (require 'cider)
+
+  (add-hook 'org-mode-hook '(lambda ()
+                              (set-fill-column 85)
+                              (visual-line-mode 1)
+                              (auto-fill-mode 1)))
+  (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
+  (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
+
+
+  ;; swap between exported PDF and Org document by pressing F4
+  (defun my/toggle-pdf (extension)
+    (interactive)
+    (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
+      (find-file (concat filename extension))))
+  (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
+  (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
+  (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
+  (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
+
+  (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
+
+  (use-package org-noter)
+  (use-package ob-ipython)
+  ;; notes/wiki/journal
+  (use-package deft
     :init
-    (require 'pdf-view)
-    (require 'ob-clojure)
-    (require 'ox-latex)
-    (require 'cider)
+    (setq deft-extensions '("txt" "tex" "org" "md")
+          deft-directory notes-dir
+          deft-recursive t
+         deft-use-filename-as-title t))
+  (use-package org-journal
+    :init
+    (setq org-journal-dir notes-dir
+          org-journal-date-format "%A, %d %B %Y"
+          org-journal-file-format "%Y%m%d-journal-entry.org"))
+  (use-package org-roam
+    :hook (after-init . org-roam-mode)
+    :custom (org-roam-directory notes-dir))
 
-    (add-hook 'org-mode-hook '(lambda ()
-                                (set-fill-column 85)
-                                (visual-line-mode 1)
-                                (auto-fill-mode 1)))
-    (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
-    (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
+  (use-package ox-latex-subfigure
+   :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
+   :config (require 'ox-latex-subfigure)
+   :init
+   (setq org-latex-prefer-user-labels t))
+  ;; (use-package ox-pandoc :defer t)
+  (use-package ox-gfm)
+  (use-package org-ref
+    :init
+    (setq reftex-default-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
+          org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
+          org-ref-default-bibliography '("/media/hdd/Nextcloud/Notes/Wiki/library.bib"))
+    (use-package helm-bibtex
+        :init
+        (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
+              bibtex-completion-pdf-open-function 'org-open-file
+              bibtex-completion-notes-path "/media/hdd/Nextcloud/Notes/Papers/"
+              bibtex-completion-pdf-field "file")))
 
+  ;; enable tikzpictures in latex export
+  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+  (eval-after-load "preview" '
+    (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
 
-    ;; swap between exported PDF and Org document by pressing F4
-    (defun my/toggle-pdf (extension)
-      (interactive)
-      (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
-        (find-file (concat filename extension))))
-    (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
-    (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
-    (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
-    (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
+  ;; set variables
+  (setq org-startup-indented t
+        org-startup-folded t
+        org-src-tab-acts-natively t
+        org-src-window-setup 'split-window-below
+        org-hide-leading-stars t
+        org-edit-src-content-indentation 0
+        org-footnote-auto-adjust t
+        org-latex-listings 'minted   ;; color highlighting for source blocks
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
+        ;; org-latex-pdf-process
+        ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
+        org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
+        inferior-julia-program-name "/usr/bin/julia"
+        org-babel-clojure-backend 'cider
+        org-confirm-babel-evaluate nil
+        org-fontify-done-headline t
+        org-log-done 'time
+        org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
+        org-todo-keyword-faces '(("TODO" . org-warning)
+                                 ("WAIT" . "Firebrick")
+                                 ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
+                                 ("CANC" . "red")))
 
-    (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
-    (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
+    (add-to-list 'org-latex-classes
+            '("book-no-parts"
+                "\\documentclass{book}"
+                ("\\chapter{%s}" . "\\chapter*{%s}")
+                ("\\section{%s}" . "\\section*{%s}")
+                ("\\subsection{%s}" . "\\subsection*{%s}")
+                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+  (custom-set-faces '(org-headline-done
+                        ((((class color)
+                        (min-colors 16))
+                        (:foreground "dim gray" :strike-through t)))))
 
-    (use-package ob-ipython)
-    ;; notes/wiki/journal
-    (use-package deft
-      :init
-      (setq deft-extensions '("txt" "tex" "org" "md")
-            deft-directory notes-dir
-            deft-recursive t
-           deft-use-filename-as-title t))
-    (use-package org-journal
-      :init
-      (setq org-journal-dir notes-dir
-            org-journal-date-format "%A, %d %B %Y"
-            org-journal-file-format "%Y%m%d-journal-entry.org"))
-    (use-package org-roam
-      :hook (after-init . org-roam-mode)
-      :custom (org-roam-directory notes-dir))
-
-    (use-package ox-latex-subfigure
-     :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
-     :config (require 'ox-latex-subfigure)
-     :init
-     (setq org-latex-prefer-user-labels t))
-    ;; (use-package ox-pandoc :defer t)
-    (use-package ox-gfm)
-    (use-package org-ref
-      :init
-      (setq reftex-default-bibliography bib-file-loc
-            org-ref-default-bibliography '(bib-file-loc))
-      (use-package helm-bibtex
-          :init
-          (setq bibtex-completion-bibliography bib-file-loc
-              bibtex-completion-pdf-open-function 'org-open-file)))
-
-    ;; enable tikzpictures in latex export
-    (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-    (eval-after-load "preview" '
-      (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
-
-    ;; set variables
-    (setq org-startup-indented t
-          org-startup-folded t
-          org-src-tab-acts-natively t
-          org-src-window-setup 'split-window-below
-          org-hide-leading-stars t
-          org-edit-src-content-indentation 0
-          org-footnote-auto-adjust t
-          org-latex-listings 'minted   ;; color highlighting for source blocks
-          org-latex-packages-alist '(("" "minted"))
-          org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
-          ;; org-latex-pdf-process
-          ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-          ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
-          org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
-          inferior-julia-program-name "/usr/bin/julia"
-          org-babel-clojure-backend 'cider
-          org-confirm-babel-evaluate nil
-          org-fontify-done-headline t
-          org-log-done 'time
-          org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
-          org-todo-keyword-faces '(("TODO" . org-warning)
-                                   ("WAIT" . "Firebrick")
-                                   ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
-                                   ("CANC" . "red")))
-
-      (add-to-list 'org-latex-classes
-              '("book-no-parts"
-                  "\\documentclass{book}"
-                  ("\\chapter{%s}" . "\\chapter*{%s}")
-                  ("\\section{%s}" . "\\section*{%s}")
-                  ("\\subsection{%s}" . "\\subsection*{%s}")
-                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                  ("\\paragraph{%s}" . "\\paragraph*{%s}")))
-    (custom-set-faces '(org-headline-done
-                          ((((class color)
-                          (min-colors 16))
-                          (:foreground "dim gray" :strike-through t)))))
-
-    ;; list of languages for org-mode to support
-    (org-babel-do-load-languages 'org-babel-load-languages
-                                 '((shell . t)
-                                   (python . t)
-                                   (R . t)
-                                   (ipython . t)
-                                   (clojure . t)
-                                   (emacs-lisp . t)
-                                   (julia . t)
-                                   (gnuplot . t)
-                                   (dot . t))))
+  ;; list of languages for org-mode to support
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '((shell . t)
+                                 (python . t)
+                                 (R . t)
+                                 (ipython . t)
+                                 (clojure . t)
+                                 (emacs-lisp . t)
+                                 (julia . t)
+                                 (gnuplot . t)
+                                 (dot . t))))
 #+END_SRC
 
 Sometimes it is nice to have a table of contents inside the org-mode document,
@@ -721,7 +728,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
   ("C" cfw:open-calendar-buffer "Open calendar")
-  ("b" org-roam-buffer-toggle-display "Org-roam buffer")
+  ("b" helm-bibtex "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
   ("e" elfeed "Elfeed")
@@ -815,6 +822,13 @@ And finally, ivy/counsel for partial completions, searches, etc.
 (bind-evil-key "SPC l ;" (lambda ()
                            (interactive)
                            (dorsync rsync-source rsync-destination)))
+
+(defun conda-activate-once (env-name)
+  " Set the conda environment if it hasn't been set yet "
+  (interactive)
+  (let ((current-env (locate-file "python" exec-path)))
+    (unless (string-match-p (regexp-quote env-name) current-env)
+      (conda-env-activate env-name))))
 #+END_SRC
 
 * Email Client
@@ -907,14 +921,6 @@ package to disable all mouse operations in evil mode.
 
 (set-frame-font "Jetbrains Mono-9.5")
 (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
-
-;; enable ligatures for the Lilex font set
-;;(use-package ligature
-;; :quelpa (ligature :fetcher github :repo "mickeynp/ligature.el")
-;; :config
-;; ;; Enable ligatures in programming modes
-;; (ligature-set-ligatures 'prog-mode '("->" "==" "===" "<=" ">=" "<-" "!=" "/>"))
-;; (global-ligature-mode t))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp

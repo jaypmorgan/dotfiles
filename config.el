@@ -52,7 +52,10 @@
 (use-package flycheck
   :init
   (add-hook 'sh-mode-hook 'flycheck-mode))
-(use-package clojure-mode :init (use-package cider))
+
+(use-package clojure-mode
+  :init (use-package cider))
+
 (use-package markdown-mode)
 (use-package htmlize)
 (use-package toml-mode)
@@ -77,7 +80,8 @@
     (ess-rdired-mode)
     (other-window -1)
     (set-window-dedicated-p (nth 1 (window-list)) t)
-    (set-window-dedicated-p (nth 2 (window-list)) t))
+    (set-window-dedicated-p (nth 2 (window-list)) t)
+    (imenu-list-smart-toggle))
 
   (define-key org-mode-map (kbd "<f7>") 'r/open-workspace)
   (define-key ess-r-mode-map (kbd "<f7>") 'r/open-workspace)
@@ -221,6 +225,7 @@
   (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
   (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
 
+  (use-package org-noter)
   (use-package ob-ipython)
   ;; notes/wiki/journal
   (use-package deft
@@ -247,12 +252,15 @@
   (use-package ox-gfm)
   (use-package org-ref
     :init
-    (setq reftex-default-bibliography bib-file-loc
-          org-ref-default-bibliography '(bib-file-loc))
+    (setq reftex-default-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
+          org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
+          org-ref-default-bibliography '("/media/hdd/Nextcloud/Notes/Wiki/library.bib"))
     (use-package helm-bibtex
         :init
-        (setq bibtex-completion-bibliography bib-file-loc
-            bibtex-completion-pdf-open-function 'org-open-file)))
+        (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
+              bibtex-completion-pdf-open-function 'org-open-file
+              bibtex-completion-notes-path "/media/hdd/Nextcloud/Notes/Papers/"
+              bibtex-completion-pdf-field "file")))
 
   ;; enable tikzpictures in latex export
   (add-to-list 'org-latex-packages-alist '("" "tikz" t))
@@ -320,12 +328,16 @@
 (use-package itail)
 (use-package magit)
 (use-package disable-mouse)
-(use-package imenu-list)
 (use-package linum-relative)
 (use-package ace-window)
 (use-package focus)
 (use-package iedit)
 (use-package ripgrep)
+
+(use-package imenu-list
+  :init
+  (setq imenu-list-size 0.1
+        imenu-list-position 'left))
 
 (use-package undo-tree
   :init
@@ -579,7 +591,8 @@
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
   ("C" cfw:open-calendar-buffer "Open calendar")
-  ("b" org-roam-buffer-toggle-display "Org-roam buffer")
+  ("b" helm-bibtex-with-local-bibliography "Open local bibliography")
+  ("B" helm-bibtex "Open local bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
   ("e" elfeed "Elfeed")
@@ -731,14 +744,6 @@
 
 (set-frame-font "Jetbrains Mono-9.5")
 (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
-
-;; enable ligatures for the Lilex font set
-;;(use-package ligature
-;; :quelpa (ligature :fetcher github :repo "mickeynp/ligature.el")
-;; :config
-;; ;; Enable ligatures in programming modes
-;; (ligature-set-ligatures 'prog-mode '("->" "==" "===" "<=" ">=" "<-" "!=" "/>"))
-;; (global-ligature-mode t))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
