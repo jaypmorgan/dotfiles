@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: R variable
+# key: <v
+# --
+${1:my_var} <- ${2:do_something()}

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: R for loop
+# key: <for
+# --
+for (${1:range}) {
+  ${2:## do something}
+}

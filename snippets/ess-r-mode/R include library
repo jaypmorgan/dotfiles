@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: R include library
+# key: <l
+# --
+library(${1:libname})

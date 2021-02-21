@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: R Function
+# key: <f
+# --
+${1:my_var} <- function($2) {
+  ${3:## do something}
+}

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex Un-numbered Equation
+# key: <ue
+# --
+\[
+$1
+\]
