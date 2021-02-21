@@ -113,20 +113,20 @@ Q: What are your favourite programming languages?\\
 A: Clojure > Julia > C++ > Python
 
 #+BEGIN_SRC emacs-lisp
-(use-package flycheck
-  :init
-  (add-hook 'sh-mode-hook 'flycheck-mode))
-
-(use-package clojure-mode
-  :init (use-package cider))
-
+(use-package flycheck :init (add-hook 'sh-mode-hook 'flycheck-mode))
+(use-package clojure-mode :init (use-package cider))
 (use-package markdown-mode)
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
 
+;; C++/C/Objective-C LSP support
+(use-package ccls
+  :config
+  (setq ccls-executable "~/Applications/ccls/Release/ccls"))
 
-(use-package ess ;; Emacs speaks statistics (R)
+ ;; Emacs speaks statistics (R)
+(use-package ess
   :init
   (require 'ess-r-mode)
 

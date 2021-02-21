@@ -49,20 +49,20 @@
    :url "https://github.com/quelpa/quelpa-use-package.git"))
 (require 'quelpa-use-package)
 
-(use-package flycheck
-  :init
-  (add-hook 'sh-mode-hook 'flycheck-mode))
-
-(use-package clojure-mode
-  :init (use-package cider))
-
+(use-package flycheck :init (add-hook 'sh-mode-hook 'flycheck-mode))
+(use-package clojure-mode :init (use-package cider))
 (use-package markdown-mode)
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
 
+;; C++/C/Objective-C LSP support
+(use-package ccls
+  :config
+  (setq ccls-executable "~/Applications/ccls/Release/ccls"))
 
-(use-package ess ;; Emacs speaks statistics (R)
+ ;; Emacs speaks statistics (R)
+(use-package ess
   :init
   (require 'ess-r-mode)
 
@@ -591,8 +591,7 @@
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
   ("C" cfw:open-calendar-buffer "Open calendar")
-  ("b" helm-bibtex-with-local-bibliography "Open local bibliography")
-  ("B" helm-bibtex "Open local bibliography")
+  ("b" helm-bibtex "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
   ("e" elfeed "Elfeed")
@@ -682,6 +681,13 @@
 (bind-evil-key "SPC l ;" (lambda ()
                            (interactive)
                            (dorsync rsync-source rsync-destination)))
+
+(defun conda-activate-once (env-name)
+  " Set the conda environment if it hasn't been set yet "
+  (interactive)
+  (let ((current-env (locate-file "python" exec-path)))
+    (unless (string-match-p (regexp-quote env-name) current-env)
+      (conda-env-activate env-name))))
 
 (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
