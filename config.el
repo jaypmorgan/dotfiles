@@ -130,6 +130,7 @@
     (setq python-shell-interpreter "ipython"
 	  python-shell-interpreter-args "--simple-prompt -i"
 	  python-indent-offset 4)
+
     (defun my/py-send-line ()
       (interactive)
       (when (eq evil-state 'visual)
@@ -137,12 +138,27 @@
       (when (eq evil-state 'normal)
 	(py-execute-line-ipython)))
     (define-key python-mode-map (kbd "C-c C-c") 'my/py-send-line)
+
     (use-package blacken
       :init
       (defun blacken-python-hook ()
 	  (when (eq major-mode 'python-mode)
 	    (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
+
+    (require 'flycheck)
+    (flycheck-define-checker
+        python-mypy ""
+        :command ("mypy"
+                  "--ignore-missing-imports"
+                  "--python-version" "3.6"
+                  source-original)
+        :error-patterns
+        ((error line-start (file-name) ":" line ": error:" (message) line-end))
+        :modes python-mode)
+    (add-to-list 'flycheck-checkers 'python-mypy t)
+    (flycheck-add-next-checker 'python-pylint 'python-mypy t)
+
     (use-package conda
 	:init
 	(conda-env-initialize-eshell)
@@ -182,9 +198,6 @@
   :hook (company-mode . company-box-mode))
 
 (use-package lsp-mode
-  :hook ((python-mode . lsp-deferred)
-         (julia-mode . lsp-deferred)
-         (r-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
@@ -217,10 +230,16 @@
     (interactive)
     (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
       (find-file (concat filename extension))))
+  (defun my/open-to-odf-other-window ()
+    (interactive)
+    (split-window-right)
+    (other-window 1)
+    (my/toggle-pdf ".pdf"))
   (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
   (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
   (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
   (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
+  (define-key org-mode-map (kbd "<f3>") 'my/open-to-odf-other-window)
 
   (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
   (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
