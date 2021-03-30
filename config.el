@@ -49,7 +49,10 @@
    :url "https://github.com/quelpa/quelpa-use-package.git"))
 (require 'quelpa-use-package)
 
-(use-package flycheck :init (add-hook 'sh-mode-hook 'flycheck-mode))
+(use-package flycheck
+  :init
+  (add-hook 'sh-mode-hook 'flycheck-mode)
+  (setq-default flycheck-disabled-checkers '(python-pylint)))
 (use-package clojure-mode :init (use-package cider))
 (use-package markdown-mode)
 (use-package htmlize)
@@ -65,6 +68,7 @@
 (use-package ess
   :init
   (require 'ess-r-mode)
+  (use-package ess-view)
 
   (defun r/open-workspace ()
     " Open side panel containing r-dired and r console "
@@ -90,8 +94,27 @@
     " Insert key into buffer "
     (interactive)
     (insert key))
-    (defun r/insert-variable () (interactive) (r/insert "<- "))
-    (defun r/insert-pipe () (interactive) (r/insert " %>%\n    "))
+  (defun r/insert-variable () (interactive) (r/insert "<- "))
+  (defun r/insert-pipe () (interactive) (r/insert " %>%\n    "))
+
+  (defun r/read-last-function ()
+    (interactive)
+    (ess-switch-to-ESS t)
+    (comint-previous-prompt 1)
+    (let ((cur-line (thing-at-point 'line t)))
+      (save-match-data
+        (and (string-match "\s([a-zA-Z0-9._]+)\s<" cur-line)
+             (setq fn (match-string 1 cur-line))
+             (message fn)))))
+
+  (defun r/submit-and-execute-function ()
+    " Send cursor to terminal and execute the function "
+    (interactive)
+    (ess-eval-region-or-function-or-paragraph t)
+    (let ((func_name (r/read-last-function)))
+      (ess-send-string (ess-get-process) (concat func_name "()"))))
+  (define-key ess-r-mode-map (kbd "C-c C-f") 'r/submit-and-execute-function)
+  (define-key inferior-ess-r-mode-map (kbd "C-c C-f") 'r/submit-and-execute-function)
 
   (define-key ess-r-mode-map (kbd "C-,") 'ess-insert-assign)
   (define-key ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
@@ -125,19 +148,17 @@
            (side . bottom)
            (reusable-frames . nil)))))
 
+(use-package rust-mode
+  :hook ((rust-mode . cargo-minor-mode))
+  :config
+  (use-package cargo)
+  (setq rust-format-on-save t))
+
 (use-package python-mode
     :config
     (setq python-shell-interpreter "ipython"
 	  python-shell-interpreter-args "--simple-prompt -i"
 	  python-indent-offset 4)
-
-    (defun my/py-send-line ()
-      (interactive)
-      (when (eq evil-state 'visual)
-	(py-execute-region-ipython (region-beginning) (region-end)))
-      (when (eq evil-state 'normal)
-	(py-execute-line-ipython)))
-    (define-key python-mode-map (kbd "C-c C-c") 'my/py-send-line)
 
     (use-package blacken
       :init
@@ -145,19 +166,6 @@
 	  (when (eq major-mode 'python-mode)
 	    (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
-
-    (require 'flycheck)
-    (flycheck-define-checker
-        python-mypy ""
-        :command ("mypy"
-                  "--ignore-missing-imports"
-                  "--python-version" "3.6"
-                  source-original)
-        :error-patterns
-        ((error line-start (file-name) ":" line ": error:" (message) line-end))
-        :modes python-mode)
-    (add-to-list 'flycheck-checkers 'python-mypy t)
-    (flycheck-add-next-checker 'python-pylint 'python-mypy t)
 
     (use-package conda
 	:init
@@ -198,15 +206,26 @@
   :hook (company-mode . company-box-mode))
 
 (use-package lsp-mode
+  :hook ((rust-mode . lsp-deferred)
+         (python-mode . lsp-deferred)
+         (ess-r-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
   (setq lsp-keymap-prefix "C-c l"
-        lsp-file-watch-threshold 10000))
+        lsp-file-watch-threshold nil
+        lsp-modeline-code-actions-enable t
+        lsp-pyls-plugins-flake8-max-line-length 100
+        lsp-pyls-plugins-pycodestyle-max-line-length 100
+        lsp-eldoc-enable-hover nil
+        lsp-log-io nil
+        lsp-idle-delay 1.0)
+  (lsp-register-custom-settings '(("pyls.plugins.pyls_mypy.enabled" t t)
+                                ("pyls.plugins.pyls_mypy.live_mode" nil t))))
 
 (use-package lsp-julia
   :config
-  (setq lsp-julia-default-environment "~/.julia/environments/v1.5"))
+  (setq lsp-julia-default-environment "~/.julia/environments/v1.6"))
 
 (use-package org
   :after (cider pdf-view)
@@ -216,6 +235,13 @@
   (require 'ob-clojure)
   (require 'ox-latex)
   (require 'cider)
+
+  (add-to-list 'org-latex-classes
+               '("beamer"
+                 "\\documentclass\[presentation\]\{beamer\}"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")))
 
   (add-hook 'org-mode-hook '(lambda ()
                               (set-fill-column 85)
@@ -244,6 +270,9 @@
   (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
   (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
 
+  (use-package ox-reveal
+    :init
+    (setq org-reveal-root "file:///usr/lib/node_modules/reveal.js"))
   (use-package org-noter)
   (use-package ob-ipython)
   ;; notes/wiki/journal
@@ -306,9 +335,10 @@
         org-confirm-babel-evaluate nil
         org-fontify-done-headline t
         org-log-done 'time
-        org-todo-keywords '((type "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANC(c)"))
+        org-todo-keywords '((type "TODO(t)" "WAIT(w)" "INPROGRESS(p)" "|" "DONE(d)" "CANC(c)"))
         org-todo-keyword-faces '(("TODO" . org-warning)
                                  ("WAIT" . "Firebrick")
+                                 ("INPROGRESS" . "SeaGreen3")
                                  ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
                                  ("CANC" . "red")))
 
@@ -401,6 +431,43 @@
   :init
   (shackle-mode 1)
   (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+
+(use-package popper
+  :ensure t
+  :bind (("C-`"   . popper-toggle-latest)
+         ("M-`"   . popper-cycle)
+         ("C-M-`" . popper-toggle-type))
+  :init
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          "Output\\*$"
+          help-mode
+          compilation-mode))
+  (popper-mode +1))
+
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
+        (backward-char 1)
+        (if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+      (minibuffer-complete)
+    (if (or (not yas/minor-mode)
+            (null (do-yas-expand)))
+        (if (check-expansion)
+            (company-complete-common)
+          (indent-for-tab-command)))))
+
+(global-set-key [tab] 'tab-indent-or-complete)
 
 (use-package evil
   :init
@@ -522,19 +589,24 @@
         (load-theme dark-theme t)
         (setq dark-theme-p t)))))
 
-(defmacro bind-evil-key (binding func)
+(defmacro bind-evil-normal-key (binding func)
   `(define-key evil-motion-state-map (kbd ,binding) (quote ,func)))
 
+(defmacro bind-evil-visual-key (binding func)
+  `(define-key evil-visual-state-map (kbd ,binding) (quote ,func)))
+
 (defmacro bind-global-key (binding func)
-  `(global-set-key (kbd ,binding) (quote, func)))
+  `(global-set-key (kbd ,binding) (quote ,func)))
 
 (with-eval-after-load 'evil-maps
   (define-key evil-normal-state-map (kbd "C-n") nil))
-(bind-evil-key "C-n"
+(bind-evil-normal-key "C-n"
   (lambda ()
     (interactive)
     (iedit-mode)
     (iedit-restrict-current-line)))
+
+(bind-evil-visual-key "SPC l f" align-regexp)
 
 (defhydra hydra-helm-files (:color blue :hint nil)
   "Ivy Files"
@@ -542,17 +614,17 @@
   ("r" helm-recentf "File Recent Files")
   ("d" deft "Deft Find File")
   ("b" swiper "Find in buffer"))
-(bind-evil-key "SPC f" hydra-helm-files/body)
+(bind-evil-normal-key "SPC f" hydra-helm-files/body)
 
-(bind-evil-key "SPC p" projectile-command-map)
-(bind-evil-key "SPC p a" projectile-add-known-project)
-(bind-evil-key "SPC g" magit-status)
-(bind-evil-key "SPC a" org-agenda)
-(bind-evil-key "SPC w" ace-window)
-(bind-evil-key "SPC n" avy-goto-char-timer)
-(bind-evil-key "SPC e" eww)
+(bind-evil-normal-key "SPC p" projectile-command-map)
+(bind-evil-normal-key "SPC p a" projectile-add-known-project)
+(bind-evil-normal-key "SPC g" magit-status)
+(bind-evil-normal-key "SPC a" org-agenda)
+(bind-evil-normal-key "SPC w" ace-window)
+(bind-evil-normal-key "SPC n" avy-goto-char-timer)
+(bind-evil-normal-key "SPC e" eww)
 (bind-global-key "C-x ," vterm) ;; new terminal in window
-(bind-evil-key "SPC c" cheat-sh) ;; open cheat-sheet search
+(bind-evil-normal-key "SPC c" cheat-sh) ;; open cheat-sheet search
 
 (defun my/split (direction)
   (interactive)
@@ -572,8 +644,8 @@
   (interactive)
   (my/split "horizontal"))
 
-(bind-evil-key "SPC s v" my/split-vertical)
-(bind-evil-key "SPC s h" my/split-horizontal)
+(bind-evil-normal-key "SPC s v" my/split-vertical)
+(bind-evil-normal-key "SPC s h" my/split-horizontal)
 
 (defhydra hydra-eyebrowse (:color blue :hint nil)
   "Workspaces"
@@ -587,9 +659,9 @@
   ("7" eyebrowse-switch-to-window-config-7 "Workspace 7")
   ("8" eyebrowse-switch-to-window-config-8 "Workspace 8")
   ("9" eyebrowse-switch-to-window-config-9 "Workspace 9"))
-(bind-evil-key "SPC TAB" hydra-eyebrowse/body)
+(bind-evil-normal-key "SPC TAB" hydra-eyebrowse/body)
 
-(bind-evil-key "SPC SPC" helm-buffers-list)
+(bind-evil-normal-key "SPC SPC" helm-buffers-list)
 (bind-global-key "C-x b" helm-buffers-list)
 
 (defhydra hydra-open-config (:color blue :hint nil)
@@ -620,7 +692,7 @@
   ("s" hydra-shell-buffer/body "Open shell")
   ("t" (find-file tasks-loc) "Open tasks")
   ("u" undo-tree-visualize "Undo-tree"))
-(bind-evil-key "SPC o" hydra-openbuffer/body)
+(bind-evil-normal-key "SPC o" hydra-openbuffer/body)
 
 (defun new-org-note ()
   (interactive)
@@ -635,14 +707,14 @@
   ("l" org-roam-insert "Org Roam link")
   ("j" org-journal-new-entry "Insert New Journal Entry")
   ("n" new-org-note "New Org-mode note"))
-(bind-evil-key "SPC i" hydra-insert/body)
+(bind-evil-normal-key "SPC i" hydra-insert/body)
 
 (defhydra hydra-remote-hosts (:color blue :hint nil)
   "Browse remote hosts"
   ("l" (dired-at-point "/ssh:lis.me:~/workspace") "LIS Lab")
   ("s" (dired-at-point "/ssh:sunbird.me:~/workspace") "Sunbird Swansea")
   ("c" (dired-at-point "/ssh:chemistry.me:~/workspace") "Chemistry Swanasea"))
-(bind-evil-key "SPC r" hydra-remote-hosts/body)
+(bind-evil-normal-key "SPC r" hydra-remote-hosts/body)
 
 (defhydra hydra-modify-buffers (:color blue :hint nil)
   "Modify buffer"
@@ -650,7 +722,7 @@
   ("o" olivetti-mode "Olivetti Mode")
   ("b" ibuffer "Edit Buffers")
   ("q" (kill-buffer-and-window) "Close"))
-(bind-evil-key "SPC m" hydra-modify-buffers/body)
+(bind-evil-normal-key "SPC m" hydra-modify-buffers/body)
 
 (defun get-stats (user host format)
   "Get SLURM status from remote server"
@@ -676,7 +748,7 @@
       slurm-username "jay.morgan"
       slurm-job-format "jobid,jobname%30,state,elapsed")
 
-(bind-evil-key "SPC l l" (lambda ()
+(bind-evil-normal-key "SPC l l" (lambda ()
                            (interactive)
                            (slurm-get-stats slurm-username
                                             slurm-host
@@ -697,7 +769,7 @@
     (setq async-shell-command-display-buffer async-value)))
 
 ;; Bind a local key to launch rsync
-(bind-evil-key "SPC l ;" (lambda ()
+(bind-evil-normal-key "SPC l ;" (lambda ()
                            (interactive)
                            (dorsync rsync-source rsync-destination)))
 
