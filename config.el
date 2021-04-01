@@ -159,11 +159,11 @@
            (reusable-frames . nil)))))
 
 (use-package python-mode
-    :config
+    :init
     (setq python-shell-interpreter "jupyter"
-	      python-shell-interpreter-args "console --simple-prompt"
+	  python-shell-interpreter-args "console --simple-prompt"
           python-shell-prompt-detect-failure-warning nil
-	      python-indent-offset 4
+	  python-indent-offset 4
           python-indent-guess-indent-offset-verbose nil)
 
     (use-package blacken
@@ -213,9 +213,7 @@
         lsp-pyls-plugins-pycodestyle-max-line-length 100
         lsp-eldoc-enable-hover nil
         lsp-log-io nil
-        lsp-idle-delay 1.0)
-  (lsp-register-custom-settings '(("pyls.plugins.pyls_mypy.enabled" t t)
-                                ("pyls.plugins.pyls_mypy.live_mode" nil t))))
+        lsp-idle-delay 1.0))
 
 (use-package lsp-julia
   :config
@@ -809,7 +807,7 @@
     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'modus-operandi t))
+(load-theme 'modus-operandi t)
 
 (set-frame-font "Jetbrains Mono-9.5")
 (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
