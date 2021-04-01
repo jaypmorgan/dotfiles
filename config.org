@@ -123,6 +123,14 @@ A: Clojure > Julia > C++ > Python
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
+(use-package isend-mode ;; language agnostic send to terminal
+  :init
+  (setq isend-skip-empty-lines nil
+        isend-strip-empty-lines nil
+        isend-delete-indentation nil
+        isend-end-with-empty-line nil
+        isend-send-line-function 'insert-buffer-substring
+        isend-send-region-function 'isend--ipython-cpaste))
 
 ;; C++/C/Objective-C LSP support
 (use-package ccls
@@ -221,9 +229,13 @@ A: Clojure > Julia > C++ > Python
 
 (use-package python-mode
     :config
-    (setq python-shell-interpreter "ipython"
-	  python-shell-interpreter-args "--simple-prompt -i"
-	  python-indent-offset 4)
+    (setq python-shell-interpreter "jupyter"
+	      python-shell-interpreter-args "console --simple-prompt"
+          python-shell-prompt-detect-failure-warning nil
+	      python-indent-offset 4
+          python-indent-guess-indent-offset-verbose nil)
+
+    ;; (add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
 
     (use-package blacken
       :init
@@ -231,6 +243,8 @@ A: Clojure > Julia > C++ > Python
 	  (when (eq major-mode 'python-mode)
 	    (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
+
+    (define-key python-mode-map (kbd "C-c C-c") 'py-execute-line)
 
     (use-package conda
 	:init

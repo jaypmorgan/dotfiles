@@ -58,6 +58,7 @@
 (use-package htmlize)
 (use-package toml-mode)
 (use-package haskell-mode)
+(use-package isend-mode) ;; language agnostic send to terminal
 
 ;; C++/C/Objective-C LSP support
 (use-package ccls
@@ -156,9 +157,13 @@
 
 (use-package python-mode
     :config
-    (setq python-shell-interpreter "ipython"
-	  python-shell-interpreter-args "--simple-prompt -i"
-	  python-indent-offset 4)
+    (setq python-shell-interpreter "jupyter"
+	      python-shell-interpreter-args "console --simple-prompt"
+          python-shell-prompt-detect-failure-warning nil
+	      python-indent-offset 4
+          python-indent-guess-indent-offset-verbose nil)
+
+    ;; (add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
 
     (use-package blacken
       :init
@@ -166,6 +171,8 @@
 	  (when (eq major-mode 'python-mode)
 	    (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
+
+    (define-key python-mode-map (kbd "C-c C-c") 'py-execute-line)
 
     (use-package conda
 	:init
