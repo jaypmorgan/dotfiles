@@ -50,24 +50,33 @@
 (require 'quelpa-use-package)
 
 (use-package flycheck
-  :init
-  (add-hook 'sh-mode-hook 'flycheck-mode)
+  :hook ((sh-mode . flycheck-mode))
+  :config
   (setq-default flycheck-disabled-checkers '(python-pylint)))
-(use-package clojure-mode :init (use-package cider))
-(use-package markdown-mode)
-(use-package htmlize)
-(use-package toml-mode)
-(use-package haskell-mode)
-(use-package isend-mode) ;; language agnostic send to terminal
+
+(use-package markdown-mode :defer t)
+(use-package htmlize :defer t)
+(use-package toml-mode :defer t)
+(use-package haskell-mode :defer t)
+
+(use-package isend-mode ;; language agnostic send to terminal
+  :init
+  (setq isend-skip-empty-lines nil
+        isend-strip-empty-lines nil
+        isend-delete-indentation nil
+        isend-end-with-empty-line nil
+        isend-send-line-function 'insert-buffer-substring
+        isend-send-region-function 'isend--ipython-cpaste))
 
 ;; C++/C/Objective-C LSP support
 (use-package ccls
+  :defer t
   :config
   (setq ccls-executable "~/Applications/ccls/Release/ccls"))
 
  ;; Emacs speaks statistics (R)
 (use-package ess
-  :init
+  :config
   (require 'ess-r-mode)
   (use-package ess-view)
 
@@ -149,12 +158,6 @@
            (side . bottom)
            (reusable-frames . nil)))))
 
-(use-package rust-mode
-  :hook ((rust-mode . cargo-minor-mode))
-  :config
-  (use-package cargo)
-  (setq rust-format-on-save t))
-
 (use-package python-mode
     :config
     (setq python-shell-interpreter "jupyter"
@@ -163,44 +166,28 @@
 	      python-indent-offset 4
           python-indent-guess-indent-offset-verbose nil)
 
-    ;; (add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
-
     (use-package blacken
-      :init
+      :config
       (defun blacken-python-hook ()
 	  (when (eq major-mode 'python-mode)
 	    (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
 
-    (define-key python-mode-map (kbd "C-c C-c") 'py-execute-line)
-
     (use-package conda
-	:init
-	(conda-env-initialize-eshell)
-	(setq conda-anaconda-home (expand-file-name "~/miniconda3/")
-	      conda-env-home-directory (expand-file-name "~/miniconda3/"))))
+	  :config
+	  (conda-env-initialize-eshell)
+	  (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
+	        conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
-(use-package julia-mode
-  :init
-  (use-package julia-repl
-    :quelpa (julia-repl :fetcher github :repo "tpapp/julia-repl")
-    :init
-    (require 'julia-repl)
-    (julia-repl-set-terminal-backend 'vterm)
-    (setq vterm-kill-buffer-on-exit nil)
-    (add-hook 'julia-mode-hook #'julia-repl-mode)))
-
-(use-package julia-staticlint
-  ;; https://github.com/dmalyuta/julia-staticlint
-  ;; Emacs Flycheck support for StaticLint.jl
-  :ensure nil
-  :quelpa ((julia-staticlint :fetcher github
-			       :repo "dmalyuta/julia-staticlint"
-			       :files (:defaults "julia_staticlint_server.jl"
-						 "julia_staticlint_client.jl")))
-  :hook ((julia-mode . julia-staticlint-activate))
-  :config
-  (julia-staticlint-init))
+(use-package julia-mode :defer t)
+(use-package julia-repl
+   :quelpa (julia-repl :fetcher github :repo "tpapp/julia-repl")
+   :after julia-mode
+   :hook (julia-mode . julia-repl-mode)
+   :config
+   (require 'julia-repl)
+   (julia-repl-set-terminal-backend 'vterm)
+   (setq vterm-kill-buffer-on-exit nil))
 
 (use-package company
   :hook (prog-mode . company-mode)
@@ -298,12 +285,7 @@
     :hook (after-init . org-roam-mode)
     :custom (org-roam-directory notes-dir))
 
-  (use-package ox-latex-subfigure
-   :quelpa (ox-latex-subfigure :fetcher github :repo "linktohack/ox-latex-subfigure")
-   :config (require 'ox-latex-subfigure)
-   :init
-   (setq org-latex-prefer-user-labels t))
-  ;; (use-package ox-pandoc :defer t)
+  (use-package ox-pandoc :defer t)
   (use-package ox-gfm)
   (use-package org-ref
     :init
@@ -587,7 +569,7 @@
 (defun my/toggle-theme ()
   (interactive)
   (let ((light-theme 'modus-operandi)
-        (dark-theme 'atom-one-dark))
+        (dark-theme 'base16-default-dark))
     (if (eq dark-theme-p t)
         (progn
           (load-theme light-theme t)
@@ -798,14 +780,6 @@
     (load "~/.emacs.d/mu4e-init.el")
     (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))))
 
-(use-package calfw
-  :quelpa ((calfw :fetcher github :repo "kiwanami/emacs-calfw")))
-
-;; (use-package mu4e-alert
-;;  :defer t
-;;  :init
-;;  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
-
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
@@ -820,21 +794,13 @@
 (global-linum-mode)
 (linum-relative-on)
 
-(defun font-existsp (font)
-    (if (string-equal (describe-font font)
-                    "No matching font found")
-        nil
-        t))
-
 (use-package base16-theme)
-(use-package modus-operandi-theme)
-(use-package modus-vivendi-theme
+(use-package modus-operandi-theme
  :init
  (setq modus-operandi-theme-org-blocks 'greyscale
        modus-operandi-theme-mode-line 'moody)
    (set-face-attribute 'variable-pitch nil :family "Gentium" :height 1.2)
    (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
-(use-package atom-one-dark-theme)
 
 (defun toggle-variable-pitch ()
   (interactive)
@@ -843,8 +809,7 @@
     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(when (display-graphic-p)
-  (load-theme 'modus-operandi t))
+(load-theme 'modus-operandi t))
 
 (set-frame-font "Jetbrains Mono-9.5")
 (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
