@@ -220,7 +220,7 @@
   (setq lsp-julia-default-environment "~/.julia/environments/v1.6"))
 
 (use-package org
-  :after (cider pdf-view)
+  :after pdf-view
   :ensure org-plus-contrib
   :init
   (require 'pdf-view)
@@ -283,7 +283,6 @@
     :hook (after-init . org-roam-mode)
     :custom (org-roam-directory notes-dir))
 
-  (use-package ox-pandoc :defer t)
   (use-package ox-gfm)
   (use-package org-ref
     :init
