@@ -61,11 +61,9 @@
 
 (use-package isend-mode ;; language agnostic send to terminal
   :init
-  (setq isend-skip-empty-lines nil
-        isend-strip-empty-lines nil
+  (setq isend-strip-empty-lines t
         isend-delete-indentation nil
         isend-end-with-empty-line nil
-        isend-send-line-function 'insert-buffer-substring
         isend-send-region-function 'isend--ipython-cpaste))
 
 ;; C++/C/Objective-C LSP support
@@ -99,6 +97,11 @@
 
   (define-key org-mode-map (kbd "<f7>") 'r/open-workspace)
   (define-key ess-r-mode-map (kbd "<f7>") 'r/open-workspace)
+
+  (defun my/ess-style ()
+    (ess-set-style 'C++ 'quiet)
+    (setq ess-indent-level 2))
+  (add-hook 'ess-mode-hook 'my/ess-style)
 
   (defun r/insert (key)
     " Insert key into buffer "
@@ -142,6 +145,7 @@
 	comint-scroll-to-bottom-on-output t
 	comint-move-point-for-output t
 	ess-eval-visibly 'nowait)
+
 
   ;; setup window management
   (setq display-buffer-alist
@@ -746,18 +750,23 @@
 (setq rsync-source nil
       rsync-destination nil)
 
-(defun dorsync (src dest)
+(defun dorsync (src dest is_hidden)
   "Launch an asynchronuous rsync command"
   (interactive)
   (let ((async-value async-shell-command-display-buffer))
-    (setq async-shell-command-display-buffer nil)
-    (async-shell-command (concat "rsync -a " src " " dest))
+    (if is_hidden
+        (do
+            (setq async-shell-command-display-buffer nil)
+            (setq rsync-cmd "rsync -az"))
+      (setq rsync-cmd "rsync -az --progress"))
+    (async-shell-command (concat rsync-cmd " " src " " dest))
     (setq async-shell-command-display-buffer async-value)))
 
 ;; Bind a local key to launch rsync
 (bind-evil-normal-key "SPC l ;" (lambda ()
                            (interactive)
-                           (dorsync rsync-source rsync-destination)))
+                           (dorsync rsync-source rsync-destination 1)))
+(bind-evil-normal-key "SPC l ," (lambda () (interactive) (dorsync rsync-source rsync-destination nil)))
 
 (defun conda-activate-once (env-name)
   " Set the conda environment if it hasn't been set yet "
