@@ -755,7 +755,7 @@
   (interactive)
   (let ((async-value async-shell-command-display-buffer))
     (if is_hidden
-        (do
+        (progn
             (setq async-shell-command-display-buffer nil)
             (setq rsync-cmd "rsync -az"))
       (setq rsync-cmd "rsync -az --progress"))
