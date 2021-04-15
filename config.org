@@ -20,7 +20,9 @@
 - [[#emacs-environment][Emacs Environment]]
 - [[#keybindings][Keybindings]]
 - [[#custom-functions][Custom Functions]]
-- [[#email-client][Email Client]]
+- [[#email--diary--calendar][Email + Diary + Calendar]]
+  - [[#email-mu4e][Email (mu4e)]]
+  - [[#calendar--diary][Calendar + Diary]]
 - [[#display-settings][Display Settings]]
   - [[#gui-elements][GUI Elements]]
   - [[#line-numbering][Line Numbering]]
@@ -819,7 +821,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
-  ("C" cfw:open-calendar-buffer "Open calendar")
+  ("C" calendar "Open calendar")
   ("b" helm-bibtex "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
@@ -907,7 +909,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
   (interactive)
   (let ((async-value async-shell-command-display-buffer))
     (if is_hidden
-        (progn
+        (do
             (setq async-shell-command-display-buffer nil)
             (setq rsync-cmd "rsync -az"))
       (setq rsync-cmd "rsync -az --progress"))
@@ -928,7 +930,10 @@ And finally, ivy/counsel for partial completions, searches, etc.
       (conda-env-activate env-name))))
 #+END_SRC
 
-* Email Client
+* Email + Diary + Calendar
+
+** Email (mu4e)
+
 I use mu4e and offlinemap to manage my email.
 
 For the most part, the mu4e configuration is as default. The exception to this is to
@@ -947,6 +952,19 @@ reference the email from my TODO list.
   (when (file-exists-p "~/.emacs.d/mu4e-init.el")
     (load "~/.emacs.d/mu4e-init.el")
     (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))))
+#+END_SRC
+
+** Calendar + Diary
+
+#+BEGIN_SRC elisp
+(appt-activate 1)
+(setq diary-file "~/Nextcloud/Notes/diary"
+      calendar-date-style "iso"
+      appt-display-mode-line t
+      org-agenda-diary-file diary-file
+      org-agenda-include-diary t)
+(define-key calendar-mode-map (kbd "C-x i") 'diary-insert-entry)
+(add-hook 'diary-list-entries-hook 'diary-sort-entries t)
 #+END_SRC
 
 * Display Settings
@@ -983,6 +1001,7 @@ package to disable all mouse operations in evil mode.
 
 #+BEGIN_SRC emacs-lisp
 (use-package base16-theme)
+(use-package modus-vivendi-theme)
 (use-package modus-operandi-theme
  :init
  (setq modus-operandi-theme-org-blocks 'greyscale
@@ -997,10 +1016,10 @@ package to disable all mouse operations in evil mode.
     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'modus-operandi t)
+(load-theme 'modus-vivendi t)
 
-(set-frame-font "Jetbrains Mono-9.5")
-(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
+(set-frame-font "Jetbrains Mono-13")
+(setq default-frame-alist '((font . "Jetbrains Mono-14")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1054,6 +1073,7 @@ package to disable all mouse operations in evil mode.
 
 (global-prettify-symbols-mode +1)
 #+END_SRC
+
 
 ** Splash Screen
 In my workflow, I don't find the splash screen useful, thus I prefer to supress it

@@ -671,7 +671,7 @@
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
-  ("C" cfw:open-calendar-buffer "Open calendar")
+  ("C" calendar "Open calendar")
   ("b" helm-bibtex "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
@@ -755,7 +755,7 @@
   (interactive)
   (let ((async-value async-shell-command-display-buffer))
     (if is_hidden
-        (progn
+        (do
             (setq async-shell-command-display-buffer nil)
             (setq rsync-cmd "rsync -az"))
       (setq rsync-cmd "rsync -az --progress"))
@@ -801,6 +801,7 @@
 (linum-relative-on)
 
 (use-package base16-theme)
+(use-package modus-vivendi-theme)
 (use-package modus-operandi-theme
  :init
  (setq modus-operandi-theme-org-blocks 'greyscale
@@ -815,10 +816,10 @@
     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'modus-operandi t)
+(load-theme 'modus-vivendi t)
 
-(set-frame-font "Jetbrains Mono-9.5")
-(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
+(set-frame-font "Jetbrains Mono-13")
+(setq default-frame-alist '((font . "Jetbrains Mono-14")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
@@ -874,3 +875,12 @@
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 (setq initial-scratch-message "")
+
+(appt-activate 1)
+(setq diary-file "~/Nextcloud/Notes/diary"
+      calendar-date-style "iso"
+      appt-display-mode-line t
+      org-agenda-diary-file diary-file
+      org-agenda-include-diary t)
+(define-key calendar-mode-map (kbd "C-x i") 'diary-insert-entry)
+(add-hook 'diary-list-entries-hook 'diary-sort-entries t)
