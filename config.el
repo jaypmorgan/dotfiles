@@ -43,23 +43,21 @@
 (use-package use-package-ensure-system-package)
 
 (use-package quelpa)
-(quelpa
- '(quelpa-use-package
-   :fetcher git
-   :url "https://github.com/quelpa/quelpa-use-package.git"))
-(require 'quelpa-use-package)
-
-(use-package flycheck
-  :hook ((sh-mode . flycheck-mode))
-  :config
-  (setq-default flycheck-disabled-checkers '(python-pylint)))
+(use-package quelpa-use-package
+  :demand t
+  :init
+  (setq quelpa-use-package-inhibit-loading-quelpa t)
+  (unless (package-installed-p 'quelpa-use-package)
+    (quelpa
+     '(quelpa-use-package
+       :fetcher git
+       :url "https://github.com/quelpa/quelpa-use-package.git"))))
 
 (use-package markdown-mode :defer t)
 (use-package htmlize :defer t)
-(use-package toml-mode :defer t)
-(use-package haskell-mode :defer t)
 
 (use-package isend-mode ;; language agnostic send to terminal
+  :defer t
   :init
   (setq isend-strip-empty-lines t
         isend-delete-indentation nil
@@ -74,6 +72,7 @@
 
  ;; Emacs speaks statistics (R)
 (use-package ess
+  :defer t
   :config
   (require 'ess-r-mode)
   (use-package ess-view)
@@ -163,6 +162,7 @@
            (reusable-frames . nil)))))
 
 (use-package python-mode
+    :defer t
     :init
     (setq python-shell-interpreter "jupyter"
 	  python-shell-interpreter-args "console --simple-prompt"
@@ -179,7 +179,6 @@
 
     (use-package conda
 	  :config
-	  (conda-env-initialize-eshell)
 	  (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
 	        conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
@@ -204,17 +203,13 @@
   :hook (company-mode . company-box-mode))
 
 (use-package lsp-mode
-  :hook ((rust-mode . lsp-deferred)
-         (python-mode . lsp-deferred)
-         (ess-r-mode . lsp-deferred))
+  :hook ((python-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
   (setq lsp-keymap-prefix "C-c l"
         lsp-file-watch-threshold nil
         lsp-modeline-code-actions-enable t
-        lsp-pyls-plugins-flake8-max-line-length 100
-        lsp-pyls-plugins-pycodestyle-max-line-length 100
         lsp-eldoc-enable-hover nil
         lsp-log-io nil
         lsp-idle-delay 1.0))
@@ -224,6 +219,7 @@
   (setq lsp-julia-default-environment "~/.julia/environments/v1.6"))
 
 (use-package org
+  :defer t
   :after pdf-view
   :ensure org-plus-contrib
   :init
@@ -272,21 +268,6 @@
   (use-package org-noter)
   (use-package ob-ipython)
   ;; notes/wiki/journal
-  (use-package deft
-    :init
-    (setq deft-extensions '("txt" "tex" "org" "md")
-          deft-directory notes-dir
-          deft-recursive t
-         deft-use-filename-as-title t))
-  (use-package org-journal
-    :init
-    (setq org-journal-dir notes-dir
-          org-journal-date-format "%A, %d %B %Y"
-          org-journal-file-format "%Y%m%d-journal-entry.org"))
-  (use-package org-roam
-    :hook (after-init . org-roam-mode)
-    :custom (org-roam-directory notes-dir))
-
   (use-package ox-gfm)
   (use-package org-ref
     :init
@@ -307,6 +288,7 @@
 
   ;; set variables
   (setq org-startup-indented t
+        org-latex-prefer-user-labels t
         org-startup-folded t
         org-src-tab-acts-natively t
         org-src-window-setup 'split-window-below
@@ -316,9 +298,6 @@
         org-latex-listings 'minted   ;; color highlighting for source blocks
         org-latex-packages-alist '(("" "minted"))
         org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
-        ;; org-latex-pdf-process
-        ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-        ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
         org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
         org-babel-clojure-backend 'cider
@@ -369,14 +348,13 @@
 (use-package disable-mouse)
 (use-package linum-relative)
 (use-package ace-window)
-(use-package focus)
 (use-package iedit)
 (use-package ripgrep)
 
-(use-package imenu-list
-  :init
-  (setq imenu-list-size 0.1
-        imenu-list-position 'left))
+;; (use-package imenu-list
+;;   :init
+;;   (setq imenu-list-size 0.1
+;;         imenu-list-position 'left))
 
 (use-package undo-tree
   :init
@@ -388,11 +366,13 @@
   (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
 
 (use-package yasnippet
-  :init
-  (use-package yasnippet-snippets
-    :init
-    (yas-global-mode 1))
+  :defer t
+  :config
   (yas-global-mode 1))
+;; (use-package yasnippet-snippets
+;;   :after yasnippet
+;;   :init
+;;   (yas-global-mode 1))
 
 (use-package olivetti
   :init
@@ -515,32 +495,6 @@
         helm-display-function 'pop-to-buffer
         helm-idle-delay 0.0
         helm-input-idle-delay 0.01))
-
-;; (use-package counsel
-;;   :init
-;;   (ido-mode 1)
-;;   (setq ido-enable-flex-matching t)
-;;   (setq ido-everywhere t)
-;;   (use-package counsel-projectile
-;;     :init
-;;     (counsel-projectile-mode 1)))
-
-;;   (use-package ivy-posframe
-;;     :after counsel
-;;     :init
-;;     (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
-;;     (setq ivy-posframe-parameters
-;;         '((left-fringe . 8)
-;;           (right-fringe . 8)))
-;;     (ivy-posframe-mode 1)
-;;     (add-hook 'ivy-posframe-mode #'linum-relative-mode))
-
-;; (use-package prescient
-;;   :after counsel
-;;   :init
-;;   (use-package ivy-prescient :init (ivy-prescient-mode 1))
-;;   (use-package company-prescient :init (company-prescient-mode 1)))
-
 (use-package cheat-sh)
 
 (require 'hydra)
@@ -671,7 +625,7 @@
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
-  ("C" calendar "Open calendar")
+  ("C" cfw:open-calendar-buffer "Open calendar")
   ("b" helm-bibtex "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
@@ -755,7 +709,7 @@
   (interactive)
   (let ((async-value async-shell-command-display-buffer))
     (if is_hidden
-        (do
+        (progn
             (setq async-shell-command-display-buffer nil)
             (setq rsync-cmd "rsync -az"))
       (setq rsync-cmd "rsync -az --progress"))
@@ -818,8 +772,8 @@
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-vivendi t)
 
-(set-frame-font "Jetbrains Mono-13")
-(setq default-frame-alist '((font . "Jetbrains Mono-14")))
+(set-frame-font "Jetbrains Mono-9.5")
+(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
@@ -870,6 +824,13 @@
       recentf-max-saved-items 50)
 
 (global-prettify-symbols-mode +1)
+
+(require 'flymake)
+(require 'flycheck)
+(set-face-attribute 'flymake-error nil :underline '(:color "red2" :style line))
+(set-face-attribute 'flymake-warning nil :underline '(:color "orange" :style line))
+(set-face-attribute 'flycheck-error nil :underline '(:color "red2" :style line))
+(set-face-attribute 'flycheck-warning nil :underline '(:color "orange" :style line))
 
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)

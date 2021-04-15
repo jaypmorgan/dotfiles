@@ -102,31 +102,26 @@ And quelpa
 
 #+BEGIN_SRC emacs-lisp
 (use-package quelpa)
-(quelpa
- '(quelpa-use-package
-   :fetcher git
-   :url "https://github.com/quelpa/quelpa-use-package.git"))
-(require 'quelpa-use-package)
+(use-package quelpa-use-package
+  :demand t
+  :init
+  (setq quelpa-use-package-inhibit-loading-quelpa t)
+  (unless (package-installed-p 'quelpa-use-package)
+    (quelpa
+     '(quelpa-use-package
+       :fetcher git
+       :url "https://github.com/quelpa/quelpa-use-package.git"))))
 #+END_SRC
 
 ** Programming Modes
 It's a constant struggle to not learn every programming language ever!
 
-Q: What are your favourite programming languages?\\
-A: Clojure > Julia > C++ > Python
-
 #+BEGIN_SRC emacs-lisp
-(use-package flycheck
-  :hook ((sh-mode . flycheck-mode))
-  :config
-  (setq-default flycheck-disabled-checkers '(python-pylint)))
-
 (use-package markdown-mode :defer t)
 (use-package htmlize :defer t)
-(use-package toml-mode :defer t)
-(use-package haskell-mode :defer t)
 
 (use-package isend-mode ;; language agnostic send to terminal
+  :defer t
   :init
   (setq isend-strip-empty-lines t
         isend-delete-indentation nil
@@ -141,6 +136,7 @@ A: Clojure > Julia > C++ > Python
 
  ;; Emacs speaks statistics (R)
 (use-package ess
+  :defer t
   :config
   (require 'ess-r-mode)
   (use-package ess-view)
@@ -230,6 +226,7 @@ A: Clojure > Julia > C++ > Python
            (reusable-frames . nil)))))
 
 (use-package python-mode
+    :defer t
     :init
     (setq python-shell-interpreter "jupyter"
 	  python-shell-interpreter-args "console --simple-prompt"
@@ -246,7 +243,6 @@ A: Clojure > Julia > C++ > Python
 
     (use-package conda
 	  :config
-	  (conda-env-initialize-eshell)
 	  (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
 	        conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
@@ -284,17 +280,13 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
-  :hook ((rust-mode . lsp-deferred)
-         (python-mode . lsp-deferred)
-         (ess-r-mode . lsp-deferred))
+  :hook ((python-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
   (setq lsp-keymap-prefix "C-c l"
         lsp-file-watch-threshold nil
         lsp-modeline-code-actions-enable t
-        lsp-pyls-plugins-flake8-max-line-length 100
-        lsp-pyls-plugins-pycodestyle-max-line-length 100
         lsp-eldoc-enable-hover nil
         lsp-log-io nil
         lsp-idle-delay 1.0))
@@ -308,139 +300,123 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 Once I learnt about org-mode, it would always be tough to leave Emacs.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org
-    :after pdf-view
-    :ensure org-plus-contrib
+(use-package org
+  :defer t
+  :after pdf-view
+  :ensure org-plus-contrib
+  :init
+  (require 'pdf-view)
+  (require 'ob-clojure)
+  (require 'ox-latex)
+  (require 'cider)
+
+  (add-to-list 'org-latex-classes
+               '("beamer"
+                 "\\documentclass\[presentation\]\{beamer\}"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")))
+
+  (add-hook 'org-mode-hook '(lambda ()
+                              (set-fill-column 85)
+                              (visual-line-mode 1)
+                              (auto-fill-mode 1)))
+  (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
+  (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
+
+
+  ;; swap between exported PDF and Org document by pressing F4
+  (defun my/toggle-pdf (extension)
+    (interactive)
+    (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
+      (find-file (concat filename extension))))
+  (defun my/open-to-odf-other-window ()
+    (interactive)
+    (split-window-right)
+    (other-window 1)
+    (my/toggle-pdf ".pdf"))
+  (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
+  (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
+  (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
+  (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
+  (define-key org-mode-map (kbd "<f3>") 'my/open-to-odf-other-window)
+
+  (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
+
+  (use-package ox-reveal
     :init
-    (require 'pdf-view)
-    (require 'ob-clojure)
-    (require 'ox-latex)
-    (require 'cider)
+    (setq org-reveal-root "file:///usr/lib/node_modules/reveal.js"))
+  (use-package org-noter)
+  (use-package ob-ipython)
+  ;; notes/wiki/journal
+  (use-package ox-gfm)
+  (use-package org-ref
+    :init
+    (setq reftex-default-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
+          org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
+          org-ref-default-bibliography '("/media/hdd/Nextcloud/Notes/Wiki/library.bib"))
+    (use-package helm-bibtex
+        :init
+        (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
+              bibtex-completion-pdf-open-function 'org-open-file
+              bibtex-completion-notes-path "/media/hdd/Nextcloud/Notes/Papers/"
+              bibtex-completion-pdf-field "file")))
+
+  ;; enable tikzpictures in latex export
+  (add-to-list 'org-latex-packages-alist '("" "tikz" t))
+  (eval-after-load "preview" '
+    (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
+
+  ;; set variables
+  (setq org-startup-indented t
+        org-latex-prefer-user-labels t
+        org-startup-folded t
+        org-src-tab-acts-natively t
+        org-src-window-setup 'split-window-below
+        org-hide-leading-stars t
+        org-edit-src-content-indentation 0
+        org-footnote-auto-adjust t
+        org-latex-listings 'minted   ;; color highlighting for source blocks
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
+        org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
+        inferior-julia-program-name "/usr/bin/julia"
+        org-babel-clojure-backend 'cider
+        org-confirm-babel-evaluate nil
+        org-fontify-done-headline t
+        org-log-done 'time
+        org-todo-keywords '((type "TODO(t)" "WAIT(w)" "INPROGRESS(p)" "|" "DONE(d)" "CANC(c)"))
+        org-todo-keyword-faces '(("TODO" . org-warning)
+                                 ("WAIT" . "Firebrick")
+                                 ("INPROGRESS" . "SeaGreen3")
+                                 ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
+                                 ("CANC" . "red")))
 
     (add-to-list 'org-latex-classes
-                 '("beamer"
-                   "\\documentclass\[presentation\]\{beamer\}"
-                   ("\\section\{%s\}" . "\\section*\{%s\}")
-                   ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                   ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")))
+            '("book-no-parts"
+                "\\documentclass{book}"
+                ("\\chapter{%s}" . "\\chapter*{%s}")
+                ("\\section{%s}" . "\\section*{%s}")
+                ("\\subsection{%s}" . "\\subsection*{%s}")
+                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+  (custom-set-faces '(org-headline-done
+                        ((((class color)
+                        (min-colors 16))
+                        (:foreground "dim gray" :strike-through t)))))
 
-    (add-hook 'org-mode-hook '(lambda ()
-                                (set-fill-column 85)
-                                (visual-line-mode 1)
-                                (auto-fill-mode 1)))
-    (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
-    (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
-
-
-    ;; swap between exported PDF and Org document by pressing F4
-    (defun my/toggle-pdf (extension)
-      (interactive)
-      (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
-        (find-file (concat filename extension))))
-    (defun my/open-to-odf-other-window ()
-      (interactive)
-      (split-window-right)
-      (other-window 1)
-      (my/toggle-pdf ".pdf"))
-    (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
-    (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
-    (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
-    (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
-    (define-key org-mode-map (kbd "<f3>") 'my/open-to-odf-other-window)
-
-    (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
-    (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
-
-    (use-package ox-reveal
-      :init
-      (setq org-reveal-root "file:///usr/lib/node_modules/reveal.js"))
-    (use-package org-noter)
-    (use-package ob-ipython)
-    ;; notes/wiki/journal
-    (use-package deft
-      :init
-      (setq deft-extensions '("txt" "tex" "org" "md")
-            deft-directory notes-dir
-            deft-recursive t
-           deft-use-filename-as-title t))
-    (use-package org-journal
-      :init
-      (setq org-journal-dir notes-dir
-            org-journal-date-format "%A, %d %B %Y"
-            org-journal-file-format "%Y%m%d-journal-entry.org"))
-    (use-package org-roam
-      :hook (after-init . org-roam-mode)
-      :custom (org-roam-directory notes-dir))
-
-    (use-package ox-gfm)
-    (use-package org-ref
-      :init
-      (setq reftex-default-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
-            org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
-            org-ref-default-bibliography '("/media/hdd/Nextcloud/Notes/Wiki/library.bib"))
-      (use-package helm-bibtex
-          :init
-          (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
-                bibtex-completion-pdf-open-function 'org-open-file
-                bibtex-completion-notes-path "/media/hdd/Nextcloud/Notes/Papers/"
-                bibtex-completion-pdf-field "file")))
-
-    ;; enable tikzpictures in latex export
-    (add-to-list 'org-latex-packages-alist '("" "tikz" t))
-    (eval-after-load "preview" '
-      (add-to-list 'preview-default-preamble "\\PreviewEnvironment{tikzpicture}" t))
-
-    ;; set variables
-    (setq org-startup-indented t
-          org-startup-folded t
-          org-src-tab-acts-natively t
-          org-src-window-setup 'split-window-below
-          org-hide-leading-stars t
-          org-edit-src-content-indentation 0
-          org-footnote-auto-adjust t
-          org-latex-listings 'minted   ;; color highlighting for source blocks
-          org-latex-packages-alist '(("" "minted"))
-          org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
-          ;; org-latex-pdf-process
-          ;;     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-          ;;     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")
-          org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
-          inferior-julia-program-name "/usr/bin/julia"
-          org-babel-clojure-backend 'cider
-          org-confirm-babel-evaluate nil
-          org-fontify-done-headline t
-          org-log-done 'time
-          org-todo-keywords '((type "TODO(t)" "WAIT(w)" "INPROGRESS(p)" "|" "DONE(d)" "CANC(c)"))
-          org-todo-keyword-faces '(("TODO" . org-warning)
-                                   ("WAIT" . "Firebrick")
-                                   ("INPROGRESS" . "SeaGreen3")
-                                   ("DONE" . (:forground "dim-gray" :strike-through t min-colors 16))
-                                   ("CANC" . "red")))
-
-      (add-to-list 'org-latex-classes
-              '("book-no-parts"
-                  "\\documentclass{book}"
-                  ("\\chapter{%s}" . "\\chapter*{%s}")
-                  ("\\section{%s}" . "\\section*{%s}")
-                  ("\\subsection{%s}" . "\\subsection*{%s}")
-                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                  ("\\paragraph{%s}" . "\\paragraph*{%s}")))
-    (custom-set-faces '(org-headline-done
-                          ((((class color)
-                          (min-colors 16))
-                          (:foreground "dim gray" :strike-through t)))))
-
-    ;; list of languages for org-mode to support
-    (org-babel-do-load-languages 'org-babel-load-languages
-                                 '((shell . t)
-                                   (python . t)
-                                   (R . t)
-                                   (ipython . t)
-                                   (clojure . t)
-                                   (emacs-lisp . t)
-                                   (julia . t)
-                                   (gnuplot . t)
-                                   (dot . t))))
+  ;; list of languages for org-mode to support
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '((shell . t)
+                                 (python . t)
+                                 (R . t)
+                                 (ipython . t)
+                                 (clojure . t)
+                                 (emacs-lisp . t)
+                                 (julia . t)
+                                 (gnuplot . t)
+                                 (dot . t))))
 #+END_SRC
 
 #+RESULTS:
@@ -466,14 +442,13 @@ possible.
 (use-package disable-mouse)
 (use-package linum-relative)
 (use-package ace-window)
-(use-package focus)
 (use-package iedit)
 (use-package ripgrep)
 
-(use-package imenu-list
-  :init
-  (setq imenu-list-size 0.1
-        imenu-list-position 'left))
+;; (use-package imenu-list
+;;   :init
+;;   (setq imenu-list-size 0.1
+;;         imenu-list-position 'left))
 
 (use-package undo-tree
   :init
@@ -485,11 +460,13 @@ possible.
   (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
 
 (use-package yasnippet
-  :init
-  (use-package yasnippet-snippets
-    :init
-    (yas-global-mode 1))
+  :defer t
+  :config
   (yas-global-mode 1))
+;; (use-package yasnippet-snippets
+;;   :after yasnippet
+;;   :init
+;;   (yas-global-mode 1))
 
 (use-package olivetti
   :init
@@ -534,29 +511,29 @@ possible.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (defun check-expansion ()
-    (save-excursion
-      (if (looking-at "\\_>") t
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
         (backward-char 1)
-        (if (looking-at "\\.") t
-          (backward-char 1)
-          (if (looking-at "->") t nil)))))
+        (if (looking-at "->") t nil)))))
 
-  (defun do-yas-expand ()
-    (let ((yas/fallback-behavior 'return-nil))
-      (yas/expand)))
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
 
-  (defun tab-indent-or-complete ()
-    (interactive)
-    (if (minibufferp)
-        (minibuffer-complete)
-      (if (or (not yas/minor-mode)
-              (null (do-yas-expand)))
-          (if (check-expansion)
-              (company-complete-common)
-            (indent-for-tab-command)))))
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+      (minibuffer-complete)
+    (if (or (not yas/minor-mode)
+            (null (do-yas-expand)))
+        (if (check-expansion)
+            (company-complete-common)
+          (indent-for-tab-command)))))
 
-  (global-set-key [tab] 'tab-indent-or-complete)
+(global-set-key [tab] 'tab-indent-or-complete)
 #+END_SRC
 
 #+RESULTS:
@@ -659,32 +636,6 @@ And finally, ivy/counsel for partial completions, searches, etc.
         helm-display-function 'pop-to-buffer
         helm-idle-delay 0.0
         helm-input-idle-delay 0.01))
-
-;; (use-package counsel
-;;   :init
-;;   (ido-mode 1)
-;;   (setq ido-enable-flex-matching t)
-;;   (setq ido-everywhere t)
-;;   (use-package counsel-projectile
-;;     :init
-;;     (counsel-projectile-mode 1)))
-
-;;   (use-package ivy-posframe
-;;     :after counsel
-;;     :init
-;;     (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
-;;     (setq ivy-posframe-parameters
-;;         '((left-fringe . 8)
-;;           (right-fringe . 8)))
-;;     (ivy-posframe-mode 1)
-;;     (add-hook 'ivy-posframe-mode #'linum-relative-mode))
-
-;; (use-package prescient
-;;   :after counsel
-;;   :init
-;;   (use-package ivy-prescient :init (ivy-prescient-mode 1))
-;;   (use-package company-prescient :init (company-prescient-mode 1)))
-
 (use-package cheat-sh)
 #+END_SRC
 
@@ -821,7 +772,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
-  ("C" calendar "Open calendar")
+  ("C" cfw:open-calendar-buffer "Open calendar")
   ("b" helm-bibtex "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
@@ -909,7 +860,7 @@ And finally, ivy/counsel for partial completions, searches, etc.
   (interactive)
   (let ((async-value async-shell-command-display-buffer))
     (if is_hidden
-        (do
+        (progn
             (setq async-shell-command-display-buffer nil)
             (setq rsync-cmd "rsync -az"))
       (setq rsync-cmd "rsync -az --progress"))
@@ -967,6 +918,7 @@ reference the email from my TODO list.
 (add-hook 'diary-list-entries-hook 'diary-sort-entries t)
 #+END_SRC
 
+
 * Display Settings
 ** GUI Elements
 Keep the frame clean by removing all such GUI elements.
@@ -1018,8 +970,8 @@ package to disable all mouse operations in evil mode.
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-vivendi t)
 
-(set-frame-font "Jetbrains Mono-13")
-(setq default-frame-alist '((font . "Jetbrains Mono-14")))
+(set-frame-font "Jetbrains Mono-9.5")
+(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1072,8 +1024,14 @@ package to disable all mouse operations in evil mode.
       recentf-max-saved-items 50)
 
 (global-prettify-symbols-mode +1)
-#+END_SRC
 
+(require 'flymake)
+(require 'flycheck)
+(set-face-attribute 'flymake-error nil :underline '(:color "red2" :style line))
+(set-face-attribute 'flymake-warning nil :underline '(:color "orange" :style line))
+(set-face-attribute 'flycheck-error nil :underline '(:color "red2" :style line))
+(set-face-attribute 'flycheck-warning nil :underline '(:color "orange" :style line))
+#+END_SRC
 
 ** Splash Screen
 In my workflow, I don't find the splash screen useful, thus I prefer to supress it
