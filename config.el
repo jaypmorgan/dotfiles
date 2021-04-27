@@ -344,7 +344,6 @@
 
 (use-package avy)
 (use-package swiper)
-(use-package itail)
 (use-package magit)
 (use-package disable-mouse)
 (use-package linum-relative)
@@ -352,10 +351,18 @@
 (use-package iedit)
 (use-package ripgrep)
 
-;; (use-package imenu-list
-;;   :init
-;;   (setq imenu-list-size 0.1
-;;         imenu-list-position 'left))
+(use-package plantuml-mode
+  :init
+  (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
+    (plantuml-download-jar))
+  (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
+        plantuml-default-exec-mode 'jar))
+
+(use-package imenu-list
+  :defer t
+  :init
+  (setq imenu-list-size 0.1
+        imenu-list-position 'left))
 
 (use-package undo-tree
   :init
@@ -363,6 +370,7 @@
   (global-undo-tree-mode))
 
 (use-package csv-mode
+  :defer t
   :init
   (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
 
@@ -370,12 +378,9 @@
   :defer t
   :config
   (yas-global-mode 1))
-;; (use-package yasnippet-snippets
-;;   :after yasnippet
-;;   :init
-;;   (yas-global-mode 1))
 
 (use-package olivetti
+  :defer t
   :init
   (setq olivetti-body-width 100)
   (defun set-editing-buffer ()
@@ -386,6 +391,7 @@
   (add-hook 'olivetti-mode-hook 'set-editing-buffer))
 
 (use-package pdf-tools
+  :defer t
   :init
   (pdf-loader-install)
   (setq auto-revert-interval 0.5)
@@ -782,8 +788,8 @@
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-vivendi t)
 
-(set-frame-font "Jetbrains Mono-9.5")
-(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
+(set-frame-font "Jetbrains Mono-13")
+(setq default-frame-alist '((font . "Jetbrains Mono-13")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
