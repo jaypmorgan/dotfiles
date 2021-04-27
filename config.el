@@ -352,6 +352,8 @@
 (use-package ripgrep)
 
 (use-package plantuml-mode
+  :defer t
+  :mode ("\\.plantuml\\'" . plantum-mode)
   :init
   (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
     (plantuml-download-jar))
