@@ -226,7 +226,6 @@
   (require 'pdf-view)
   (require 'ob-clojure)
   (require 'ox-latex)
-  (require 'cider)
 
   (add-to-list 'org-latex-classes
                '("beamer"
@@ -300,7 +299,6 @@
         org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
         org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
-        org-babel-clojure-backend 'cider
         org-confirm-babel-evaluate nil
         org-fontify-done-headline t
         org-log-done 'time
@@ -335,6 +333,9 @@
                                  (julia . t)
                                  (gnuplot . t)
                                  (dot . t))))
+
+(use-package tikz
+  :after org)
 
 (use-package toc-org
   :init
@@ -376,7 +377,7 @@
 
 (use-package olivetti
   :init
-  (setq olivetti-body-width 90)
+  (setq olivetti-body-width 100)
   (defun set-editing-buffer ()
     (interactive)
     (linum-mode -1)
@@ -501,7 +502,7 @@
 (require 'evil)
 (require 'ace-window)
 (define-key evil-motion-state-map " " nil)
-(global-set-key (kbd "M-x") 'counsel-M-x)
+(global-set-key (kbd "M-x") 'helm-M-x)
 
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
@@ -625,7 +626,7 @@
 (defhydra hydra-openbuffer (:color blue :hint nil)
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
-  ("C" cfw:open-calendar-buffer "Open calendar")
+  ("C" calendar "Open calendar")
   ("b" helm-bibtex "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
@@ -655,7 +656,7 @@
 
 (defhydra hydra-remote-hosts (:color blue :hint nil)
   "Browse remote hosts"
-  ("l" (dired-at-point "/ssh:lis.me:~/workspace") "LIS Lab")
+  ("l" (dired-at-point (concat "/ssh:lis.me:" lis-path)) "LIS Lab")
   ("s" (dired-at-point "/ssh:sunbird.me:~/workspace") "Sunbird Swansea")
   ("c" (dired-at-point "/ssh:chemistry.me:~/workspace") "Chemistry Swanasea"))
 (bind-evil-normal-key "SPC r" hydra-remote-hosts/body)
@@ -702,7 +703,17 @@
 ;; set the initial variables to nil
 ;; .dir-local.el should set these at a project level
 (setq rsync-source nil
-      rsync-destination nil)
+      rsync-destination nil
+      rsync-base-cmd "rsync -azm"
+      rsync-exclude-list '("data" ".git" "container" "__pycache__" "*.pyc" "renv/library" "renv/local" "renv/python" "renv/staging"))
+
+(defun rsync--build-exclude-list (exclude-list)
+  (mapconcat (lambda (s) (concat " --exclude=" s " ")) exclude-list " "))
+
+(defun rsync--cmd (&optional display)
+  (if display
+      (concat rsync-base-cmd " --progress " (rsync--build-exclude-list rsync-exclude-list))
+    (concat rsync-base-cmd (rsync--build-exclude-list rsync-exclude-list))))
 
 (defun dorsync (src dest is_hidden)
   "Launch an asynchronuous rsync command"
@@ -711,8 +722,8 @@
     (if is_hidden
         (progn
             (setq async-shell-command-display-buffer nil)
-            (setq rsync-cmd "rsync -az"))
-      (setq rsync-cmd "rsync -az --progress"))
+            (setq rsync-cmd (rsync--cmd)))
+      (setq rsync-cmd (rsync--cmd t)))
     (async-shell-command (concat rsync-cmd " " src " " dest))
     (setq async-shell-command-display-buffer async-value)))
 
@@ -755,8 +766,7 @@
 (linum-relative-on)
 
 (use-package base16-theme)
-(use-package modus-vivendi-theme)
-(use-package modus-operandi-theme
+(use-package modus-themes
  :init
  (setq modus-operandi-theme-org-blocks 'greyscale
        modus-operandi-theme-mode-line 'moody)
@@ -825,12 +835,10 @@
 
 (global-prettify-symbols-mode +1)
 
-(require 'flymake)
-(require 'flycheck)
-(set-face-attribute 'flymake-error nil :underline '(:color "red2" :style line))
-(set-face-attribute 'flymake-warning nil :underline '(:color "orange" :style line))
-(set-face-attribute 'flycheck-error nil :underline '(:color "red2" :style line))
-(set-face-attribute 'flycheck-warning nil :underline '(:color "orange" :style line))
+;;(set-face-attribute 'flymake-error nil :underline '(:color "red2" :style line))
+;;(set-face-attribute 'flymake-warning nil :underline '(:color "orange" :style line))
+;;(set-face-attribute 'flycheck-error nil :underline '(:color "red2" :style line))
+;;(set-face-attribute 'flycheck-warning nil :underline '(:color "orange" :style line))
 
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)
@@ -838,7 +846,7 @@
 (setq initial-scratch-message "")
 
 (appt-activate 1)
-(setq diary-file "~/Nextcloud/Notes/diary"
+(setq diary-file diary-loc
       calendar-date-style "iso"
       appt-display-mode-line t
       org-agenda-diary-file diary-file

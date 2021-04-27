@@ -3,6 +3,7 @@
 ;; Author: Jay Morgan
 ;;--------------------------
 
+(setq warning-minimum-level :error)
 (load (concat user-emacs-directory "hiddens.el") 'noerror)
 
 ;; Config settings are available in an org-mode
