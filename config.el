@@ -219,12 +219,9 @@
   (setq lsp-julia-default-environment "~/.julia/environments/v1.6"))
 
 (use-package org
-  :defer t
-  :after pdf-view
   :ensure org-plus-contrib
   :init
   (require 'pdf-view)
-  (require 'ob-clojure)
   (require 'ox-latex)
 
   (add-to-list 'org-latex-classes
@@ -240,7 +237,6 @@
                               (auto-fill-mode 1)))
   (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
   (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
-
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -328,7 +324,6 @@
                                  (python . t)
                                  (R . t)
                                  (ipython . t)
-                                 (clojure . t)
                                  (emacs-lisp . t)
                                  (julia . t)
                                  (gnuplot . t)
@@ -356,6 +351,8 @@
   :mode ("\\.plantuml\\'" . plantum-mode)
   :init
   (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
+    (switch-to-buffer (make-temp-name "plantuml"))
+    (ignore-errors (plantuml-mode))
     (plantuml-download-jar))
   (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
         plantuml-default-exec-mode 'jar))
@@ -788,10 +785,10 @@
     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'modus-vivendi t)
+(load-theme 'modus-operandi t)
 
-(set-frame-font "Jetbrains Mono-13")
-(setq default-frame-alist '((font . "Jetbrains Mono-13")))
+(set-frame-font "Jetbrains Mono-9.5")
+(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)

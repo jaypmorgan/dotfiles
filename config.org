@@ -301,12 +301,9 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :defer t
-  :after pdf-view
   :ensure org-plus-contrib
   :init
   (require 'pdf-view)
-  (require 'ob-clojure)
   (require 'ox-latex)
 
   (add-to-list 'org-latex-classes
@@ -322,7 +319,6 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
                               (auto-fill-mode 1)))
   (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
   (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
-
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -410,7 +406,6 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
                                  (python . t)
                                  (R . t)
                                  (ipython . t)
-                                 (clojure . t)
                                  (emacs-lisp . t)
                                  (julia . t)
                                  (gnuplot . t)
@@ -436,87 +431,89 @@ possible.
 ** Miscellaneous Packages
 
 #+BEGIN_SRC emacs-lisp
-(use-package avy)
-(use-package swiper)
-(use-package magit)
-(use-package disable-mouse)
-(use-package linum-relative)
-(use-package ace-window)
-(use-package iedit)
-(use-package ripgrep)
+  (use-package avy)
+  (use-package swiper)
+  (use-package magit)
+  (use-package disable-mouse)
+  (use-package linum-relative)
+  (use-package ace-window)
+  (use-package iedit)
+  (use-package ripgrep)
 
-(use-package plantuml-mode
-  :defer t
-  :mode ("\\.plantuml\\'" . plantum-mode)
-  :init
-  (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
-    (plantuml-download-jar))
-  (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
-        plantuml-default-exec-mode 'jar))
+  (use-package plantuml-mode
+    :defer t
+    :mode ("\\.plantuml\\'" . plantum-mode)
+    :init
+    (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
+      (switch-to-buffer (make-temp-name "plantuml"))
+      (ignore-errors (plantuml-mode))
+      (plantuml-download-jar))
+    (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
+          plantuml-default-exec-mode 'jar))
 
-(use-package imenu-list
-  :defer t
-  :init
-  (setq imenu-list-size 0.1
-        imenu-list-position 'left))
+  (use-package imenu-list
+    :defer t
+    :init
+    (setq imenu-list-size 0.1
+          imenu-list-position 'left))
 
-(use-package undo-tree
-  :init
-  (setq undo-tree-visualizer-timestamps t)
-  (global-undo-tree-mode))
+  (use-package undo-tree
+    :init
+    (setq undo-tree-visualizer-timestamps t)
+    (global-undo-tree-mode))
 
-(use-package csv-mode
-  :defer t
-  :init
-  (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
+  (use-package csv-mode
+    :defer t
+    :init
+    (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
 
-(use-package yasnippet
-  :defer t
-  :config
-  (yas-global-mode 1))
+  (use-package yasnippet
+    :defer t
+    :config
+    (yas-global-mode 1))
 
-(use-package olivetti
-  :defer t
-  :init
-  (setq olivetti-body-width 100)
-  (defun set-editing-buffer ()
-    (interactive)
-    (linum-mode -1)
-    (set-window-fringes (selected-window) 0 0)
-    (hl-line-mode -1))
-  (add-hook 'olivetti-mode-hook 'set-editing-buffer))
+  (use-package olivetti
+    :defer t
+    :init
+    (setq olivetti-body-width 100)
+    (defun set-editing-buffer ()
+      (interactive)
+      (linum-mode -1)
+      (set-window-fringes (selected-window) 0 0)
+      (hl-line-mode -1))
+    (add-hook 'olivetti-mode-hook 'set-editing-buffer))
 
-(use-package pdf-tools
-  :defer t
-  :init
-  (pdf-loader-install)
-  (setq auto-revert-interval 0.5)
-  (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1))))
+  (use-package pdf-tools
+    :defer t
+    :init
+    (pdf-loader-install)
+    (setq auto-revert-interval 0.5)
+    (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1))))
 
-(use-package flyspell
-  :init
-  (setq flyspell-default-dictionary "british"))
+  (use-package flyspell
+    :init
+    (setq flyspell-default-dictionary "british"))
 
-;; Prevent Helm from taking up random windows -- makes the UI more consistent
-;; and predictable.
-(use-package shackle
-  :after helm
-  :init
-  (shackle-mode 1)
-  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+  ;; Prevent Helm from taking up random windows -- makes the UI more consistent
+  ;; and predictable.
+  (use-package shackle
+    :after helm
+    :init
+    (shackle-mode 1)
+    (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
 
-(use-package popper
-  :ensure t
-  :bind (("C-`"   . popper-toggle-latest)
-         ("M-`"   . popper-cycle)
-         ("C-M-`" . popper-toggle-type))
-  :init
-  (setq popper-reference-buffers
-        '("\\*Messages\\*"
-          "Output\\*$"
-          help-mode
-          compilation-mode))
-  (popper-mode +1))
+  (use-package popper
+    :ensure t
+    :bind (("C-`"   . popper-toggle-latest)
+           ("M-`"   . popper-cycle)
+           ("C-M-`" . popper-toggle-type))
+    :init
+    (setq popper-reference-buffers
+          '("\\*Messages\\*"
+            "Output\\*$"
+            help-mode
+            compilation-mode))
+    (popper-mode +1))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -971,25 +968,25 @@ package to disable all mouse operations in evil mode.
 ** Look & Feel (Theme)
 
 #+BEGIN_SRC emacs-lisp
-(use-package base16-theme)
-(use-package modus-themes
- :init
- (setq modus-operandi-theme-org-blocks 'greyscale
-       modus-operandi-theme-mode-line 'moody)
-   (set-face-attribute 'variable-pitch nil :family "Gentium" :height 1.2)
-   (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
+  (use-package base16-theme)
+  (use-package modus-themes
+   :init
+   (setq modus-operandi-theme-org-blocks 'greyscale
+         modus-operandi-theme-mode-line 'moody)
+     (set-face-attribute 'variable-pitch nil :family "Gentium" :height 1.2)
+     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
 
-(defun toggle-variable-pitch ()
-  (interactive)
-  (if (variable-pitch-mode)
-      (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 0.8)
-    (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
+  (defun toggle-variable-pitch ()
+    (interactive)
+    (if (variable-pitch-mode)
+        (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 0.8)
+      (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'modus-vivendi t)
+  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+  (load-theme 'modus-operandi t)
 
-(set-frame-font "Jetbrains Mono-13")
-(setq default-frame-alist '((font . "Jetbrains Mono-13")))
+  (set-frame-font "Jetbrains Mono-9.5")
+  (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
