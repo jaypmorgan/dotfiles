@@ -70,12 +70,32 @@
   :config
   (setq ccls-executable "~/Applications/ccls/Release/ccls"))
 
+(defun toggle-repl (repl-name)
+  (interactive)
+  (let ((curr-buffer (buffer-name)))
+    (if (string-equal repl-name curr-buffer)
+        (progn
+          (select-window (get-buffer-window prev-buffer))
+          (goto-char saved-position))
+      (setq prev-buffer curr-buffer
+            saved-position (point))
+      (select-window (get-buffer-window repl-name)))))
+
  ;; Emacs speaks statistics (R)
 (use-package ess
   :defer t
   :config
   (require 'ess-r-mode)
   (use-package ess-view)
+
+
+  (defun r/toggle-r-repl ()
+    (interactive)
+    (toggle-repl "*R*"))
+  (define-key org-mode-map (kbd "C-`") #'r/toggle-r-repl)
+  (define-key ess-r-mode-map (kbd "C-`") #'r/toggle-r-repl)
+  (define-key inferior-ess-r-mode-map (kbd "C-`") #'r/toggle-r-repl)
+
 
   (defun r/open-workspace ()
     " Open side panel containing r-dired and r console "
@@ -410,7 +430,7 @@
 
 (use-package popper
   :ensure t
-  :bind (("C-`"   . popper-toggle-latest)
+  :bind (("C-1"   . popper-toggle-latest)
          ("M-`"   . popper-cycle)
          ("C-M-`" . popper-toggle-type))
   :init
