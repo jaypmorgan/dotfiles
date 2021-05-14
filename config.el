@@ -7,6 +7,7 @@
 (my/add-to-exec "~/miniconda3/bin")
 (my/add-to-exec "~/.fzf/bin")
 (my/add-to-exec "~/.cargo/bin")
+(my/add-to-exec "~/bin")
 
 (setq gc-cons-threshold 100000000
       read-process-output-max (* 1024 1024)
@@ -88,14 +89,12 @@
   (require 'ess-r-mode)
   (use-package ess-view)
 
-
   (defun r/toggle-r-repl ()
     (interactive)
     (toggle-repl "*R*"))
   (define-key org-mode-map (kbd "C-`") #'r/toggle-r-repl)
   (define-key ess-r-mode-map (kbd "C-`") #'r/toggle-r-repl)
   (define-key inferior-ess-r-mode-map (kbd "C-`") #'r/toggle-r-repl)
-
 
   (defun r/open-workspace ()
     " Open side panel containing r-dired and r console "
@@ -181,6 +180,17 @@
            (side . bottom)
            (reusable-frames . nil)))))
 
+(use-package clojure-mode
+  :init
+  (use-package cider
+    :init
+    (add-hook 'cider-mode-hook 'eldoc-mode)
+    (add-hook 'cider-mode-hook 'company-mode)
+    (add-hook 'cider-mode-hook 'yas-minor-mode))
+  (use-package clojure-mode-extra-font-locking)
+  (use-package tagedit)
+  (add-hook 'clojure-mode-hook '(lambda () (setq tab-width 2))))
+
 (use-package python-mode
     :defer t
     :init
@@ -215,7 +225,7 @@
 (use-package company
   :hook (prog-mode . company-mode)
   :config
-  (setq company-idle-delay 0.0000001
+  (setq company-idle-delay 0.000001
         company-minimum-prefix-length 2
         company-candidates-cache t))
 
@@ -223,7 +233,6 @@
   :hook (company-mode . company-box-mode))
 
 (use-package lsp-mode
-  :hook ((python-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
@@ -232,7 +241,8 @@
         lsp-modeline-code-actions-enable t
         lsp-eldoc-enable-hover nil
         lsp-log-io nil
-        lsp-idle-delay 1.0))
+        lsp-idle-delay 0.001
+        lsp-progress-via-spinner nil))
 
 (use-package lsp-julia
   :config
@@ -357,7 +367,6 @@
   (add-hook 'markdown-mode-hook 'toc-org-mode)
   (add-hook 'org-mode-hook 'toc-org-mode))
 
-(use-package avy)
 (use-package swiper)
 (use-package magit)
 (use-package disable-mouse)
@@ -365,6 +374,10 @@
 (use-package ace-window)
 (use-package iedit)
 (use-package ripgrep)
+
+(use-package smartparens
+  :hook (prog-mode . smartparens-mode)
+  :init (require 'smartparens-config))
 
 (use-package plantuml-mode
   :defer t
@@ -422,17 +435,17 @@
 
 ;; Prevent Helm from taking up random windows -- makes the UI more consistent
 ;; and predictable.
-(use-package shackle
-  :after helm
-  :init
-  (shackle-mode 1)
-  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+;;(use-package shackle
+;;  :after helm
+;;  :init
+;;  (shackle-mode 1)
+;;  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
 
 (use-package popper
   :ensure t
   :bind (("C-1"   . popper-toggle-latest)
-         ("M-`"   . popper-cycle)
-         ("C-M-`" . popper-toggle-type))
+         ("C-2"   . popper-cycle)
+         ("C-3" . popper-toggle-type))
   :init
   (setq popper-reference-buffers
         '("\\*Messages\\*"
@@ -481,13 +494,21 @@
   (setq which-key-idle-delay 1)
   (which-key-mode 1))
 
-(use-package doom-modeline
-  :init
-  (doom-modeline-mode 1)
-  (setq doom-modeline-height 10
-        doom-modeline-mu4e t
-        doom-modeline-icon nil
-        doom-modeline-env-enable-python t))
+;; (use-package doom-modeline
+;;   :init
+;;   (doom-modeline-mode 1)
+;;   (setq doom-modeline-height 10
+;;         doom-modeline-mu4e t
+;;         doom-modeline-icon nil
+;;         doom-modeline-env-enable-python t))
+
+(use-package spaceline
+  :config
+  (spaceline-helm-mode 1)
+  (spaceline-spacemacs-theme)
+  (spaceline-toggle-minor-modes-off)
+  (spaceline-toggle-version-control-on)
+  (spaceline-toggle-buffer-position-on))
 
 (use-package projectile
   :config
@@ -521,6 +542,7 @@
         helm-display-function 'pop-to-buffer
         helm-idle-delay 0.0
         helm-input-idle-delay 0.01))
+
 (use-package cheat-sh)
 
 (require 'hydra)
@@ -545,19 +567,6 @@
         (switch-to-buffer "vterm")
         (shrink-window 10))
     (vterm)))
-
-(defvar dark-theme-p t)
-(defun my/toggle-theme ()
-  (interactive)
-  (let ((light-theme 'modus-operandi)
-        (dark-theme 'base16-default-dark))
-    (if (eq dark-theme-p t)
-        (progn
-          (load-theme light-theme t)
-          (setq dark-theme-p -1))
-      (progn
-        (load-theme dark-theme t)
-        (setq dark-theme-p t)))))
 
 (defmacro bind-evil-normal-key (binding func)
   `(define-key evil-motion-state-map (kbd ,binding) (quote ,func)))
@@ -585,6 +594,11 @@
   ("d" deft "Deft Find File")
   ("b" swiper "Find in buffer"))
 (bind-evil-normal-key "SPC f" hydra-helm-files/body)
+
+(define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
+(define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
+(define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
+(define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
 
 (bind-evil-normal-key "SPC p" projectile-command-map)
 (bind-evil-normal-key "SPC p a" projectile-add-known-project)
@@ -805,7 +819,7 @@
     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'modus-operandi t)
+(load-theme 'base16-chalk t)
 
 (set-frame-font "Jetbrains Mono-9.5")
 (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
@@ -814,7 +828,6 @@
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'image-mode-hook (lambda () (linum-mode -1)))
-
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
@@ -860,10 +873,9 @@
 
 (global-prettify-symbols-mode +1)
 
-;;(set-face-attribute 'flymake-error nil :underline '(:color "red2" :style line))
-;;(set-face-attribute 'flymake-warning nil :underline '(:color "orange" :style line))
-;;(set-face-attribute 'flycheck-error nil :underline '(:color "red2" :style line))
-;;(set-face-attribute 'flycheck-warning nil :underline '(:color "orange" :style line))
+(setq scroll-step 1
+      scroll-margin 10
+      scroll-conservatively 101)
 
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)

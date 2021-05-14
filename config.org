@@ -45,6 +45,7 @@ pretty well).
 (my/add-to-exec "~/miniconda3/bin")
 (my/add-to-exec "~/.fzf/bin")
 (my/add-to-exec "~/.cargo/bin")
+(my/add-to-exec "~/bin")
 #+END_SRC
 
 * Setup Package Environment
@@ -152,14 +153,12 @@ It's a constant struggle to not learn every programming language ever!
   (require 'ess-r-mode)
   (use-package ess-view)
 
-
   (defun r/toggle-r-repl ()
     (interactive)
     (toggle-repl "*R*"))
   (define-key org-mode-map (kbd "C-`") #'r/toggle-r-repl)
   (define-key ess-r-mode-map (kbd "C-`") #'r/toggle-r-repl)
   (define-key inferior-ess-r-mode-map (kbd "C-`") #'r/toggle-r-repl)
-
 
   (defun r/open-workspace ()
     " Open side panel containing r-dired and r console "
@@ -245,6 +244,17 @@ It's a constant struggle to not learn every programming language ever!
            (side . bottom)
            (reusable-frames . nil)))))
 
+(use-package clojure-mode
+  :init
+  (use-package cider
+    :init
+    (add-hook 'cider-mode-hook 'eldoc-mode)
+    (add-hook 'cider-mode-hook 'company-mode)
+    (add-hook 'cider-mode-hook 'yas-minor-mode))
+  (use-package clojure-mode-extra-font-locking)
+  (use-package tagedit)
+  (add-hook 'clojure-mode-hook '(lambda () (setq tab-width 2))))
+
 (use-package python-mode
     :defer t
     :init
@@ -288,7 +298,7 @@ prog-modes.
 (use-package company
   :hook (prog-mode . company-mode)
   :config
-  (setq company-idle-delay 0.0000001
+  (setq company-idle-delay 0.000001
         company-minimum-prefix-length 2
         company-candidates-cache t))
 
@@ -300,7 +310,6 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
-  :hook ((python-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
@@ -309,12 +318,13 @@ For our programming buffers, I use =lsp-mode= to connect to a specific LanguageS
         lsp-modeline-code-actions-enable t
         lsp-eldoc-enable-hover nil
         lsp-log-io nil
-        lsp-idle-delay 1.0))
+        lsp-idle-delay 0.001
+        lsp-progress-via-spinner nil))
 
 (use-package lsp-julia
   :config
   (setq lsp-julia-default-environment "~/.julia/environments/v1.6"))
-#+END_SRC
+ #+END_SRC
 
 ** Org-mode all the things!
 Once I learnt about org-mode, it would always be tough to leave Emacs.
@@ -451,89 +461,92 @@ possible.
 ** Miscellaneous Packages
 
 #+BEGIN_SRC emacs-lisp
-  (use-package avy)
-  (use-package swiper)
-  (use-package magit)
-  (use-package disable-mouse)
-  (use-package linum-relative)
-  (use-package ace-window)
-  (use-package iedit)
-  (use-package ripgrep)
+(use-package swiper)
+(use-package magit)
+(use-package disable-mouse)
+(use-package linum-relative)
+(use-package ace-window)
+(use-package iedit)
+(use-package ripgrep)
 
-  (use-package plantuml-mode
-    :defer t
-    :mode ("\\.plantuml\\'" . plantum-mode)
-    :init
-    (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
-      (switch-to-buffer (make-temp-name "plantuml"))
-      (ignore-errors (plantuml-mode))
-      (plantuml-download-jar))
-    (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
-          plantuml-default-exec-mode 'jar))
+(use-package smartparens
+  :hook (prog-mode . smartparens-mode)
+  :init (require 'smartparens-config))
 
-  (use-package imenu-list
-    :defer t
-    :init
-    (setq imenu-list-size 0.1
-          imenu-list-position 'left))
+(use-package plantuml-mode
+  :defer t
+  :mode ("\\.plantuml\\'" . plantum-mode)
+  :init
+  (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
+    (switch-to-buffer (make-temp-name "plantuml"))
+    (ignore-errors (plantuml-mode))
+    (plantuml-download-jar))
+  (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
+        plantuml-default-exec-mode 'jar))
 
-  (use-package undo-tree
-    :init
-    (setq undo-tree-visualizer-timestamps t)
-    (global-undo-tree-mode))
+(use-package imenu-list
+  :defer t
+  :init
+  (setq imenu-list-size 0.1
+        imenu-list-position 'left))
 
-  (use-package csv-mode
-    :defer t
-    :init
-    (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
+(use-package undo-tree
+  :init
+  (setq undo-tree-visualizer-timestamps t)
+  (global-undo-tree-mode))
 
-  (use-package yasnippet
-    :defer t
-    :config
-    (yas-global-mode 1))
+(use-package csv-mode
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
 
-  (use-package olivetti
-    :defer t
-    :init
-    (setq olivetti-body-width 100)
-    (defun set-editing-buffer ()
-      (interactive)
-      (linum-mode -1)
-      (set-window-fringes (selected-window) 0 0)
-      (hl-line-mode -1))
-    (add-hook 'olivetti-mode-hook 'set-editing-buffer))
+(use-package yasnippet
+  :defer t
+  :config
+  (yas-global-mode 1))
 
-  (use-package pdf-tools
-    :defer t
-    :init
-    (pdf-loader-install)
-    (setq auto-revert-interval 0.5)
-    (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1))))
+(use-package olivetti
+  :defer t
+  :init
+  (setq olivetti-body-width 100)
+  (defun set-editing-buffer ()
+    (interactive)
+    (linum-mode -1)
+    (set-window-fringes (selected-window) 0 0)
+    (hl-line-mode -1))
+  (add-hook 'olivetti-mode-hook 'set-editing-buffer))
 
-  (use-package flyspell
-    :init
-    (setq flyspell-default-dictionary "british"))
+(use-package pdf-tools
+  :defer t
+  :init
+  (pdf-loader-install)
+  (setq auto-revert-interval 0.5)
+  (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1))))
 
-  ;; Prevent Helm from taking up random windows -- makes the UI more consistent
-  ;; and predictable.
-  (use-package shackle
-    :after helm
-    :init
-    (shackle-mode 1)
-    (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+(use-package flyspell
+  :init
+  (setq flyspell-default-dictionary "british"))
 
-  (use-package popper
-    :ensure t
-    :bind (("C-1"   . popper-toggle-latest)
-           ("M-`"   . popper-cycle)
-           ("C-M-`" . popper-toggle-type))
-    :init
-    (setq popper-reference-buffers
-          '("\\*Messages\\*"
-            "Output\\*$"
-            help-mode
-            compilation-mode))
-    (popper-mode +1))
+;; Prevent Helm from taking up random windows -- makes the UI more consistent
+;; and predictable.
+;;(use-package shackle
+;;  :after helm
+;;  :init
+;;  (shackle-mode 1)
+;;  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+
+(use-package popper
+  :ensure t
+  :bind (("C-1"   . popper-toggle-latest)
+         ("C-2"   . popper-cycle)
+         ("C-3" . popper-toggle-type))
+  :init
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          "Output\\*$"
+          help-mode
+          compilation-mode))
+  (popper-mode +1))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -561,10 +574,6 @@ possible.
 
 (global-set-key [tab] 'tab-indent-or-complete)
 #+END_SRC
-
-#+RESULTS:
-: tab-indent-or-complete
-
 
 * Emacs Environment
 A number of changes to the default config have been made to make the transition
@@ -602,13 +611,21 @@ It is unnecessary to say that Emacs comes with a whole load of keybindings,
 A very simple modeline is configured with =doom-modeline=
 
 #+BEGIN_SRC emacs-lisp
-(use-package doom-modeline
-  :init
-  (doom-modeline-mode 1)
-  (setq doom-modeline-height 10
-        doom-modeline-mu4e t
-        doom-modeline-icon nil
-        doom-modeline-env-enable-python t))
+;; (use-package doom-modeline
+;;   :init
+;;   (doom-modeline-mode 1)
+;;   (setq doom-modeline-height 10
+;;         doom-modeline-mu4e t
+;;         doom-modeline-icon nil
+;;         doom-modeline-env-enable-python t))
+
+(use-package spaceline
+  :config
+  (spaceline-helm-mode 1)
+  (spaceline-spacemacs-theme)
+  (spaceline-toggle-minor-modes-off)
+  (spaceline-toggle-version-control-on)
+  (spaceline-toggle-buffer-position-on))
 #+END_SRC
 
 Projects with =projectile=
@@ -621,9 +638,6 @@ Projects with =projectile=
   (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
   (setq projectile-project-search-path '("/media/hdd/workspace/")))
 #+END_SRC
-
-#+RESULTS:
-: t
 
 Workspaces are created using =eyebrowse=
 
@@ -662,6 +676,7 @@ And finally, helm for partial completions, searches, etc.
         helm-display-function 'pop-to-buffer
         helm-idle-delay 0.0
         helm-input-idle-delay 0.01))
+
 (use-package cheat-sh)
 #+END_SRC
 
@@ -693,19 +708,6 @@ And finally, helm for partial completions, searches, etc.
         (shrink-window 10))
     (vterm)))
 
-(defvar dark-theme-p t)
-(defun my/toggle-theme ()
-  (interactive)
-  (let ((light-theme 'modus-operandi)
-        (dark-theme 'base16-default-dark))
-    (if (eq dark-theme-p t)
-        (progn
-          (load-theme light-theme t)
-          (setq dark-theme-p -1))
-      (progn
-        (load-theme dark-theme t)
-        (setq dark-theme-p t)))))
-
 (defmacro bind-evil-normal-key (binding func)
   `(define-key evil-motion-state-map (kbd ,binding) (quote ,func)))
 
@@ -732,6 +734,11 @@ And finally, helm for partial completions, searches, etc.
   ("d" deft "Deft Find File")
   ("b" swiper "Find in buffer"))
 (bind-evil-normal-key "SPC f" hydra-helm-files/body)
+
+(define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
+(define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
+(define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
+(define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
 
 (bind-evil-normal-key "SPC p" projectile-command-map)
 (bind-evil-normal-key "SPC p a" projectile-add-known-project)
@@ -988,25 +995,25 @@ package to disable all mouse operations in evil mode.
 ** Look & Feel (Theme)
 
 #+BEGIN_SRC emacs-lisp
-  (use-package base16-theme)
-  (use-package modus-themes
-   :init
-   (setq modus-operandi-theme-org-blocks 'greyscale
-         modus-operandi-theme-mode-line 'moody)
-     (set-face-attribute 'variable-pitch nil :family "Gentium" :height 1.2)
-     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
+(use-package base16-theme)
+(use-package modus-themes
+ :init
+ (setq modus-operandi-theme-org-blocks 'greyscale
+       modus-operandi-theme-mode-line 'moody)
+   (set-face-attribute 'variable-pitch nil :family "Gentium" :height 1.2)
+   (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
 
-  (defun toggle-variable-pitch ()
-    (interactive)
-    (if (variable-pitch-mode)
-        (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 0.8)
-      (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
+(defun toggle-variable-pitch ()
+  (interactive)
+  (if (variable-pitch-mode)
+      (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 0.8)
+    (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
-  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-  (load-theme 'modus-operandi t)
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+(load-theme 'base16-chalk t)
 
-  (set-frame-font "Jetbrains Mono-9.5")
-  (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
+(set-frame-font "Jetbrains Mono-9.5")
+(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1014,7 +1021,6 @@ package to disable all mouse operations in evil mode.
 (setq completion-auto-help t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'image-mode-hook (lambda () (linum-mode -1)))
-
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
@@ -1060,10 +1066,9 @@ package to disable all mouse operations in evil mode.
 
 (global-prettify-symbols-mode +1)
 
-;;(set-face-attribute 'flymake-error nil :underline '(:color "red2" :style line))
-;;(set-face-attribute 'flymake-warning nil :underline '(:color "orange" :style line))
-;;(set-face-attribute 'flycheck-error nil :underline '(:color "red2" :style line))
-;;(set-face-attribute 'flycheck-warning nil :underline '(:color "orange" :style line))
+(setq scroll-step 1
+      scroll-margin 10
+      scroll-conservatively 101)
 #+END_SRC
 
 ** Splash Screen
