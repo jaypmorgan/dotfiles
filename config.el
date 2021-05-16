@@ -194,6 +194,10 @@
 (use-package python-mode
     :defer t
     :init
+
+    (use-package hy-mode
+      :load-path "~/.emacs.d/hy-mode/")
+
     (setq python-shell-interpreter "jupyter"
 	  python-shell-interpreter-args "console --simple-prompt"
           python-shell-prompt-detect-failure-warning nil
@@ -236,13 +240,18 @@
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
+  (add-to-list 'lsp-language-id-configuration '(hy-mode . "hy"))
+  (lsp-register-client
+  (make-lsp-client :new-connection (lsp-stdio-connection "hyls")
+                  :activation-fn (lsp-activate-on "hy")
+                  :server-id 'hyls))
   (setq lsp-keymap-prefix "C-c l"
-        lsp-file-watch-threshold nil
-        lsp-modeline-code-actions-enable t
-        lsp-eldoc-enable-hover nil
-        lsp-log-io nil
-        lsp-idle-delay 0.001
-        lsp-progress-via-spinner nil))
+  lsp-file-watch-threshold nil
+  lsp-modeline-code-actions-enable t
+  lsp-eldoc-enable-hover nil
+  lsp-log-io nil
+  lsp-idle-delay 0.001
+  lsp-progress-via-spinner nil))
 
 (use-package lsp-julia
   :config
@@ -435,24 +444,25 @@
 
 ;; Prevent Helm from taking up random windows -- makes the UI more consistent
 ;; and predictable.
-;;(use-package shackle
-;;  :after helm
-;;  :init
-;;  (shackle-mode 1)
-;;  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
-
-(use-package popper
-  :ensure t
-  :bind (("C-1"   . popper-toggle-latest)
-         ("C-2"   . popper-cycle)
-         ("C-3" . popper-toggle-type))
+(use-package shackle
+  :after helm
   :init
-  (setq popper-reference-buffers
-        '("\\*Messages\\*"
-          "Output\\*$"
-          help-mode
-          compilation-mode))
-  (popper-mode +1))
+  (shackle-mode 1)
+  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
+
+;;(use-package popper
+;;  :ensure t
+;;  :bind (("C-1"   . popper-toggle-latest)
+;;         ("C-2"   . popper-cycle)
+;;         ("C-3" . popper-toggle-type))
+;;  :init
+;;  (setq popper-reference-buffers
+;;        '("\\*Messages\\*"
+;;          "Output\\*$"
+;;          help-mode
+;;          helm-mode
+;;          compilation-mode))
+;;  (popper-mode +1))
 
 (defun check-expansion ()
   (save-excursion
@@ -505,7 +515,7 @@
 (use-package spaceline
   :config
   (spaceline-helm-mode 1)
-  (spaceline-spacemacs-theme)
+  (spaceline-emacs-theme)
   (spaceline-toggle-minor-modes-off)
   (spaceline-toggle-version-control-on)
   (spaceline-toggle-buffer-position-on))
@@ -819,7 +829,7 @@
     (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'base16-chalk t)
+(load-theme 'modus-operandi t)
 
 (set-frame-font "Jetbrains Mono-9.5")
 (setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
@@ -843,6 +853,7 @@
       ;; '(left-curly-arrow right-curly-arrow) ;; default
       )
 
+(setq create-lockfiles nil)
 (setq auto-save-default nil)
 (setq backup-directory-alist '(("" . "~/.Trash")))
 (put 'dired-find-alternate-file 'disabled nil)
