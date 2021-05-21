@@ -240,18 +240,13 @@
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
-  (add-to-list 'lsp-language-id-configuration '(hy-mode . "hy"))
-  (lsp-register-client
-  (make-lsp-client :new-connection (lsp-stdio-connection "hyls")
-                  :activation-fn (lsp-activate-on "hy")
-                  :server-id 'hyls))
   (setq lsp-keymap-prefix "C-c l"
-  lsp-file-watch-threshold nil
-  lsp-modeline-code-actions-enable t
-  lsp-eldoc-enable-hover nil
-  lsp-log-io nil
-  lsp-idle-delay 0.001
-  lsp-progress-via-spinner nil))
+        lsp-file-watch-threshold nil
+        lsp-modeline-code-actions-enable t
+        lsp-eldoc-enable-hover nil
+        lsp-log-io nil
+        lsp-idle-delay 0.001
+        lsp-progress-via-spinner nil))
 
 (use-package lsp-julia
   :config
@@ -366,7 +361,8 @@
                                  (emacs-lisp . t)
                                  (julia . t)
                                  (gnuplot . t)
-                                 (dot . t))))
+                                 (dot . t)
+                                 (plantuml . t))))
 
 (use-package tikz
   :after org)
@@ -397,7 +393,8 @@
     (ignore-errors (plantuml-mode))
     (plantuml-download-jar))
   (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
-        plantuml-default-exec-mode 'jar))
+        plantuml-default-exec-mode 'jar
+        org-plantuml-jar-path plantuml-jar-path))
 
 (use-package imenu-list
   :defer t
@@ -490,6 +487,8 @@
 
 (use-package evil
   :init
+  (use-package undo-fu)
+  (setq evil-undo-system 'undo-fu)
   (evil-mode 1))
 
 (use-package evil-collection
@@ -512,13 +511,9 @@
 ;;         doom-modeline-icon nil
 ;;         doom-modeline-env-enable-python t))
 
-(use-package spaceline
-  :config
-  (spaceline-helm-mode 1)
-  (spaceline-emacs-theme)
-  (spaceline-toggle-minor-modes-off)
-  (spaceline-toggle-version-control-on)
-  (spaceline-toggle-buffer-position-on))
+(use-package mood-line
+  :init
+  (mood-line-mode))
 
 (use-package projectile
   :config
@@ -596,6 +591,7 @@
     (iedit-restrict-current-line)))
 
 (bind-evil-visual-key "SPC l f" align-regexp)
+(bind-global-key "M-/" comment-line)
 
 (defhydra hydra-helm-files (:color blue :hint nil)
   "Ivy Files"
@@ -816,23 +812,16 @@
 
 (use-package base16-theme)
 (use-package modus-themes
+ :bind (("<f8>" . modus-themes-toggle))
  :init
  (setq modus-operandi-theme-org-blocks 'greyscale
-       modus-operandi-theme-mode-line 'moody)
-   (set-face-attribute 'variable-pitch nil :family "Gentium" :height 1.2)
-   (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0))
-
-(defun toggle-variable-pitch ()
-  (interactive)
-  (if (variable-pitch-mode)
-      (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 0.8)
-    (set-face-attribute 'fixed-pitch nil :family "Jetbrains Mono" :height 1.0)))
+       modus-operandi-theme-mode-line 'moody))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
 
-(set-frame-font "Jetbrains Mono-9.5")
-(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
+(set-frame-font "IBMPlexMono-10")
+(setq default-frame-alist '((font . "IBMPlexMono-10")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
