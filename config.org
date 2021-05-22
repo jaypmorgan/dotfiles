@@ -382,15 +382,16 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   (use-package ox-gfm)
   (use-package org-ref
     :init
-    (setq reftex-default-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
-          org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
-          org-ref-default-bibliography '("/media/hdd/Nextcloud/Notes/Wiki/library.bib"))
-    (use-package helm-bibtex
-        :init
-        (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
-              bibtex-completion-pdf-open-function 'org-open-file
-              bibtex-completion-notes-path "/media/hdd/Nextcloud/Notes/Papers/"
-              bibtex-completion-pdf-field "file")))
+    (setq reftex-default-bibliography bib-file-loc
+          ;;org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
+          org-ref-default-bibliography '(bib-file-loc)))
+  ("d" deft "Deft Find File")
+   ;; (use-package helm-bibtex
+   ;;     :init
+   ;;     (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
+   ;;           bibtex-completion-pdf-open-function 'org-open-file
+   ;;           bibtex-completion-notes-path "/media/hdd/Nextcloud/Notes/Papers/"
+   ;;           bibtex-completion-pdf-field "file")))
 
   ;; enable tikzpictures in latex export
   (add-to-list 'org-latex-packages-alist '("" "tikz" t))
@@ -670,17 +671,43 @@ bells & whistles that eshell does, is vterm
 And finally, helm for partial completions, searches, etc.
 
 #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :config
-  (helm-mode 1)
-  (use-package helm-projectile)
-  (use-package helm-ag
-    :ensure-system-package (ag . silversearcher-ag))
-  (setq helm-use-frame-when-more-than-two-windows nil
-        helm-split-window-in-side nil
-        helm-display-function 'pop-to-buffer
-        helm-idle-delay 0.0
-        helm-input-idle-delay 0.01))
+;; (use-package helm
+;;   :config
+;;   (helm-mode 1)
+;;   (use-package helm-projectile)
+;;   (use-package helm-ag
+;;     :ensure-system-package (ag . silversearcher-ag))
+;;   (setq helm-use-frame-when-more-than-two-windows nil
+;;         helm-split-window-in-side nil
+;;         helm-display-function 'pop-to-buffer
+;;         helm-idle-delay 0.0
+;;         helm-input-idle-delay 0.01))
+(use-package vertico
+  :init
+  (vertico-mode)
+  (define-key vertico-map "?" #'minibuffer-completion-help)
+  (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exit)
+  (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete))
+
+(use-package consult)
+
+(use-package orderless
+  :init
+  (setq completion-styles '(substring orderless)
+        completion-category-defaults nil
+        completion-category override '((file (styles . (partial-completion))))))
+
+(use-package savehist
+  :init
+  (savehist-mode))
+
+(use-package marginalia
+  :init
+  (marginalia-mode))
+
+(use-package bibtex-actions
+  :custom
+  (bibtex-completion-bibliography bib-file-loc))
 
 (use-package cheat-sh)
 #+END_SRC
@@ -694,7 +721,7 @@ And finally, helm for partial completions, searches, etc.
 (require 'evil)
 (require 'ace-window)
 (define-key evil-motion-state-map " " nil)
-(global-set-key (kbd "M-x") 'helm-M-x)
+;;(global-set-key (kbd "M-x") 'helm-M-x)
 
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
@@ -733,13 +760,14 @@ And finally, helm for partial completions, searches, etc.
 (bind-evil-visual-key "SPC l f" align-regexp)
 (bind-global-key "M-/" comment-line)
 
-(defhydra hydra-helm-files (:color blue :hint nil)
+(defhydra hydra-find-things (:color blue :hint nil)
   "Ivy Files"
-  ("f" helm-find-files "Find Files")
-  ("r" helm-recentf "File Recent Files")
-  ("d" deft "Deft Find File")
-  ("b" swiper "Find in buffer"))
-(bind-evil-normal-key "SPC f" hydra-helm-files/body)
+  ("f" find-file "Find Files")
+  ("c" consult-find "Find File via Regex")
+  ("o" consult-recent-file "File Recently Opened Files")
+  ("b" swiper "Find in buffer")
+  ("r" consult-ripgrep "Find with Ripgrep"))
+(bind-evil-normal-key "SPC f" hydra-find-things/body)
 
 (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
 (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
@@ -764,7 +792,7 @@ And finally, helm for partial completions, searches, etc.
       (evil-window-split))
     (other-window 1)
     (if p-name
-        (helm-projectile-find-file)
+        (projectile-find-file)
       (switch-to-buffer "*scratch*"))))
 
 (defun my/split-vertical ()
@@ -791,8 +819,8 @@ And finally, helm for partial completions, searches, etc.
   ("9" eyebrowse-switch-to-window-config-9 "Workspace 9"))
 (bind-evil-normal-key "SPC TAB" hydra-eyebrowse/body)
 
-(bind-evil-normal-key "SPC SPC" helm-buffers-list)
-(bind-global-key "C-x b" helm-buffers-list)
+(bind-evil-normal-key "SPC SPC" consult-buffer)
+(bind-global-key "C-x b" consult-buffer)
 
 (defhydra hydra-open-config (:color blue :hint nil)
   "Open Config"
@@ -812,7 +840,7 @@ And finally, helm for partial completions, searches, etc.
   "Open Buffer"
   ("c" hydra-open-config/body "Config files")
   ("C" calendar "Open calendar")
-  ("b" helm-bibtex "Open Bibliography")
+  ("b" bibtex-actions-open "Open Bibliography")
   ("d" (progn (split-window-sensibly) (dired-jump)) "Dired in another window")
   ("D" (dired-jump) "Dired")
   ("e" elfeed "Elfeed")
@@ -1011,8 +1039,23 @@ package to disable all mouse operations in evil mode.
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
 
-(set-frame-font "IBMPlexMono-10")
-(setq default-frame-alist '((font . "IBMPlexMono-10")))
+(defun font-exists? (font)
+  "Predicate of whether a font exists"
+  (if (member font (font-family-list))
+      t))
+
+;; define the font face and size
+(setq font-face "IBM Plex Mono")
+(setq font-size "13")
+
+(defun set-my-font (&optional frame)
+  ;; use fonts if they are available
+  (when (font-exists? font-face)
+    (let ((my-font (concat font-face "-" font-size)))
+      (set-frame-font my-font))))
+
+(setq default-frame-alist '((font . "IBM Plex Mono-13")))
+(with-eval-after-load (set-my-font))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
