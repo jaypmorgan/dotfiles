@@ -5,8 +5,6 @@
     (setenv "PATH" (format "%s:%s" (getenv "PATH") new-path))))
 
 (my/add-to-exec "~/miniconda3/bin")
-(my/add-to-exec "~/.fzf/bin")
-(my/add-to-exec "~/.cargo/bin")
 (my/add-to-exec "~/bin")
 
 (setq gc-cons-threshold 100000000
@@ -17,7 +15,7 @@
       tramp-default-method "ssh")
 
 ;; Manually installed plugins/packages
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/plugins/"))
+(add-to-list 'load-path (expand-file-name (concat user-emacs-directory "plugins/")))
 
 ;; Setup package.el to work with MELPA
 (setq package-check-signature nil)
@@ -56,6 +54,16 @@
 
 (use-package markdown-mode :defer t)
 (use-package htmlize :defer t)
+
+;; (use-package slurp-mode
+;;   :load-path "~/workspace/slurp-mode/slurp-mode.el"
+;;   :bind (("C-c C-c" . slurp-repl-send-region)
+;;          ("C-c C-b" . slurp-repl-send-buffer)
+;;          ("C-c C-z" . run-slurp-other-window))
+;;   :init
+;;   (require 'slurp-repl-mode)
+;;   (setq slurp-repl-location "~/workspace/slurp/slurp"))
+
 
 (use-package isend-mode ;; language agnostic send to terminal
   :defer t
@@ -160,65 +168,50 @@
   ;; define variables scroll to the end of R shell automatically when
   ;; new input is entered.
   (setq comint-scroll-to-bottom-on-input t
-	comint-scroll-to-bottom-on-output t
-	comint-move-point-for-output t
-	ess-eval-visibly 'nowait)
+        comint-scroll-to-bottom-on-output t
+        comint-move-point-for-output t
+        ess-eval-visibly 'nowait)
 
 
   ;; setup window management
   (setq display-buffer-alist
-	`(("\\*R dired\\*"
-	   (display-buffer-reuse-window display-buffer-same-window)
-	   (reusable-frames . nil))
-	  ("\\*R"
-	   (display-buffer-reuse-window display-buffer-in-side-window)
-	   (side . bottom)
-	   (window-width . 0.33)
-	   (reusable-frames . nil))
+        `(("\\*R dired\\*"
+           (display-buffer-reuse-window display-buffer-same-window)
+           (reusable-frames . nil))
+          ("\\*R"
+           (display-buffer-reuse-window display-buffer-in-side-window)
+           (side . bottom)
+           (window-width . 0.33)
+           (reusable-frames . nil))
           ("\\*help"
            (display-buffer-reuse-window display-buffer-in-side-window)
            (side . bottom)
            (reusable-frames . nil)))))
 
-(use-package clojure-mode
-  :init
-  (use-package cider
-    :init
-    (add-hook 'cider-mode-hook 'eldoc-mode)
-    (add-hook 'cider-mode-hook 'company-mode)
-    (add-hook 'cider-mode-hook 'yas-minor-mode))
-  (use-package clojure-mode-extra-font-locking)
-  (use-package tagedit)
-  (add-hook 'clojure-mode-hook '(lambda () (setq tab-width 2))))
-
 (use-package python-mode
     :defer t
     :init
-
-    (use-package hy-mode
-      :load-path "~/.emacs.d/hy-mode/")
-
     (setq python-shell-interpreter "jupyter"
-	  python-shell-interpreter-args "console --simple-prompt"
+          python-shell-interpreter-args "console --simple-prompt"
           python-shell-prompt-detect-failure-warning nil
-	  python-indent-offset 4
+          python-indent-offset 4
           python-indent-guess-indent-offset-verbose nil)
 
     (use-package blacken
       :config
       (defun blacken-python-hook ()
-	  (when (eq major-mode 'python-mode)
-	    (blacken-buffer)))
+          (when (eq major-mode 'python-mode)
+            (blacken-buffer)))
     (add-hook 'before-save-hook 'blacken-python-hook))
 
     (use-package conda
-	  :config
-	  (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
-	        conda-env-home-directory (expand-file-name "~/miniconda3/"))))
+          :config
+          (setq conda-anaconda-home (expand-file-name "~/miniconda3/")
+                conda-env-home-directory (expand-file-name "~/miniconda3/"))))
 
 (use-package julia-mode :defer t)
 (use-package julia-repl
-   :quelpa (julia-repl :fetcher github :repo "tpapp/julia-repl")
+   :quelpa ((julia-repl :fetcher github :repo "tpapp/julia-repl") :upgrade t)
    :after julia-mode
    :hook (julia-mode . julia-repl-mode)
    :config
@@ -257,6 +250,14 @@
   :init
   (require 'pdf-view)
   (require 'ox-latex)
+
+  (setq org-directory notes-dir)
+  (setq org-default-notes-file (concat org-directory "notes.org"))
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file "notes.org")
+           "* TODO %?\n%a\n %i\n")
+          ("m" "Meeting" entry (file "meeting.org")
+           "* [%T] %?\n")))
 
   (add-to-list 'org-latex-classes
                '("beamer"
@@ -303,7 +304,6 @@
     (setq reftex-default-bibliography bib-file-loc
           ;;org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
           org-ref-default-bibliography '(bib-file-loc)))
-  ("d" deft "Deft Find File")
    ;; (use-package helm-bibtex
    ;;     :init
    ;;     (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
@@ -504,14 +504,6 @@
   (setq which-key-idle-delay 1)
   (which-key-mode 1))
 
-;; (use-package doom-modeline
-;;   :init
-;;   (doom-modeline-mode 1)
-;;   (setq doom-modeline-height 10
-;;         doom-modeline-mu4e t
-;;         doom-modeline-icon nil
-;;         doom-modeline-env-enable-python t))
-
 (use-package mood-line
   :init
   (mood-line-mode))
@@ -537,17 +529,6 @@
   (add-hook 'vterm-mode-hook (lambda () (company-mode -1)))
   (setq term-prompt-regexp "^[^#$%>\n]*$ *"))
 
-;; (use-package helm
-;;   :config
-;;   (helm-mode 1)
-;;   (use-package helm-projectile)
-;;   (use-package helm-ag
-;;     :ensure-system-package (ag . silversearcher-ag))
-;;   (setq helm-use-frame-when-more-than-two-windows nil
-;;         helm-split-window-in-side nil
-;;         helm-display-function 'pop-to-buffer
-;;         helm-idle-delay 0.0
-;;         helm-input-idle-delay 0.01))
 (use-package vertico
   :init
   (vertico-mode)
@@ -561,7 +542,7 @@
   :init
   (setq completion-styles '(substring orderless)
         completion-category-defaults nil
-        completion-category override '((file (styles . (partial-completion))))))
+        completion-category-override '((file (styles . (partial-completion))))))
 
 (use-package savehist
   :init
@@ -636,10 +617,11 @@
 
 (bind-evil-normal-key "SPC p" projectile-command-map)
 (bind-evil-normal-key "SPC p a" projectile-add-known-project)
+(bind-evil-normal-key "SPC /" consult-ripgrep)
 (bind-evil-normal-key "SPC g" magit-status)
 (bind-evil-normal-key "SPC a" org-agenda)
 (bind-evil-normal-key "SPC w" ace-window)
-(bind-evil-normal-key "SPC n" avy-goto-char-timer)
+(bind-evil-normal-key "SPC n" org-capture)
 (bind-evil-normal-key "SPC e" eww)
 (bind-global-key "C-x ," vterm) ;; new terminal in window
 (bind-evil-normal-key "SPC c" cheat-sh) ;; open cheat-sheet search
@@ -684,7 +666,7 @@
 
 (defhydra hydra-open-config (:color blue :hint nil)
   "Open Config"
-  ("e" (find-file "~/.emacs.d/config.org") "Emacs Config")
+  ("e" (find-file (concat user-emacs-directory "config.org")) "Emacs Config")
   ("x" (find-file "~/.xmonad/xmonad.hs") "Xmonad Config")
   ("m" (find-file "~/.emacs.d/mu4e-init.el") "Mail Config"))
 
@@ -854,16 +836,17 @@
       t))
 
 ;; define the font face and size
-(setq font-face "IBM Plex Mono")
-(setq font-size "13")
+(setq font-face "Jetbrains Mono")
+(setq font-size "14")
 
 (defun set-my-font (&optional frame)
   ;; use fonts if they are available
+  (interactive)
   (when (font-exists? font-face)
     (let ((my-font (concat font-face "-" font-size)))
       (set-frame-font my-font))))
 
-(setq default-frame-alist '((font . "IBM Plex Mono-13")))
+(setq default-frame-alist '((font . "Jetbrains Mono-14")))
 (with-eval-after-load (set-my-font))
 
 (global-auto-revert-mode t)
@@ -915,10 +898,6 @@
       recentf-max-saved-items 50)
 
 (global-prettify-symbols-mode +1)
-
-(setq scroll-step 1
-      scroll-margin 10
-      scroll-conservatively 101)
 
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)
