@@ -55,15 +55,16 @@
 (use-package markdown-mode :defer t)
 (use-package htmlize :defer t)
 
-;; (use-package slurp-mode
-;;   :load-path "~/workspace/slurp-mode/slurp-mode.el"
-;;   :bind (("C-c C-c" . slurp-repl-send-region)
-;;          ("C-c C-b" . slurp-repl-send-buffer)
-;;          ("C-c C-z" . run-slurp-other-window))
-;;   :init
-;;   (require 'slurp-repl-mode)
-;;   (setq slurp-repl-location "~/workspace/slurp/slurp"))
+(use-package slurp-mode
+  :load-path "~/workspace/slurp-mode/slurp-mode.el")
 
+(use-package slurp-repl-mode
+  :load-path "~/workspace/slurp-mode/slurp-repl-mode.el"
+  :bind (("C-c C-c" . slurp-repl-send-region)
+         ("C-c C-b" . slurp-repl-send-buffer)
+         ("C-c C-z" . run-slurp-other-window))
+  :init
+  (setq slurp-repl-location "~/workspace/slurp/slurp"))
 
 (use-package isend-mode ;; language agnostic send to terminal
   :defer t
@@ -188,6 +189,8 @@
            (side . bottom)
            (reusable-frames . nil)))))
 
+(use-package flycheck)
+
 (use-package python-mode
     :defer t
     :init
@@ -230,16 +233,15 @@
   :hook (company-mode . company-box-mode))
 
 (use-package lsp-mode
+  :hook ((python-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
-  (setq lsp-keymap-prefix "C-c l"
-        lsp-file-watch-threshold nil
+  (setq lsp-file-watch-threshold 2000
         lsp-modeline-code-actions-enable t
         lsp-eldoc-enable-hover nil
         lsp-log-io nil
-        lsp-idle-delay 0.001
-        lsp-progress-via-spinner nil))
+        lsp-idle-delay 0.500))
 
 (use-package lsp-julia
   :config
@@ -302,15 +304,7 @@
   (use-package org-ref
     :init
     (setq reftex-default-bibliography bib-file-loc
-          ;;org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
           org-ref-default-bibliography '(bib-file-loc)))
-   ;; (use-package helm-bibtex
-   ;;     :init
-   ;;     (setq bibtex-completion-bibliography "/media/hdd/Nextcloud/Notes/Wiki/library.bib"
-   ;;           bibtex-completion-pdf-open-function 'org-open-file
-   ;;           bibtex-completion-notes-path "/media/hdd/Nextcloud/Notes/Papers/"
-   ;;           bibtex-completion-pdf-field "file")))
-
   ;; enable tikzpictures in latex export
   (add-to-list 'org-latex-packages-alist '("" "tikz" t))
   (eval-after-load "preview" '
@@ -440,27 +434,20 @@
   :init
   (setq flyspell-default-dictionary "british"))
 
-;; Prevent Helm from taking up random windows -- makes the UI more consistent
-;; and predictable.
-(use-package shackle
-  :after helm
-  :init
-  (shackle-mode 1)
-  (setq shackle-rules '(("\\`\\*helm.*?\\*\\'" :regexp t :align t :ratio 0.3))))
-
-;;(use-package popper
-;;  :ensure t
-;;  :bind (("C-1"   . popper-toggle-latest)
-;;         ("C-2"   . popper-cycle)
-;;         ("C-3" . popper-toggle-type))
-;;  :init
-;;  (setq popper-reference-buffers
-;;        '("\\*Messages\\*"
-;;          "Output\\*$"
-;;          help-mode
-;;          helm-mode
-;;          compilation-mode))
-;;  (popper-mode +1))
+(use-package popper
+ :ensure t
+ :bind (("C-1"   . popper-toggle-latest)
+        ("C-2"   . popper-cycle)
+        ("C-3" . popper-toggle-type))
+ :init
+ (setq popper-reference-buffers
+       '("\\*Messages\\*"
+         "Output\\*$"
+         "\\*Flycheck Errors\\*"
+         help-mode
+         helm-mode
+         compilation-mode))
+ (popper-mode +1))
 
 (defun check-expansion ()
   (save-excursion
@@ -610,10 +597,11 @@
   ("r" consult-ripgrep "Find with Ripgrep"))
 (bind-evil-normal-key "SPC f" hydra-find-things/body)
 
-(define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
-(define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
-(define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
-(define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+(defhydra hydra-lsp-common (:color blue :hint nil)
+  "LSP Common"
+  ("r" lsp-rename "Rename symbol")
+  ("l" flycheck-list-errors "List warnings/errors"))
+(bind-evil-normal-key "SPC c" hydra-lsp-common/body)
 
 (bind-evil-normal-key "SPC p" projectile-command-map)
 (bind-evil-normal-key "SPC p a" projectile-add-known-project)
@@ -623,8 +611,8 @@
 (bind-evil-normal-key "SPC w" ace-window)
 (bind-evil-normal-key "SPC n" org-capture)
 (bind-evil-normal-key "SPC e" eww)
+(bind-evil-normal-key "SPC <return>" consult-bookmark)
 (bind-global-key "C-x ," vterm) ;; new terminal in window
-(bind-evil-normal-key "SPC c" cheat-sh) ;; open cheat-sheet search
 
 (defun my/split (direction)
   (interactive)
@@ -691,7 +679,8 @@
   ("m" mu4e "Open Mailbox")
   ("s" hydra-shell-buffer/body "Open shell")
   ("t" (find-file tasks-loc) "Open tasks")
-  ("u" undo-tree-visualize "Undo-tree"))
+  ("u" undo-tree-visualize "Undo-tree")
+  ("x" cheat-sh "CheatSheet"))
 (bind-evil-normal-key "SPC o" hydra-openbuffer/body)
 
 (defun new-org-note ()
@@ -802,9 +791,10 @@
   (define-key mu4e-compose-mode-map (kbd "C-c C-a") 'mail-add-attachment)
   (define-key mu4e-view-mode-map (kbd "C-c C-s") 'org-store-link)
   ;; load the configuration details
-  (when (file-exists-p "~/.emacs.d/mu4e-init.el")
-    (load "~/.emacs.d/mu4e-init.el")
-    (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1)))))
+  (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
+    (when (file-exists-p mu4e-config)
+      (load mu4e-config)
+      (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1))))))
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
