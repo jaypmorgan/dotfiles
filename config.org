@@ -118,6 +118,8 @@ It's a constant struggle to not learn every programming language ever!
 #+BEGIN_SRC emacs-lisp
 (use-package markdown-mode :defer t)
 (use-package htmlize :defer t)
+(use-package haskell-mode :defer t)
+(use-package flycheck)
 
 (use-package slurp-mode
   :load-path "~/workspace/slurp-mode/slurp-mode.el")
@@ -253,8 +255,6 @@ It's a constant struggle to not learn every programming language ever!
            (side . bottom)
            (reusable-frames . nil)))))
 
-(use-package flycheck)
-
 (use-package python-mode
     :defer t
     :init
@@ -334,6 +334,10 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   :init
   (require 'pdf-view)
   (require 'ox-latex)
+
+  (use-package org-present
+    :bind (("C-c n" . org-present-next)
+           ("C-c p" . org-present-prev)))
 
   (setq org-directory notes-dir)
   (setq org-default-notes-file (concat org-directory "notes.org"))
@@ -445,8 +449,6 @@ Once I learnt about org-mode, it would always be tough to leave Emacs.
   :after org)
 #+END_SRC
 
-#+RESULTS:
-
 Sometimes it is nice to have a table of contents inside the org-mode document,
 or in the rendered version on GitHub/Gitlab. With =toc-org= this is easily
 possible.
@@ -509,13 +511,7 @@ possible.
 (use-package olivetti
   :defer t
   :init
-  (setq olivetti-body-width 100)
-  (defun set-editing-buffer ()
-    (interactive)
-    (linum-mode -1)
-    (set-window-fringes (selected-window) 0 0)
-    (hl-line-mode -1))
-  (add-hook 'olivetti-mode-hook 'set-editing-buffer))
+  (setq olivetti-body-width 100))
 
 (use-package pdf-tools
   :defer t
@@ -527,6 +523,8 @@ possible.
 (use-package flyspell
   :init
   (setq flyspell-default-dictionary "british"))
+
+(use-package writegood-mode)
 
 (use-package popper
  :ensure t
@@ -571,10 +569,10 @@ possible.
 #+END_SRC
 
 * Emacs Environment
-A number of changes to the default config have been made to make the transition
-from VIM to Emacs a little easier. First and foremost is =evil-mode=. Another
-amendment is =evil-collection= with helps with propagating =evil-mode= to other
-non-evil environments such as mu4e.
+A number of changes to the default config have been made to make the transition from
+VIM to Emacs a little easier. First and foremost is =evil-mode=. Another amendment is
+=evil-collection= with helps with propagating =evil-mode= to other non-evil
+environments such as mu4e.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil
@@ -587,6 +585,13 @@ non-evil environments such as mu4e.
   :after (evil)
   :config
   (evil-collection-init))
+
+(use-package evil-snipe
+  :init
+  (evil-snipe-override-mode 1)
+  (setq evil-snipe-scope 'visible
+        evil-snipe-smart-case t)
+  (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode))
 #+END_SRC
 
 Keybindings are managed via =hydra=
@@ -689,7 +694,6 @@ And finally, helm for partial completions, searches, etc.
 (require 'evil)
 (require 'ace-window)
 (define-key evil-motion-state-map " " nil)
-;;(global-set-key (kbd "M-x") 'helm-M-x)
 
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
@@ -796,7 +800,7 @@ And finally, helm for partial completions, searches, etc.
   "Open Config"
   ("e" (find-file (concat user-emacs-directory "config.org")) "Emacs Config")
   ("x" (find-file "~/.xmonad/xmonad.hs") "Xmonad Config")
-  ("m" (find-file "~/.emacs.d/mu4e-init.el") "Mail Config"))
+  ("m" (find-file (concat user-emacs-directory "mu4e-init.el")) "Mail Config"))
 
 (defhydra hydra-shell-buffer (:color blue :hint nil)
   "Open Shell"
@@ -857,11 +861,21 @@ And finally, helm for partial completions, searches, etc.
 * Custom Functions
 
 #+BEGIN_SRC emacs-lisp
+(define-minor-mode writing-room-mode
+  "A minor mode for distractionless writing"
+  :lighter " Writing-Room"
+  (set (make-local-variable 'line-spacing) 20)
+  (add-hook 'writing-room-mode-hook 'linum-mode)
+  (add-hook 'writing-room-mode-hook 'olivetti-mode)
+  (add-hook 'writing-room-mode-hook 'writegood-mode)
+  (add-hook 'writing-room-mode-hook 'flyspell-mode)
+  (add-hook 'writing-room-mode-hook 'variable-pitch-mode))
+
 (defun get-stats (user host format)
   "Get SLURM status from remote server"
   (eshell-command-result
    (concat
-    "cd /ssh:" host ":/ && sacct -u" user " --format=" format)))
+    "cd /ssh:" host ":/ && sacct -u" user " --format=" format "| grep -v '\\(.ex\\|.ba\\)'")))
 
 (defun slurm-get-stats (user host format)
   "Log into SLURM server and get current running/pending jobs"
@@ -1005,8 +1019,8 @@ package to disable all mouse operations in evil mode.
 (use-package modus-themes
  :bind (("<f8>" . modus-themes-toggle))
  :init
- (setq modus-operandi-theme-org-blocks 'greyscale
-       modus-operandi-theme-mode-line 'moody))
+ (setq modus-operandi-themes-org-blocks 'greyscale
+       modus-operandi-themes-mode-line 'moody))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
@@ -1017,18 +1031,9 @@ package to disable all mouse operations in evil mode.
       t))
 
 ;; define the font face and size
-(setq font-face "Jetbrains Mono")
-(setq font-size "14")
-
-(defun set-my-font (&optional frame)
-  ;; use fonts if they are available
-  (interactive)
-  (when (font-exists? font-face)
-    (let ((my-font (concat font-face "-" font-size)))
-      (set-frame-font my-font))))
-
+(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 145)
+(set-face-attribute 'variable-pitch nil :family "PTSerif" :height 160)
 (setq default-frame-alist '((font . "Jetbrains Mono-14")))
-(with-eval-after-load (set-my-font))
 #+END_SRC
 
 #+RESULTS:

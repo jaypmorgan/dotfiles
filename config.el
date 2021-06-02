@@ -54,6 +54,8 @@
 
 (use-package markdown-mode :defer t)
 (use-package htmlize :defer t)
+(use-package haskell-mode :defer t)
+(use-package flycheck)
 
 (use-package slurp-mode
   :load-path "~/workspace/slurp-mode/slurp-mode.el")
@@ -189,8 +191,6 @@
            (side . bottom)
            (reusable-frames . nil)))))
 
-(use-package flycheck)
-
 (use-package python-mode
     :defer t
     :init
@@ -252,6 +252,10 @@
   :init
   (require 'pdf-view)
   (require 'ox-latex)
+
+  (use-package org-present
+    :bind (("C-c n" . org-present-next)
+           ("C-c p" . org-present-prev)))
 
   (setq org-directory notes-dir)
   (setq org-default-notes-file (concat org-directory "notes.org"))
@@ -415,13 +419,7 @@
 (use-package olivetti
   :defer t
   :init
-  (setq olivetti-body-width 100)
-  (defun set-editing-buffer ()
-    (interactive)
-    (linum-mode -1)
-    (set-window-fringes (selected-window) 0 0)
-    (hl-line-mode -1))
-  (add-hook 'olivetti-mode-hook 'set-editing-buffer))
+  (setq olivetti-body-width 100))
 
 (use-package pdf-tools
   :defer t
@@ -433,6 +431,8 @@
 (use-package flyspell
   :init
   (setq flyspell-default-dictionary "british"))
+
+(use-package writegood-mode)
 
 (use-package popper
  :ensure t
@@ -483,6 +483,13 @@
   :after (evil)
   :config
   (evil-collection-init))
+
+(use-package evil-snipe
+  :init
+  (evil-snipe-override-mode 1)
+  (setq evil-snipe-scope 'visible
+        evil-snipe-smart-case t)
+  (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode))
 
 (use-package hydra)
 
@@ -549,7 +556,6 @@
 (require 'evil)
 (require 'ace-window)
 (define-key evil-motion-state-map " " nil)
-;;(global-set-key (kbd "M-x") 'helm-M-x)
 
 (defun my/queue ()
   "run slurm's squeue command. Using eshell should run it on the
@@ -656,7 +662,7 @@
   "Open Config"
   ("e" (find-file (concat user-emacs-directory "config.org")) "Emacs Config")
   ("x" (find-file "~/.xmonad/xmonad.hs") "Xmonad Config")
-  ("m" (find-file "~/.emacs.d/mu4e-init.el") "Mail Config"))
+  ("m" (find-file (concat user-emacs-directory "mu4e-init.el")) "Mail Config"))
 
 (defhydra hydra-shell-buffer (:color blue :hint nil)
   "Open Shell"
@@ -712,6 +718,16 @@
   ("b" ibuffer "Edit Buffers")
   ("q" (kill-buffer-and-window) "Close"))
 (bind-evil-normal-key "SPC m" hydra-modify-buffers/body)
+
+(define-minor-mode writing-room-mode
+  "A minor mode for distractionless writing"
+  :lighter " Writing-Room"
+  (set (make-local-variable 'line-spacing) 20)
+  (add-hook 'writing-room-mode-hook 'linum-mode)
+  (add-hook 'writing-room-mode-hook 'olivetti-mode)
+  (add-hook 'writing-room-mode-hook 'writegood-mode)
+  (add-hook 'writing-room-mode-hook 'flyspell-mode)
+  (add-hook 'writing-room-mode-hook 'variable-pitch-mode))
 
 (defun get-stats (user host format)
   "Get SLURM status from remote server"
@@ -814,8 +830,8 @@
 (use-package modus-themes
  :bind (("<f8>" . modus-themes-toggle))
  :init
- (setq modus-operandi-theme-org-blocks 'greyscale
-       modus-operandi-theme-mode-line 'moody))
+ (setq modus-operandi-themes-org-blocks 'greyscale
+       modus-operandi-themes-mode-line 'moody))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
@@ -826,18 +842,9 @@
       t))
 
 ;; define the font face and size
-(setq font-face "Jetbrains Mono")
-(setq font-size "14")
-
-(defun set-my-font (&optional frame)
-  ;; use fonts if they are available
-  (interactive)
-  (when (font-exists? font-face)
-    (let ((my-font (concat font-face "-" font-size)))
-      (set-frame-font my-font))))
-
+(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 145)
+(set-face-attribute 'variable-pitch nil :family "PTSerif" :height 160)
 (setq default-frame-alist '((font . "Jetbrains Mono-14")))
-(with-eval-after-load (set-my-font))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
