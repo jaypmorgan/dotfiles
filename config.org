@@ -122,10 +122,10 @@ It's a constant struggle to not learn every programming language ever!
 (use-package flycheck)
 
 (use-package slurp-mode
-  :load-path "~/workspace/slurp-mode/slurp-mode.el")
+  :load-path "~/workspace/slurp-mode/")
 
 (use-package slurp-repl-mode
-  :load-path "~/workspace/slurp-mode/slurp-repl-mode.el"
+  :load-path "~/workspace/slurp-mode/"
   :bind (("C-c C-c" . slurp-repl-send-region)
          ("C-c C-b" . slurp-repl-send-buffer)
          ("C-c C-z" . run-slurp-other-window))
