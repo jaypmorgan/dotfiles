@@ -58,13 +58,10 @@
 (use-package flycheck)
 
 (use-package slurp-mode
-  :load-path "~/workspace/slurp-mode/slurp-mode.el")
+  :load-path "~/workspace/slurp-mode/")
 
 (use-package slurp-repl-mode
-  :load-path "~/workspace/slurp-mode/slurp-repl-mode.el"
-  :bind (("C-c C-c" . slurp-repl-send-region)
-         ("C-c C-b" . slurp-repl-send-buffer)
-         ("C-c C-z" . run-slurp-other-window))
+  :load-path "~/workspace/slurp-mode/"
   :init
   (setq slurp-repl-location "~/workspace/slurp/slurp"))
 
@@ -100,6 +97,9 @@
   (require 'ess-r-mode)
   (use-package ess-view)
 
+  ;; enable company mode completions in the REPL
+  (add-hook 'inferior-ess-r-mode-hook 'company-mode)
+
   (defun r/toggle-r-repl ()
     (interactive)
     (toggle-repl "*R*"))
@@ -132,37 +132,6 @@
     (setq ess-indent-level 2))
   (add-hook 'ess-mode-hook 'my/ess-style)
 
-  (defun r/insert (key)
-    " Insert key into buffer "
-    (interactive)
-    (insert key))
-  (defun r/insert-variable () (interactive) (r/insert "<- "))
-  (defun r/insert-pipe () (interactive) (r/insert " %>%\n    "))
-
-  (defun r/read-last-function ()
-    (interactive)
-    (ess-switch-to-ESS t)
-    (comint-previous-prompt 1)
-    (let ((cur-line (thing-at-point 'line t)))
-      (save-match-data
-        (and (string-match "\s([a-zA-Z0-9._]+)\s<" cur-line)
-             (setq fn (match-string 1 cur-line))
-             (message fn)))))
-
-  (defun r/submit-and-execute-function ()
-    " Send cursor to terminal and execute the function "
-    (interactive)
-    (ess-eval-region-or-function-or-paragraph t)
-    (let ((func_name (r/read-last-function)))
-      (ess-send-string (ess-get-process) (concat func_name "()"))))
-  (define-key ess-r-mode-map (kbd "C-c C-f") 'r/submit-and-execute-function)
-  (define-key inferior-ess-r-mode-map (kbd "C-c C-f") 'r/submit-and-execute-function)
-
-  (define-key ess-r-mode-map (kbd "C-,") 'ess-insert-assign)
-  (define-key ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
-  (define-key inferior-ess-r-mode-map (kbd "C-,") 'ess-insert-assign)
-  (define-key inferior-ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
-
   (require 'ess-rdired)
   (define-key ess-rdired-mode-map (kbd "C-c p") 'ess-rdired-plot)
   (define-key ess-rdired-mode-map (kbd "C-c e") 'ess-rdired-edit)
@@ -175,7 +144,6 @@
         comint-move-point-for-output t
         ess-eval-visibly 'nowait)
 
-
   ;; setup window management
   (setq display-buffer-alist
         `(("\\*R dired\\*"
@@ -184,7 +152,7 @@
           ("\\*R"
            (display-buffer-reuse-window display-buffer-in-side-window)
            (side . bottom)
-           (window-width . 0.33)
+           (window-width . 0.4)
            (reusable-frames . nil))
           ("\\*help"
            (display-buffer-reuse-window display-buffer-in-side-window)
@@ -214,18 +182,13 @@
 
 (use-package julia-mode :defer t)
 (use-package julia-repl
-   :quelpa ((julia-repl :fetcher github :repo "tpapp/julia-repl") :upgrade t)
    :after julia-mode
-   :hook (julia-mode . julia-repl-mode)
-   :config
-   (require 'julia-repl)
-   (julia-repl-set-terminal-backend 'vterm)
-   (setq vterm-kill-buffer-on-exit nil))
+   :hook (julia-mode . julia-repl-mode))
 
 (use-package company
   :hook (prog-mode . company-mode)
   :config
-  (setq company-idle-delay 0.000001
+  (setq company-idle-delay 0.5
         company-minimum-prefix-length 2
         company-candidates-cache t))
 
@@ -241,11 +204,7 @@
         lsp-modeline-code-actions-enable t
         lsp-eldoc-enable-hover nil
         lsp-log-io nil
-        lsp-idle-delay 0.500))
-
-(use-package lsp-julia
-  :config
-  (setq lsp-julia-default-environment "~/.julia/environments/v1.6"))
+        lsp-idle-delay 0.5))
 
 (use-package org
   :ensure org-plus-contrib
@@ -254,7 +213,8 @@
   (require 'ox-latex)
 
   (use-package org-present
-    :bind (("C-c n" . org-present-next)
+    :bind (:map org-present-map
+           ("C-c n" . org-present-next)
            ("C-c p" . org-present-prev)))
 
   (setq org-directory notes-dir)
@@ -373,11 +333,10 @@
 
 (use-package swiper)
 (use-package magit)
-(use-package disable-mouse)
 (use-package linum-relative)
 (use-package ace-window)
 (use-package iedit)
-(use-package ripgrep)
+(use-package cheat-sh)
 
 (use-package smartparens
   :hook (prog-mode . smartparens-mode)
@@ -436,14 +395,15 @@
 
 (use-package popper
  :ensure t
- :bind (("C-1"   . popper-toggle-latest)
-        ("C-2"   . popper-cycle)
+ :bind (("C-1" . popper-toggle-latest)
+        ("C-2" . popper-cycle)
         ("C-3" . popper-toggle-type))
  :init
  (setq popper-reference-buffers
        '("\\*Messages\\*"
          "Output\\*$"
          "\\*Flycheck Errors\\*"
+         "\\*slurm-log\\*"
          help-mode
          helm-mode
          compilation-mode))
@@ -486,9 +446,11 @@
 
 (use-package evil-snipe
   :init
+  (evil-snipe-mode 1)
   (evil-snipe-override-mode 1)
   (setq evil-snipe-scope 'visible
         evil-snipe-smart-case t)
+  (add-hook 'magit-mode-hook 'turn-off-evil-snipe-mode)
   (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode))
 
 (use-package hydra)
@@ -528,29 +490,21 @@
   (vertico-mode)
   (define-key vertico-map "?" #'minibuffer-completion-help)
   (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exit)
-  (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete))
+  (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete)
 
-(use-package consult)
+  (use-package consult)
+  (use-package savehist :init (savehist-mode))
+  (use-package marginalia :init (marginalia-mode))
+  (use-package orderless
+    :init
+    (setq completion-styles '(substring orderless)
+          completion-category-defaults nil
+          completion-category-override '((file (styles . (partial-completion))))))
 
-(use-package orderless
-  :init
-  (setq completion-styles '(substring orderless)
-        completion-category-defaults nil
-        completion-category-override '((file (styles . (partial-completion))))))
-
-(use-package savehist
-  :init
-  (savehist-mode))
-
-(use-package marginalia
-  :init
-  (marginalia-mode))
-
-(use-package bibtex-actions
-  :custom
-  (bibtex-completion-bibliography bib-file-loc))
-
-(use-package cheat-sh)
+  (use-package bibtex-actions
+    :custom
+    ;; TODO add functions from other computer
+    (bibtex-completion-bibliography bib-file-loc)))
 
 (require 'hydra)
 (require 'evil)
@@ -733,7 +687,7 @@
   "Get SLURM status from remote server"
   (eshell-command-result
    (concat
-    "cd /ssh:" host ":/ && sacct -u" user " --format=" format)))
+    "cd /ssh:" host ":/ && sacct -u" user " --format=" format "| grep -v '\\(.ex\\|.ba\\)'")))
 
 (defun slurm-get-stats (user host format)
   "Log into SLURM server and get current running/pending jobs"
@@ -788,9 +742,7 @@
     (setq async-shell-command-display-buffer async-value)))
 
 ;; Bind a local key to launch rsync
-(bind-evil-normal-key "SPC l ;" (lambda ()
-                           (interactive)
-                           (dorsync rsync-source rsync-destination 1)))
+(bind-evil-normal-key "SPC l ;" (lambda () (interactive) (dorsync rsync-source rsync-destination 1)))
 (bind-evil-normal-key "SPC l ," (lambda () (interactive) (dorsync rsync-source rsync-destination nil)))
 
 (defun conda-activate-once (env-name)
@@ -816,17 +768,9 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-(global-disable-mouse-mode)
-(mapc #'disable-mouse-in-keymap
-  (list evil-motion-state-map
-        evil-normal-state-map
-        evil-visual-state-map
-        evil-insert-state-map))
-
 (global-linum-mode)
 (linum-relative-on)
 
-(use-package base16-theme)
 (use-package modus-themes
  :bind (("<f8>" . modus-themes-toggle))
  :init
@@ -836,14 +780,8 @@
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (load-theme 'modus-operandi t)
 
-(defun font-exists? (font)
-  "Predicate of whether a font exists"
-  (if (member font (font-family-list))
-      t))
-
 ;; define the font face and size
 (set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 145)
-(set-face-attribute 'variable-pitch nil :family "PTSerif" :height 160)
 (setq default-frame-alist '((font . "Jetbrains Mono-14")))
 
 (global-auto-revert-mode t)
@@ -874,8 +812,7 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq revert-without-query 1)
 
-(use-package dired-single)
-(use-package dired-open)
+;; make dired easier to read
 (setq dired-listing-switches "-alhgo --group-directories-first")
 
 ;; Close the compilation window if there was no error at all.
@@ -900,6 +837,63 @@
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 (setq initial-scratch-message "")
+
+(use-package exwm
+  :init
+  (require 'exwm)
+  ;; send keys chords directly to emacs instead of underlying window
+  (setq exwm-input-prefix-keys
+        '(?\C-x
+          ?\C-u
+          ?\C-h
+          ?\C-c
+          ?\C-w
+          ?\C-\
+          ?\M-x
+          ?\M-`
+          ?\M-&
+          ?\M-:))
+
+  ;; but if prefixed with C-q then send the next keystroke to window
+  (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+  (defun launch-program (cmd)
+    (interactive (list (read-shell-command "$ ")))
+    (start-process-shell-command cmd nil cmd))
+
+  ;; define keys to manage EXWM environment
+  (setq exwm-input-global-keys
+        `(([?\s-r] . exwm-reset)
+          ([s-left] . windmove-left)
+          ([s-right] . windmove-right)
+          ([s-up] . windmove-up)
+          ([s-down] . windmove-down)
+          ([?\s-&] . launch-program)
+          ([?\s-w] . exwm-workspace-switch)
+          ;; swap to workspace with s-N
+          ,@(mapcar (lambda (i)
+                      `(,(kbd (format "s-%d" i)) .
+                        (lambda ()
+                          (interactive)
+                          (exwm-workspace-switch-create ,i))))
+                    (number-sequence 0 9))))
+
+  (use-package xbacklight
+    :ensure nil  ;; so quelpa-use-package works
+    :quelpa (xbacklight :fetcher github :repo "dakra/xbacklight")
+    :bind (("<XF86MonBrightnessUp>" . xbacklight-increase)
+           ("<XF86MonBrightnessDown>" . xbacklight-decrease))
+    :init
+    (setq xbacklight-step 5))
+
+  (use-package pulseaudio-control
+    :bind (:map exwm-mode-map
+           ("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
+           ("<XF86AudioLowerVolume>" . pulseaudio-control-decrease-volume)
+           ("<XF86AudioMute>" . pulseaudio-control-toggle-current-sink-mute)))
+
+  (display-battery-mode)
+  (exwm-enable))
 
 (appt-activate 1)
 (setq diary-file diary-loc
