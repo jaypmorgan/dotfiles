@@ -58,10 +58,17 @@
 (use-package flycheck)
 
 (use-package slurp-mode
-  :load-path "~/workspace/slurp-mode/")
+  :ensure nil
+  :quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode"))
 
 (use-package slurp-repl-mode
-  :load-path "~/workspace/slurp-mode/"
+  :ensure nil
+  :after slurp-mode
+  :quelpa (slurp-mode-repl :fetcher github :repo "jaypmorgan/slurp-mode")
+  :bind (:map slurp-mode-map
+              ("C-c C-c" . slurp-repl-send-line)
+              ("C-c C-r" . slurp-repl-send-region)
+              ("C-c C-b" . slurp-repl-send-buffer))
   :init
   (setq slurp-repl-location "~/workspace/slurp/slurp"))
 
@@ -404,6 +411,7 @@
          "Output\\*$"
          "\\*Flycheck Errors\\*"
          "\\*slurm-log\\*"
+         "\\*Warnings\\*"
          help-mode
          helm-mode
          compilation-mode))
@@ -848,7 +856,7 @@
           ?\C-h
           ?\C-c
           ?\C-w
-          ?\C-\
+          ?\C-\s
           ?\M-x
           ?\M-`
           ?\M-&
@@ -857,19 +865,41 @@
   ;; but if prefixed with C-q then send the next keystroke to window
   (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
 
+
   (defun launch-program (cmd)
     (interactive (list (read-shell-command "$ ")))
     (start-process-shell-command cmd nil cmd))
 
+  (defun exwm-logout ()
+    (interactive)
+    (recentf-save-list)
+    (save-some-buffers)
+    (start-process-shell-command "logout" nil "lxsession-logout"))
+
+  ;; Make buffer name more meaningful
+  (add-hook 'exwm-update-class-hook
+            (lambda ()
+            (exwm-workspace-rename-buffer exwm-class-name)))
+  ;; remove modeline for floating windows
+  (add-hook 'exwm-floating-setup-hook 'exwm-layout-hide-mode-line)
+
+  ;; start up applications
+  ;; (setq my/exwm-startup-applications '("nextcloud"))
+  ;; (defun my/launch-startup (apps)
+  ;;   (let ((apps my/exwm-startup-applications))
+  ;;     (map #'launch-program apps)))
+  ;; (add-hook 'exwm-mode-hook 'my/launch-startup)
+
   ;; define keys to manage EXWM environment
   (setq exwm-input-global-keys
-        `(([?\s-r] . exwm-reset)
-          ([s-left] . windmove-left)
+        `(([?\s-r]   . exwm-reset)
+          ([s-left]  . windmove-left)
           ([s-right] . windmove-right)
-          ([s-up] . windmove-up)
-          ([s-down] . windmove-down)
-          ([?\s-&] . launch-program)
-          ([?\s-w] . exwm-workspace-switch)
+          ([s-up]    . windmove-up)
+          ([s-down]  . windmove-down)
+          ([?\s-&]   . launch-program)
+          ([?\s-w]   . exwm-workspace-switch)
+          ([?\s-b]   . exwm-layout-toggle-mode-line)
           ;; swap to workspace with s-N
           ,@(mapcar (lambda (i)
                       `(,(kbd (format "s-%d" i)) .
@@ -882,17 +912,31 @@
     :ensure nil  ;; so quelpa-use-package works
     :quelpa (xbacklight :fetcher github :repo "dakra/xbacklight")
     :bind (("<XF86MonBrightnessUp>" . xbacklight-increase)
+           ("<XF86MonBrightnessDown>" . xbacklight-decrease)
+           :map exwm-mode-map
+           ("<XF86MonBrightnessUp>" . xbacklight-increase)
            ("<XF86MonBrightnessDown>" . xbacklight-decrease))
     :init
     (setq xbacklight-step 5))
 
   (use-package pulseaudio-control
-    :bind (:map exwm-mode-map
+    :bind (("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
+           ("<XF86AudioLowerVolume>" . pulseaudio-control-decrease-volume)
+           ("<XF86AudioMute>" . pulseaudio-control-toggle-current-sink-mute)
+           :map exwm-mode-map
            ("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
            ("<XF86AudioLowerVolume>" . pulseaudio-control-decrease-volume)
            ("<XF86AudioMute>" . pulseaudio-control-toggle-current-sink-mute)))
 
-  (display-battery-mode)
+  ;; display time and battery
+  (setq display-time-format " %H:%M:%S %a,%d %b ")
+  (display-time-mode)
+  (use-package fancy-battery :init (fancy-battery-mode))
+
+  ;; start in workspace 1
+  (setq exwm-workspace-current-index 1
+        exwm-workspace-number        4)
+
   (exwm-enable))
 
 (appt-activate 1)
