@@ -440,6 +440,7 @@
           (indent-for-tab-command)))))
 
 (global-set-key [tab] 'tab-indent-or-complete)
+(define-key magit-mode-map [tab] 'magit-section-toggle)
 
 (use-package evil
   :init
@@ -892,14 +893,15 @@
 
   ;; define keys to manage EXWM environment
   (setq exwm-input-global-keys
-        `(([?\s-r]   . exwm-reset)
-          ([s-left]  . windmove-left)
-          ([s-right] . windmove-right)
-          ([s-up]    . windmove-up)
-          ([s-down]  . windmove-down)
-          ([?\s-&]   . launch-program)
-          ([?\s-w]   . exwm-workspace-switch)
-          ([?\s-b]   . exwm-layout-toggle-mode-line)
+        `(([?\s-r]    . exwm-reset)
+         ([s-left]     . windmove-left)
+         ([s-right]    . windmove-right)
+         ([s-up]       . windmove-up)
+         ([s-down]     . windmove-down)
+         ([?\s-&]      . launch-program)
+         ([?\s-w]      . exwm-workspace-switch)
+         ([?\s-b]      . exwm-layout-toggle-mode-line)
+         ([?\s-i]      . (lambda () (interactive) (launch-program "firefox")))
           ;; swap to workspace with s-N
           ,@(mapcar (lambda (i)
                       `(,(kbd (format "s-%d" i)) .
