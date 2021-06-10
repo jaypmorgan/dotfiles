@@ -349,7 +349,7 @@
 
 (use-package swiper)
 (use-package magit)
-(use-package linum-relative)
+;; (use-package linum-relative)
 (use-package ace-window)
 (use-package iedit)
 (use-package cheat-sh)
@@ -517,12 +517,22 @@
     :init
     (setq completion-styles '(substring orderless)
           completion-category-defaults nil
-          completion-category-override '((file (styles . (partial-completion))))))
+          completion-category-override '((file (styles . (partial-completion)))))))
 
-  (use-package bibtex-actions
-    :custom
-    ;; TODO add functions from other computer
-    (bibtex-completion-bibliography bib-file-loc)))
+(use-package bibtex-actions
+  :custom
+  (bibtex-completion-bibliography bib-file-loc)
+  :init
+
+  (defun bibtex-actions-add-citation (citation)
+    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
+    (write-region (concat "\n" citation "\n") nil bibtex-completion-bibliography 'append)
+    (bibtex-actions-refresh))
+
+  (defun bibtex-actions-open-library ()
+    (interactive)
+    (split-window-sensibly)
+    (find-file bibtex-completion-bibliography)))
 
 (require 'hydra)
 (require 'evil)
@@ -787,7 +797,8 @@
 (scroll-bar-mode -1)
 
 (global-linum-mode)
-(linum-relative-on)
+;; (linum-relative-on)
+(setq display-line-numbers 'visual)
 
 (use-package modus-themes
  :bind (("<f8>" . modus-themes-toggle))
