@@ -121,15 +121,35 @@ It's a constant struggle to not learn every programming language ever!
 (use-package htmlize :defer t)
 (use-package haskell-mode :defer t)
 (use-package flycheck)
+(use-package yaml-mode)
+
+
+(defun toggle-repl (repl-name)
+  (interactive)
+  (let ((curr-buffer (buffer-name)))
+    (if (string-equal repl-name curr-buffer)
+        (progn
+          (select-window (get-buffer-window prev-buffer))
+          (goto-char saved-position))
+      (setq prev-buffer curr-buffer
+            saved-position (point))
+      (select-window (get-buffer-window repl-name)))))
 
 (use-package slurp-mode
   :ensure nil
-  :quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode"))
+  :quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+  :init
+  (defun toggle-slurp-repl ()
+    (interactive)
+    (toggle-repl "*SluRp*"))
+  (define-key slurp-mode-map (kbd "C-`") #'toggle-slurp-repl)
+  (define-key slurp-repl-mode-map (kbd "C-`") #'toggle-slurp-repl))
 
 (use-package slurp-repl-mode
   :ensure nil
   :after slurp-mode
   :quelpa (slurp-mode-repl :fetcher github :repo "jaypmorgan/slurp-mode")
+  :commands (run-slurp run-slurp-other-window)
   :bind (:map slurp-mode-map
               ("C-c C-c" . slurp-repl-send-line)
               ("C-c C-r" . slurp-repl-send-region)
@@ -150,17 +170,6 @@ It's a constant struggle to not learn every programming language ever!
   :defer t
   :config
   (setq ccls-executable "~/Applications/ccls/Release/ccls"))
-
-(defun toggle-repl (repl-name)
-  (interactive)
-  (let ((curr-buffer (buffer-name)))
-    (if (string-equal repl-name curr-buffer)
-        (progn
-          (select-window (get-buffer-window prev-buffer))
-          (goto-char saved-position))
-      (setq prev-buffer curr-buffer
-            saved-position (point))
-      (select-window (get-buffer-window repl-name)))))
 
  ;; Emacs speaks statistics (R)
 (use-package ess
@@ -556,14 +565,14 @@ environments such as mu4e.
   :config
   (evil-collection-init))
 
-(use-package evil-snipe
-  :init
-  (evil-snipe-mode 1)
-  (evil-snipe-override-mode 1)
-  (setq evil-snipe-scope 'visible
-        evil-snipe-smart-case t)
-  (add-hook 'magit-mode-hook 'turn-off-evil-snipe-mode)
-  (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode))
+;; (use-package evil-snipe
+;;   :init
+;;   (evil-snipe-mode 1)
+;;   (evil-snipe-override-mode 1)
+;;   (setq evil-snipe-scope 'visible
+;;         evil-snipe-smart-case t)
+;;   (add-hook 'magit-mode-hook 'turn-off-evil-snipe-mode)
+;;   (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode))
 #+END_SRC
 
 Keybindings are managed via =hydra=
@@ -720,7 +729,7 @@ And finally, vertico.
 (bind-evil-normal-key "SPC n" org-capture)
 (bind-evil-normal-key "SPC e" eww)
 (bind-evil-normal-key "SPC <return>" consult-bookmark)
-(bind-global-key "C-x ," vterm) ;; new terminal in window
+(bind-global-key "C-x ," (lambda () (interactive) (vterm t))) ;; new terminal in window
 
 (defun my/split (direction)
   (interactive)
@@ -769,7 +778,7 @@ And finally, vertico.
 (defhydra hydra-shell-buffer (:color blue :hint nil)
   "Open Shell"
   ("s" my/bash "Shell")
-  ("S" vterm "Big shell")
+  ("S" run-slurp-other-window "SluRp")
   ("j" julia-repl "Julia repl")
   ("r" R "R repl")
   ("p" python "Python repl"))
