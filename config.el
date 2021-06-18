@@ -251,7 +251,9 @@
   (add-hook 'org-mode-hook #'(lambda ()
                               (set-fill-column 85)
                               (visual-line-mode 1)
-                              (auto-fill-mode 1)))
+                              (auto-fill-mode 1)
+                              (flyspell-mode 1)
+                              (flyspell-buffer)))
   (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
 
@@ -301,7 +303,7 @@
         org-footnote-auto-adjust t
         org-latex-listings 'minted   ;; color highlighting for source blocks
         org-latex-packages-alist '(("" "minted"))
-        org-latex-pdf-process '( "latexmk -shell-escape -bibtex -f -pdf %f")
+        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
         org-format-latex-options (plist-put org-format-latex-options :scale 1.4)
         inferior-julia-program-name "/usr/bin/julia"
         org-confirm-babel-evaluate nil
@@ -401,7 +403,7 @@
   :init
   (pdf-loader-install)
   (setq auto-revert-interval 0.5)
-  (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1))))
+  (add-hook 'pdf-view-mode-hook #'(lambda () (linum-mode -1))))
 
 (use-package flyspell
   :init
@@ -461,15 +463,6 @@
   :after (evil)
   :config
   (evil-collection-init))
-
-;; (use-package evil-snipe
-;;   :init
-;;   (evil-snipe-mode 1)
-;;   (evil-snipe-override-mode 1)
-;;   (setq evil-snipe-scope 'visible
-;;         evil-snipe-smart-case t)
-;;   (add-hook 'magit-mode-hook 'turn-off-evil-snipe-mode)
-;;   (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode))
 
 (use-package hydra)
 
@@ -747,7 +740,7 @@
 (setq rsync-source nil
       rsync-destination nil
       rsync-base-cmd "rsync -azm"
-      rsync-exclude-list '("data" ".git" "container" "__pycache__" "*.pyc" "renv/library" "renv/local" "renv/python" "renv/staging"))
+      rsync-exclude-list '("data" ".git" "container-dev" "container" "__pycache__" "*.pyc" "renv/library" "renv/local" "renv/python" "renv/staging"))
 
 (defun rsync--build-exclude-list (exclude-list)
   (mapconcat (lambda (s) (concat " --exclude=" s " ")) exclude-list " "))
@@ -811,8 +804,8 @@
 (load-theme 'modus-operandi t)
 
 ;; define the font face and size
-(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 145)
-(setq default-frame-alist '((font . "Jetbrains Mono-14")))
+(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 110)
+(setq default-frame-alist '((font . "Jetbrains Mono-11")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
