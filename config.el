@@ -58,7 +58,6 @@
 (use-package flycheck)
 (use-package yaml-mode)
 
-
 (defun toggle-repl (repl-name)
   (interactive)
   (let ((curr-buffer (buffer-name)))
@@ -74,31 +73,29 @@
   :ensure nil
   :quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
   :init
+  (use-package slurp-repl-mode
+    :ensure nil
+    :quelpa (slurp-repl-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+    :commands (run-slurp run-slurp-other-window)
+    :bind (:map slurp-mode-map
+           ("C-c C-c" . slurp-repl-send-line)
+           ("C-c C-r" . slurp-repl-send-region)
+           ("C-c C-b" . slurp-repl-send-buffer))
+    :init
+    (setq slurp-repl-location "~/workspace/slurp/slurp"))
+
   (defun toggle-slurp-repl ()
     (interactive)
     (toggle-repl "*SluRp*"))
-  (define-key slurp-mode-map (kbd "C-`") #'toggle-slurp-repl)
-  (define-key slurp-repl-mode-map (kbd "C-`") #'toggle-slurp-repl))
-
-(use-package slurp-repl-mode
-  :ensure nil
-  :after slurp-mode
-  :quelpa (slurp-mode-repl :fetcher github :repo "jaypmorgan/slurp-mode")
-  :commands (run-slurp run-slurp-other-window)
-  :bind (:map slurp-mode-map
-              ("C-c C-c" . slurp-repl-send-line)
-              ("C-c C-r" . slurp-repl-send-region)
-              ("C-c C-b" . slurp-repl-send-buffer))
-  :init
-  (setq slurp-repl-location "~/workspace/slurp/slurp"))
+  (define-key slurp-mode-map (kbd "C-`") #'toggle-slurp-repl))
+  ;;(define-key slurp-repl-mode-map (kbd "C-`") #'toggle-slurp-repl)
 
 (use-package isend-mode ;; language agnostic send to terminal
   :defer t
   :init
   (setq isend-strip-empty-lines t
         isend-delete-indentation nil
-        isend-end-with-empty-line nil
-        isend-send-region-function 'isend--ipython-cpaste))
+        isend-end-with-empty-line nil))
 
 ;; C++/C/Objective-C LSP support
 (use-package ccls
@@ -114,7 +111,7 @@
   (use-package ess-view)
 
   ;; enable company mode completions in the REPL
-  (add-hook 'inferior-ess-r-mode-hook 'company-mode)
+  (add-hook 'inferior-ess-r-mode-hook #'company-mode)
 
   (defun r/toggle-r-repl ()
     (interactive)
@@ -140,18 +137,18 @@
     (set-window-dedicated-p (nth 2 (window-list)) t)
     (imenu-list-smart-toggle))
 
-  (define-key org-mode-map (kbd "<f7>") 'r/open-workspace)
-  (define-key ess-r-mode-map (kbd "<f7>") 'r/open-workspace)
+  (define-key org-mode-map (kbd "<f7>") #'r/open-workspace)
+  (define-key ess-r-mode-map (kbd "<f7>") #'r/open-workspace)
 
   (defun my/ess-style ()
     (ess-set-style 'C++ 'quiet)
     (setq ess-indent-level 2))
-  (add-hook 'ess-mode-hook 'my/ess-style)
+  (add-hook 'ess-mode-hook #'my/ess-style)
 
   (require 'ess-rdired)
-  (define-key ess-rdired-mode-map (kbd "C-c p") 'ess-rdired-plot)
-  (define-key ess-rdired-mode-map (kbd "C-c e") 'ess-rdired-edit)
-  (define-key ess-rdired-mode-map (kbd "C-c v") 'ess-rdired-view)
+  (define-key ess-rdired-mode-map (kbd "C-c p") #'ess-rdired-plot)
+  (define-key ess-rdired-mode-map (kbd "C-c e") #'ess-rdired-edit)
+  (define-key ess-rdired-mode-map (kbd "C-c v") #'ess-rdired-view)
 
   ;; define variables scroll to the end of R shell automatically when
   ;; new input is entered.
@@ -189,7 +186,7 @@
       (defun blacken-python-hook ()
           (when (eq major-mode 'python-mode)
             (blacken-buffer)))
-    (add-hook 'before-save-hook 'blacken-python-hook))
+    (add-hook 'before-save-hook #'blacken-python-hook))
 
     (use-package conda
           :config
@@ -228,6 +225,9 @@
   (require 'pdf-view)
   (require 'ox-latex)
 
+  (use-package org-fragtog
+    :hook (org-mode . org-fragtog-mode))
+
   (use-package org-present
     :bind (:map org-present-map
            ("C-c n" . org-present-next)
@@ -248,12 +248,12 @@
                  ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
                  ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")))
 
-  (add-hook 'org-mode-hook '(lambda ()
+  (add-hook 'org-mode-hook #'(lambda ()
                               (set-fill-column 85)
                               (visual-line-mode 1)
                               (auto-fill-mode 1)))
   (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
-  (define-key org-mode-map (kbd "<f5>") 'org-latex-export-to-pdf)
+  (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -267,12 +267,12 @@
     (my/toggle-pdf ".pdf"))
   (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
   (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
-  (define-key org-mode-map (kbd "<f4>") 'my/swap-to-pdf)
-  (define-key pdf-view-mode-map (kbd "<f4>") 'my/swap-to-org)
-  (define-key org-mode-map (kbd "<f3>") 'my/open-to-odf-other-window)
+  (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
+  (define-key pdf-view-mode-map (kbd "<f4>") #'my/swap-to-org)
+  (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
 
-  (define-key org-mode-map (kbd "C-<right>") 'org-babel-next-src-block)
-  (define-key org-mode-map (kbd "C-<left>") 'org-babel-previous-src-block)
+  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block)
 
   (use-package ox-reveal
     :init
@@ -344,8 +344,8 @@
 
 (use-package toc-org
   :init
-  (add-hook 'markdown-mode-hook 'toc-org-mode)
-  (add-hook 'org-mode-hook 'toc-org-mode))
+  (add-hook 'markdown-mode-hook #'toc-org-mode)
+  (add-hook 'org-mode-hook #'toc-org-mode))
 
 (use-package swiper)
 (use-package magit)
@@ -448,8 +448,8 @@
             (company-complete-common)
           (indent-for-tab-command)))))
 
-(global-set-key [tab] 'tab-indent-or-complete)
-(define-key magit-mode-map [tab] 'magit-section-toggle)
+(global-set-key [tab] #'tab-indent-or-complete)
+(define-key magit-mode-map [tab] #'magit-section-toggle)
 
 (use-package evil
   :init
@@ -784,21 +784,22 @@
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
   ;; define some custom keybindings
   (require 'mu4e)
-  (define-key mu4e-compose-mode-map (kbd "C-c C-a") 'mail-add-attachment)
-  (define-key mu4e-view-mode-map (kbd "C-c C-s") 'org-store-link)
+  (define-key mu4e-compose-mode-map (kbd "C-c C-a") #'mail-add-attachment)
+  (define-key mu4e-view-mode-map (kbd "C-c C-s") #'org-store-link)
   ;; load the configuration details
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
       (load mu4e-config)
-      (add-hook 'mu4e-main-mode-hook '(lambda () (interactive) (linum-mode -1))))))
+      (add-hook 'mu4e-main-mode-hook #'(lambda () (interactive) (linum-mode -1))))))
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-(global-linum-mode)
+;; (global-linum-mode)
 ;; (linum-relative-on)
-(setq display-line-numbers 'visual)
+(fringe-mode 0)
+(add-hook 'fundamental-mode #'(lambda () (setq display-line-numbers 'visual)))
 
 (use-package modus-themes
  :bind (("<f8>" . modus-themes-toggle))
@@ -815,8 +816,8 @@
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-(add-hook 'image-mode-hook (lambda () (linum-mode -1)))
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+(add-hook 'image-mode-hook #'(lambda () (linum-mode -1)))
 
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
@@ -859,6 +860,16 @@
 (recentf-mode 1)
 (setq recentf-max-menu 50
       recentf-max-saved-items 50)
+
+(setq prettify-symbols-alist
+      '(("lambda" . ?λ)
+        (">="     . ?≥)
+        ("<="     . ?≤)
+        ("&&"     . ?∧)
+        ("||"     . ?∨)
+        ("=>"     . ?⇒)
+        ("!="     . ?≠)
+        ("=="     . ?≌)))
 
 (global-prettify-symbols-mode +1)
 
@@ -938,8 +949,7 @@
            :map exwm-mode-map
            ("<XF86MonBrightnessUp>" . xbacklight-increase)
            ("<XF86MonBrightnessDown>" . xbacklight-decrease))
-    :init
-    (setq xbacklight-step 5))
+    :init (setq xbacklight-step 1))
 
   (use-package pulseaudio-control
     :bind (("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
@@ -948,12 +958,20 @@
            :map exwm-mode-map
            ("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
            ("<XF86AudioLowerVolume>" . pulseaudio-control-decrease-volume)
-           ("<XF86AudioMute>" . pulseaudio-control-toggle-current-sink-mute)))
+           ("<XF86AudioMute>" . pulseaudio-control-toggle-current-sink-mute))
+    :init (setq pulseaudio-control-volume-step "5%"))
 
   ;; display time and battery
   (setq display-time-format " %H:%M:%S %a,%d %b ")
   (display-time-mode)
   (use-package fancy-battery :init (fancy-battery-mode))
+
+  ;; TODO: move window to workspace with super+shift+N where N is the
+  ;; workspace number to move it to
+  ;; TODO: show workspace number in modeline
+  ;; TODO: improve battery and time format
+  ;; TODO: exwm doesn't start on workspace one
+  ;; TODO: enlarge and skrink windows with super+[jklh]
 
   ;; start in workspace 1
   (setq exwm-workspace-current-index 1
@@ -967,5 +985,5 @@
       appt-display-mode-line t
       org-agenda-diary-file diary-file
       org-agenda-include-diary t)
-(define-key calendar-mode-map (kbd "C-x i") 'diary-insert-entry)
-(add-hook 'diary-list-entries-hook 'diary-sort-entries t)
+(define-key calendar-mode-map (kbd "C-x i") #'diary-insert-entry)
+(add-hook 'diary-list-entries-hook #'diary-sort-entries t)
