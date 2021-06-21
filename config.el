@@ -804,8 +804,8 @@
 (load-theme 'modus-operandi t)
 
 ;; define the font face and size
-(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 110)
-(setq default-frame-alist '((font . "Jetbrains Mono-11")))
+(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 145)
+(setq default-frame-alist '((font . "Jetbrains Mono-14")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
@@ -890,6 +890,10 @@
   ;; but if prefixed with C-q then send the next keystroke to window
   (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
 
+  (defun launch-program-with-completion ()
+    (interactive)
+    (let ((cmds (split-string (shell-command-to-string "compgen -c") "\n")))
+      (completing-read "Program: " cmds)))
 
   (defun launch-program (cmd)
     (interactive (list (read-shell-command "$ ")))
@@ -909,15 +913,15 @@
   (add-hook 'exwm-floating-setup-hook 'exwm-layout-hide-mode-line)
 
   ;; start up applications
-  ;; (setq my/exwm-startup-applications '("nextcloud"))
-  ;; (defun my/launch-startup (apps)
-  ;;   (let ((apps my/exwm-startup-applications))
-  ;;     (map #'launch-program apps)))
-  ;; (add-hook 'exwm-mode-hook 'my/launch-startup)
+  (setq my/exwm-startup-applications '("nextcloud"))
+  (defun my/launch-startup (apps)
+    (interactive)
+    (mapc #'launch-program apps)))
+  ;; (add-hook 'exwm-init-hook #'my/launch-startup)
 
   ;; define keys to manage EXWM environment
   (setq exwm-input-global-keys
-        `(([?\s-r]    . exwm-reset)
+        `(([?\s-r]     . exwm-reset)
          ([s-left]     . windmove-left)
          ([s-right]    . windmove-right)
          ([s-up]       . windmove-up)
@@ -967,8 +971,8 @@
   ;; TODO: enlarge and skrink windows with super+[jklh]
 
   ;; start in workspace 1
-  (setq exwm-workspace-current-index 1
-        exwm-workspace-number        4)
+  (setq exwm-workspace-number 4)
+  ;; (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
 
   (exwm-enable))
 
