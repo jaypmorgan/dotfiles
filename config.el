@@ -892,8 +892,9 @@
 
   (defun launch-program-with-completion ()
     (interactive)
-    (let ((cmds (split-string (shell-command-to-string "compgen -c") "\n")))
-      (completing-read "Program: " cmds)))
+    (let* ((cmds (split-string (shell-command-to-string "compgen -c") "\n"))
+           (cmd  (completing-read "Program: " cmds)))
+      (start-process-shell-command cmd nil cmd)))
 
   (defun launch-program (cmd)
     (interactive (list (read-shell-command "$ ")))
@@ -926,7 +927,7 @@
          ([s-right]    . windmove-right)
          ([s-up]       . windmove-up)
          ([s-down]     . windmove-down)
-         ([?\s-&]      . launch-program)
+         ([?\s-&]      . launch-program-with-completion)
          ([?\s-w]      . exwm-workspace-switch)
          ([?\s-b]      . exwm-layout-toggle-mode-line)
          ([?\s-i]      . (lambda () (interactive) (launch-program "firefox")))
