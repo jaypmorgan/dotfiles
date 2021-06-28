@@ -298,6 +298,7 @@
   (use-package org-ref
     :init
     (setq reftex-default-bibliography bib-file-loc
+          org-ref-pdf-directory (concat notes-dir "Wiki/Papers/")
           org-ref-default-bibliography '(bib-file-loc)))
   ;; enable tikzpictures in latex export
   (add-to-list 'org-latex-packages-alist '("" "tikz" t))
@@ -529,6 +530,7 @@
   :custom
   (bibtex-completion-bibliography bib-file-loc)
   :init
+  (use-package all-the-icons)
 
   (defun bibtex-actions-add-citation (citation)
     (interactive (list (read-from-minibuffer "Bibtex citation: ")))
@@ -538,7 +540,23 @@
   (defun bibtex-actions-open-library ()
     (interactive)
     (split-window-sensibly)
-    (find-file bibtex-completion-bibliography)))
+    (find-file bibtex-completion-bibliography))
+
+  ;; enable font icons -- taken directly from bibtex-actions README
+  (setq bibtex-actions-symbols
+        `((pdf  . (,(all-the-icons-icon-for-file "foo.pdf" :face 'all-the-icons-dred) .
+                   ,(all-the-icons-icon-for-file "foo.pdf" :face 'bibtex-actions-icon-dim)))
+          (note . (,(all-the-icons-icon-for-file "foo.txt") .
+                   ,(all-the-icons-icon-for-file "foo.txt" :face 'bibtex-actions-icon-dim)))
+          (link . (,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'all-the-icons-dpurple) .
+                   ,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'bibtex-actions-icon-dim)))))
+
+  ;; Here we define a face to dim non 'active' icons, but preserve alignment
+  (defface bibtex-actions-icon-dim
+      '((((background dark)) :foreground "#282c34")
+      (((background light)) :foreground "#fafafa"))
+      "Face for obscuring/dimming icons"
+      :group 'all-the-icons-faces))
 
 (require 'hydra)
 (require 'evil)
@@ -817,8 +835,8 @@
 (load-theme 'modus-operandi t)
 
 ;; define the font face and size
-(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 95)
-(setq default-frame-alist '((font . "Jetbrains Mono-9.5")))
+(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 110)
+(setq default-frame-alist '((font . "Jetbrains Mono-11")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
