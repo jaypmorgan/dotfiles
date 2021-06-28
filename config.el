@@ -178,7 +178,7 @@
     (setq python-shell-interpreter "jupyter"
           python-shell-interpreter-args "console --simple-prompt"
           python-shell-prompt-detect-failure-warning nil
-          python-indent-offset 4
+          python-indent-offset 2
           python-indent-guess-indent-offset-verbose nil)
 
     (use-package blacken
@@ -201,7 +201,7 @@
 (use-package company
   :hook (prog-mode . company-mode)
   :config
-  (setq company-idle-delay 0.5
+  (setq company-idle-delay 0.05
         company-minimum-prefix-length 2
         company-candidates-cache t))
 
@@ -209,7 +209,7 @@
   :hook (company-mode . company-box-mode))
 
 (use-package lsp-mode
-  :hook ((python-mode . lsp-deferred))
+  ;;:hook ((python-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (lsp-enable-which-key-integration t)
   :init
@@ -227,6 +227,18 @@
 
   (use-package org-fragtog
     :hook (org-mode . org-fragtog-mode))
+
+  (use-package org-roam
+    :hook (after-init . org-roam-mode)
+    :custom (org-roam-directory (file-truename notes-dir))
+    :bind (:map org-roam-mode-map
+                (("C-c n l" . org-roam)
+                 ("C-c n f" . org-roam-find-file)
+                 ("C-c n g" . org-roam-graph))
+           :map org-mode-map
+                (("C-c n i" . org-roam-insert)
+                 ("C-c n I" . org-roam-insert-immediate))))
+
 
   (use-package org-present
     :bind (:map org-present-map
@@ -299,6 +311,7 @@
         org-src-tab-acts-natively t
         org-src-window-setup 'split-window-below
         org-hide-leading-stars t
+        org-hide-emphasis-markers t
         org-edit-src-content-indentation 0
         org-footnote-auto-adjust t
         org-latex-listings 'minted   ;; color highlighting for source blocks
@@ -916,11 +929,12 @@
   (add-hook 'exwm-floating-setup-hook 'exwm-layout-hide-mode-line)
 
   ;; start up applications
-  (setq my/exwm-startup-applications '("nextcloud"))
-  (defun my/launch-startup (apps)
+  (setq my/exwm-startup-applications '("nextcloud" "nm-applet" "blueman-applet"))
+  (defun my/launch-startup ()
     (interactive)
-    (mapc #'launch-program apps))
-  ;; (add-hook 'exwm-init-hook #'my/launch-startup)
+    (mapc #'launch-program my/exwm-startup-applications))
+  (add-hook 'exwm-init-hook #'my/launch-startup)
+
   (setq window-size-delta 10)
 
   ;; define keys to manage EXWM environment
