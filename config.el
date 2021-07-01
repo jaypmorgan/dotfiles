@@ -263,9 +263,7 @@
   (add-hook 'org-mode-hook #'(lambda ()
                               (set-fill-column 85)
                               (visual-line-mode 1)
-                              (auto-fill-mode 1)
-                              (flyspell-mode 1)
-                              (flyspell-buffer)))
+                              (auto-fill-mode 1)))
   (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
 
@@ -292,8 +290,6 @@
     :init
     (setq org-reveal-root "file:///usr/lib/node_modules/reveal.js"))
   (use-package org-noter)
-  (use-package ob-ipython)
-  ;; notes/wiki/journal
   (use-package ox-gfm)
   (use-package org-ref
     :init
@@ -348,10 +344,8 @@
                                '((shell . t)
                                  (python . t)
                                  (R . t)
-                                 (ipython . t)
                                  (emacs-lisp . t)
                                  (julia . t)
-                                 (gnuplot . t)
                                  (dot . t)
                                  (plantuml . t))))
 
@@ -365,7 +359,7 @@
 
 (use-package swiper)
 (use-package magit)
-;; (use-package linum-relative)
+(use-package linum-relative)
 (use-package ace-window)
 (use-package iedit)
 (use-package cheat-sh)
@@ -425,6 +419,12 @@
 
 (use-package writegood-mode)
 
+(use-package shackle
+  :init
+  (setq shackle-rules '(("\\*julia\\*" :regexp t :align t :size 0.3)
+                        ("\\*Calendar\\*" :regexp t :align t :size 0.3)))
+  (shackle-mode 1))
+
 (use-package popper
  :ensure t
  :bind (("C-1" . popper-toggle-latest)
@@ -437,10 +437,11 @@
          "\\*Flycheck Errors\\*"
          "\\*slurm-log\\*"
          "\\*Warnings\\*"
+         "\\*Org Select\\*"
          help-mode
          helm-mode
          compilation-mode))
- (popper-mode +1))
+ (popper-mode 1))
 
 (defun check-expansion ()
   (save-excursion
@@ -689,6 +690,7 @@
   ("g" org-roam-graph "Open Org Roam Graph")
   ("i" imenu-list-smart-toggle "Open Menu Buffer")
   ("m" mu4e "Open Mailbox")
+  ("n" (find-file (concat notes-dir "notes.org")) "Notes file")
   ("s" hydra-shell-buffer/body "Open shell")
   ("t" (find-file tasks-loc) "Open tasks")
   ("u" undo-tree-visualize "Undo-tree")
@@ -820,10 +822,8 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-;; (global-linum-mode)
-;; (linum-relative-on)
-(fringe-mode 0)
-(add-hook 'fundamental-mode #'(lambda () (setq display-line-numbers 'visual)))
+(global-linum-mode)
+(linum-relative-on)
 
 (use-package modus-themes
  :bind (("<f8>" . modus-themes-toggle))
@@ -835,8 +835,8 @@
 (load-theme 'modus-operandi t)
 
 ;; define the font face and size
-(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 110)
-(setq default-frame-alist '((font . "Jetbrains Mono-11")))
+(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 100)
+(setq default-frame-alist '((font . "Jetbrains Mono-10")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
@@ -895,7 +895,7 @@
         ("!="     . ?≠)
         ("=="     . ?≌)))
 
-(global-prettify-symbols-mode +1)
+(global-prettify-symbols-mode 1)
 
 (setq-default inhibit-startup-screen t)
 (setq inhibit-splash-screen t)
@@ -916,7 +916,8 @@
           ?\M-x
           ?\M-`
           ?\M-&
-          ?\M-:))
+          ?\M-:
+          ?\s-\ ))
 
   ;; but if prefixed with C-q then send the next keystroke to window
   (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
@@ -959,6 +960,7 @@
   (setq exwm-input-global-keys
         `(([?\s-r] . exwm-reset)
          ([?\s-&]  . launch-program-with-completion)
+         ([?\s-\ ] . launch-program-with-completion)
          ([?\s-w]  . exwm-workspace-switch)
          ([?\s-b]  . exwm-layout-toggle-mode-line)
          ([?\s-i]  . (lambda () (interactive) (launch-program "firefox")))
@@ -967,13 +969,13 @@
          ([?\s-l]    . windmove-right)
          ([?\s-k]    . windmove-up)
          ([?\s-j]    . windmove-down)
-         (,(kbd "S-h") . #'(lambda () (exwm-layout-enlarge-window-horizontally window-size-delta)))
-         (,(kbd "S-l") . #'(lambda () (exwm-layout-shrink-window-horizontally window-size-delta)))
-         (,(kbd "S-j") . #'(lambda () (exwm-layout-shrink-window window-size-delta)))
-         (,(kbd "S-k") . #'(lambda () (exwm-layout-enlarge-window window-size-delta)))
+         (,(kbd "S-H") . #'(lambda () (exwm-layout-enlarge-window-horizontally window-size-delta)))
+         (,(kbd "S-L") . #'(lambda () (exwm-layout-shrink-window-horizontally window-size-delta)))
+         (,(kbd "S-J") . #'(lambda () (exwm-layout-shrink-window window-size-delta)))
+         (,(kbd "S-K") . #'(lambda () (exwm-layout-enlarge-window window-size-delta)))
          ;; worskspace management
          ;; swap to workspace with s-N
-          ,@(mapcar (lambda (i)
+         ,@(mapcar (lambda (i)
                       `(,(kbd (format "s-%d" i)) .
                         (lambda ()
                           (interactive)
@@ -1017,7 +1019,7 @@
 
   ;; start in workspace 1
   (setq exwm-workspace-number 4)
-  ;; (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
+  (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
 
   (exwm-enable))
 
