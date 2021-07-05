@@ -21,6 +21,7 @@
 - [[#keybindings][Keybindings]]
 - [[#custom-functions][Custom Functions]]
 - [[#email--diary--calendar][Email + Diary + Calendar]]
+  - [[#elfeed][Elfeed]]
   - [[#email-mu4e][Email (mu4e)]]
   - [[#calendar--diary][Calendar + Diary]]
 - [[#display-settings][Display Settings]]
@@ -136,24 +137,26 @@ It's a constant struggle to not learn every programming language ever!
 
 (use-package slurp-mode
   :ensure nil
-  :quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+  :load-path "~/workspace/slurp-mode"
+  ;;:quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
   :init
-  (use-package slurp-repl-mode
-    :ensure nil
-    :quelpa (slurp-repl-mode :fetcher github :repo "jaypmorgan/slurp-mode")
-    :commands (run-slurp run-slurp-other-window)
-    :bind (:map slurp-mode-map
-           ("C-c C-c" . slurp-repl-send-line)
-           ("C-c C-r" . slurp-repl-send-region)
-           ("C-c C-b" . slurp-repl-send-buffer))
-    :init
-    (setq slurp-repl-location "~/workspace/slurp/slurp"))
+  (setq slurp-repl-location "~/workspace/slurp/slurp"))
 
+(use-package slurp-repl-mode
+  :after slurp-mode
+  :ensure nil
+  :load-path "~/workspace/slurp-mode"
+  ;;:quelpa (slurp-repl-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+  :commands (run-slurp run-slurp-other-window)
+  :bind (:map slurp-mode-map
+         ("C-c C-c" . slurp-repl-send-line)
+         ("C-c C-r" . slurp-repl-send-region)
+         ("C-c C-b" . slurp-repl-send-buffer))
+  :init
   (defun toggle-slurp-repl ()
     (interactive)
     (toggle-repl "*SluRp*"))
   (define-key slurp-mode-map (kbd "C-`") #'toggle-slurp-repl))
-  ;;(define-key slurp-repl-mode-map (kbd "C-`") #'toggle-slurp-repl)
 
 (use-package isend-mode ;; language agnostic send to terminal
   :defer t
@@ -610,12 +613,12 @@ A very simple modeline is configured with =moodline=
 Projects with =projectile=
 
 #+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :config
-  (projectile-mode 1)
-  (setq projectile-git-submodule-command nil)
-  (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
-  (setq projectile-project-search-path '("/media/hdd/workspace/")))
+  (use-package projectile
+    :config
+    (projectile-mode 1)
+    (setq projectile-git-submodule-command nil)
+    (setq projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name))))
+    (setq projectile-project-search-path '("/media/hdd/workspace/")))
 #+END_SRC
 
 Workspaces are created using =eyebrowse=
@@ -949,6 +952,20 @@ And finally, vertico.
 #+END_SRC
 
 * Email + Diary + Calendar
+
+** Elfeed
+
+#+BEGIN_SRC emacs-lisp
+(use-package elfeed
+  :init
+  ;; https://www.theinsaneapp.com/2021/04/top-machine-learning-blogs-to-follow-in-2021.html
+  (setq elfeed-feeds
+        '("https://ruder.io/rss/index.rss"
+          "https://karpathy.github.io/feed.xml"
+          "https://lilianweng.github.io/lil-log/feed.xml"
+          "https://machinelearningmastery.com/feed/"
+          "http://blog.shakirm.com/feed/")))
+#+END_SRC
 
 ** Email (mu4e)
 

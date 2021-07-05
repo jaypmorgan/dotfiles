@@ -71,24 +71,26 @@
 
 (use-package slurp-mode
   :ensure nil
-  :quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+  :load-path "~/workspace/slurp-mode"
+  ;;:quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
   :init
-  (use-package slurp-repl-mode
-    :ensure nil
-    :quelpa (slurp-repl-mode :fetcher github :repo "jaypmorgan/slurp-mode")
-    :commands (run-slurp run-slurp-other-window)
-    :bind (:map slurp-mode-map
-           ("C-c C-c" . slurp-repl-send-line)
-           ("C-c C-r" . slurp-repl-send-region)
-           ("C-c C-b" . slurp-repl-send-buffer))
-    :init
-    (setq slurp-repl-location "~/workspace/slurp/slurp"))
+  (setq slurp-repl-location "~/workspace/slurp/slurp"))
 
+(use-package slurp-repl-mode
+  :after slurp-mode
+  :ensure nil
+  :load-path "~/workspace/slurp-mode"
+  ;;:quelpa (slurp-repl-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+  :commands (run-slurp run-slurp-other-window)
+  :bind (:map slurp-mode-map
+         ("C-c C-c" . slurp-repl-send-line)
+         ("C-c C-r" . slurp-repl-send-region)
+         ("C-c C-b" . slurp-repl-send-buffer))
+  :init
   (defun toggle-slurp-repl ()
     (interactive)
     (toggle-repl "*SluRp*"))
   (define-key slurp-mode-map (kbd "C-`") #'toggle-slurp-repl))
-  ;;(define-key slurp-repl-mode-map (kbd "C-`") #'toggle-slurp-repl)
 
 (use-package isend-mode ;; language agnostic send to terminal
   :defer t
@@ -805,6 +807,16 @@
   (let ((current-env (locate-file "python" exec-path)))
     (unless (string-match-p (regexp-quote env-name) current-env)
       (conda-env-activate env-name))))
+
+(use-package elfeed
+  :init
+  ;; https://www.theinsaneapp.com/2021/04/top-machine-learning-blogs-to-follow-in-2021.html
+  (setq elfeed-feeds
+        '("https://ruder.io/rss/index.rss"
+          "https://karpathy.github.io/feed.xml"
+          "https://lilianweng.github.io/lil-log/feed.xml"
+          "https://machinelearningmastery.com/feed/"
+          "http://blog.shakirm.com/feed/")))
 
 (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
