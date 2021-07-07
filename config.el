@@ -488,9 +488,16 @@
   (setq which-key-idle-delay 1)
   (which-key-mode 1))
 
-(use-package mood-line
+(use-package mini-modeline
   :init
-  (mood-line-mode))
+  (mini-modeline-mode 1)
+  (setq mini-modeline-enhance-visual t
+        mini-modeline-right-padding 10))
+
+(use-package diminish
+  :init
+  ;; remove all minor modes from lighter
+  (mapc #'diminish minor-mode-list))
 
 (use-package projectile
   :config

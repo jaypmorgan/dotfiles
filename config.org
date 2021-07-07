@@ -605,9 +605,17 @@ It is unnecessary to say that Emacs comes with a whole load of keybindings,
 A very simple modeline is configured with =moodline=
 
 #+BEGIN_SRC emacs-lisp
-(use-package mood-line
+(use-package mini-modeline
   :init
-  (mood-line-mode))
+  (mini-modeline-mode 1)
+  (setq mini-modeline-enhance-visual t
+        mini-modeline-right-padding 10))
+
+(use-package diminish
+  :after exwm
+  :init
+  ;; remove all minor modes from lighter
+  (mapc #'diminish minor-mode-list))
 #+END_SRC
 
 Projects with =projectile=
