@@ -482,28 +482,31 @@
 
 (use-package mini-modeline
   :hook (after-init . mini-modeline-mode)
-  :init
+  :custom
   (setq mini-modeline-enhance-visual t
-        mini-modeline-right-padding 0))
+        mini-modeline-right-padding 10))
 
 (use-package diminish
-  :after mini-modeline
   :init
   ;; remove all minor modes from lighter
-  (mapc #'diminish minor-mode-list))
+  (defun apply-diminish ()
+    (interactive)
+    (mapc #'diminish minor-mode-list))
+  (add-hook mini-modeline-mode-hook #'apply-diminish))
 
-;; (use-package mini-frame
-;;   :init
-;;   (custom-set-variables
-;;    '(mini-frame-show-parameters
-;;      '((top . 0.9)
-;;        (width . 0.7)
-;;        (height . 10)
-;;        (left . 0.5))))
-;;   (setq mini-frame-resize nil)
-;;   (setq mini-frame-ignore-function '(evil-ex))
-;;   (setq mini-frame-background-color-function (lambda () "lightgray"))
-;;   (mini-frame-mode))
+(use-package mini-frame
+  :init
+  (custom-set-variables
+   '(mini-frame-show-parameters
+     '((top . 0.9)
+       (width . 0.7)
+       (height . 10)
+       (left . 0.5)
+       (parent-frame . nil))))
+  (setq mini-frame-resize nil)
+  (setq mini-frame-ignore-function '(evil-ex))
+  ;; (setq mini-frame-background-color-function (lambda () "lightgray"))
+  (mini-frame-mode))
 
 (use-package projectile
   :config
@@ -555,6 +558,7 @@
   (use-package all-the-icons)
 
   (defun bibtex-actions-add-citation (citation)
+    "Add a new key to the bibliography file"
     (interactive (list (read-from-minibuffer "Bibtex citation: ")))
     (write-region (concat "\n" citation "\n") nil bibtex-completion-bibliography 'append)
     (bibtex-actions-refresh))
@@ -563,6 +567,17 @@
     (interactive)
     (split-window-sensibly)
     (find-file bibtex-completion-bibliography))
+
+  (setq test-string "@inproceeding{thisisatesrkjerkj,")
+  (and (string-match "{\\(.*\\)?," test-string)
+       (match-string 1 test-string))
+
+  (defun bibtex-actions-add-and-insert-citation (citation)
+    "Add a new key to the bibliography and insert citation into buffer"
+    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
+    (bibtex-actions-add-citation citation)
+    (and (string-match "@.*?{\\(.*\\)?," citation)
+         (bibtex-actions-insert-citation (list (match-string 1 citation)))))
 
   ;; enable font icons -- taken directly from bibtex-actions README
   (setq bibtex-actions-symbols
@@ -647,6 +662,7 @@
 (bind-evil-normal-key "SPC e" eww)
 (bind-evil-normal-key "SPC <return>" consult-bookmark)
 (bind-global-key "C-x ," (lambda () (interactive) (vterm t))) ;; new terminal in window
+(global-set-key (kbd "<Scroll_Lock>") #'scroll-lock-mode)
 
 (defun my/split (direction)
   (interactive)
@@ -934,7 +950,6 @@
 (setq initial-scratch-message "")
 
 (use-package exwm
-  :disabled
   :init
   (require 'exwm)
   ;; send keys chords directly to emacs instead of underlying window
