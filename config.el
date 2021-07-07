@@ -71,16 +71,14 @@
 
 (use-package slurp-mode
   :ensure nil
-  :load-path "~/workspace/slurp-mode"
-  ;;:quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+  :quelpa (slurp-mode :fetcher github :repo "jaypmorgan/slurp-mode")
   :init
   (setq slurp-repl-location "~/workspace/slurp/slurp"))
 
 (use-package slurp-repl-mode
   :after slurp-mode
   :ensure nil
-  :load-path "~/workspace/slurp-mode"
-  ;;:quelpa (slurp-repl-mode :fetcher github :repo "jaypmorgan/slurp-mode")
+  :quelpa (slurp-repl-mode :fetcher github :repo "jaypmorgan/slurp-mode")
   :commands (run-slurp run-slurp-other-window)
   :bind (:map slurp-mode-map
          ("C-c C-c" . slurp-repl-send-line)
@@ -127,7 +125,7 @@
     (interactive)
     (if (< (window-total-width) 200)
         (split-window-right)
-        (split-window-right -120))
+        (split-window-right -70))
     (other-window 1)
     (switch-to-buffer "*R*")
     (split-window-below)
@@ -167,7 +165,7 @@
           ("\\*R"
            (display-buffer-reuse-window display-buffer-in-side-window)
            (side . bottom)
-           (window-width . 0.4)
+           (window-width . 0.25)
            (reusable-frames . nil))
           ("\\*help"
            (display-buffer-reuse-window display-buffer-in-side-window)
@@ -371,7 +369,6 @@
   :init (require 'smartparens-config))
 
 (use-package plantuml-mode
-  :defer t
   :mode ("\\.plantuml\\'" . plantum-mode)
   :init
   (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
@@ -383,7 +380,6 @@
         org-plantuml-jar-path plantuml-jar-path))
 
 (use-package imenu-list
-  :defer t
   :init
   (setq imenu-list-size 0.1
         imenu-list-position 'left))
@@ -394,22 +390,18 @@
   (global-undo-tree-mode))
 
 (use-package csv-mode
-  :defer t
   :init
   (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-align-mode)))
 
 (use-package yasnippet
-  :defer t
   :config
   (yas-global-mode 1))
 
 (use-package olivetti
-  :defer t
   :init
   (setq olivetti-body-width 100))
 
 (use-package pdf-tools
-  :defer t
   :init
   (pdf-loader-install)
   (setq auto-revert-interval 0.5)
@@ -489,15 +481,29 @@
   (which-key-mode 1))
 
 (use-package mini-modeline
+  :hook (after-init . mini-modeline-mode)
   :init
-  (mini-modeline-mode 1)
   (setq mini-modeline-enhance-visual t
-        mini-modeline-right-padding 10))
+        mini-modeline-right-padding 0))
 
 (use-package diminish
+  :after mini-modeline
   :init
   ;; remove all minor modes from lighter
   (mapc #'diminish minor-mode-list))
+
+;; (use-package mini-frame
+;;   :init
+;;   (custom-set-variables
+;;    '(mini-frame-show-parameters
+;;      '((top . 0.9)
+;;        (width . 0.7)
+;;        (height . 10)
+;;        (left . 0.5))))
+;;   (setq mini-frame-resize nil)
+;;   (setq mini-frame-ignore-function '(evil-ex))
+;;   (setq mini-frame-background-color-function (lambda () "lightgray"))
+;;   (mini-frame-mode))
 
 (use-package projectile
   :config
@@ -527,9 +533,15 @@
   (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exit)
   (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete)
 
-  (use-package consult)
-  (use-package savehist :init (savehist-mode))
-  (use-package marginalia :init (marginalia-mode))
+  (use-package consult
+    :init
+    (setq consult-preview-key (kbd "M-.")))
+  (use-package savehist
+    :init
+    (savehist-mode))
+  (use-package marginalia
+    :init
+    (marginalia-mode))
   (use-package orderless
     :init
     (setq completion-styles '(substring orderless)
@@ -854,8 +866,8 @@
 (load-theme 'modus-operandi t)
 
 ;; define the font face and size
-(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 100)
-(setq default-frame-alist '((font . "Jetbrains Mono-10")))
+(set-face-attribute 'fixed-pitch nil :family "Jetbrains mono" :height 110)
+(setq default-frame-alist '((font . "Jetbrains Mono-11")))
 
 (global-auto-revert-mode t)
 (setq completion-auto-help t)
@@ -922,6 +934,7 @@
 (setq initial-scratch-message "")
 
 (use-package exwm
+  :disabled
   :init
   (require 'exwm)
   ;; send keys chords directly to emacs instead of underlying window
