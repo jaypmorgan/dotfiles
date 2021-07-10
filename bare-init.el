@@ -1,6 +1,9 @@
-(setq auto-save-default nil)
-(setq backup-inhibited t)
-(setq custom-file (concat user-emacs-directory "custom.el"))
+(setq auto-save-default nil
+      backup-inhibited t
+      custom-file (concat user-emacs-directory "custom.el")
+      revert-without-query t
+      require-final-newline t
+      indent-tabs-mode nil)
 
 ;; setup straight.el instead of package.el
 (setq package-enable-at-startup nil)
@@ -27,12 +30,8 @@
 (use-package projectile
   :init
   (projectile-mode t)
-  (setq projectile-project-search-path '("/media/hdd/workspace/"))
+  (setq projectile-project-search-path '("~/workspace/"))
   (define-key projectile-mode-map (kbd "M-p") 'projectile-command-map))
-
-(use-package which-key
-  :init
-  (which-key-mode t))
 
 (use-package vertico
   :init
@@ -58,10 +57,28 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (use-package python-mode
-  :init
-  (setq py-keep-windows-configuration t))
+  (use-package elpy
+    :init
+    (use-package pyvenv
+      :init
+      (setenv "WORKON_HOME" (expand-file-name "~/miniconda3/envs"))
+      (pyvenv-mode t))
+    (setq elpy-rpc-backend "jedi")
+    (setq python-indent-offset 2)
+    (elpy-enable)))
 
 (use-package ess)
+
+(use-package slurp-mode
+  :straight (slurp-mode :type git :host github :repo "jaypmorgan/slurp-mode")
+  :init
+  (setq slurp-repl-location "~/workspace/slurp/slurp"))
+
+(use-package slurp-repl-mode
+  :straight (slurp-repl-mode :type git :host github :repo "jaypmorgan/slurp-mode")
+  :bind (:map slurp-mode-map
+              ("C-c C-c" . slurp-repl-send-line)
+              ("C-c C-z" . run-slurp-other-window)))
 
 (defun conda-activate-once (name)
   (interactive))
