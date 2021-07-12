@@ -1,9 +1,11 @@
 (setq auto-save-default nil
       backup-inhibited t
+      create-lockfiles nil
       custom-file (concat user-emacs-directory "custom.el")
       revert-without-query t
       require-final-newline t
       indent-tabs-mode nil
+      dired-listing-switches "-alhgo --group-directories-first"
       ring-bell-function 'ignore)
 
 ;; setup straight.el instead of package.el
@@ -96,5 +98,171 @@
 	      ("C-c C-c" . slurp-repl-send-line)
 	      ("C-c C-z" . run-slurp-other-window)))
 
+(use-package plantuml-mode
+  :mode ("\\.plantuml\\'" . plantum-mode)
+  :init
+  (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
+    (switch-to-buffer (make-temp-name "plantuml"))
+    (ignore-errors (plantuml-mode))
+    (plantuml-download-jar))
+  (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
+        plantuml-default-exec-mode 'jar
+        org-plantuml-jar-path plantuml-jar-path))
+
+(use-package magit)
+
 (defun conda-activate-once (name)
   (interactive))
+
+;;;;;;;;;;;;;;;
+;; Org mode  ;;
+;;;;;;;;;;;;;;;
+
+(use-package org
+  :init
+
+  (setq	org-hide-emphasis-markers t
+	org-edit-src-content-indentation 0
+	org-footnote-auto-adjust t
+	org-confirm-babel-evaluate nil)
+
+  (use-package pdf-tools
+    :init
+    (pdf-loader-install)
+    (setq auto-revert-interval 0.5))
+
+  (use-package org-ref
+    :init
+    (setq reftex-default-bibliography "~/Nextcloud/Notes/Wiki/library.bib"
+          org-ref-pdf-directory "~/Nextcloud/Notes/Wiki/Papers/"
+          org-ref-default-bibliography '("~/Nextcloud/Notes/Wiki/library.bib")))
+
+  ;; (add-to-list 'org-latex-classes
+  ;;           '("book-no-parts"
+  ;;               "\\documentclass{book}"
+  ;;               ("\\chapter{%s}" . "\\chapter*{%s}")
+  ;;               ("\\section{%s}" . "\\section*{%s}")
+  ;;               ("\\subsection{%s}" . "\\subsection*{%s}")
+  ;;               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+  ;;               ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+
+  (org-babel-do-load-languages 'org-babel-load-languages '((shell . t)
+							   (python . t)
+							   (R . t)
+							   (plantuml . t)))
+  
+  ;; swap between exported PDF and Org document by pressing F4
+  (defun my/toggle-pdf (extension)
+    (interactive)
+    (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
+      (find-file (concat filename extension))))
+  (defun my/open-to-odf-other-window ()
+    (interactive)
+    (split-window-right)
+    (other-window 1)
+    (my/toggle-pdf ".pdf"))
+  (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
+  (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
+  (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
+  ;;(define-key pdf-view-mode-map (kbd "<f4>") #'my/swap-to-org)
+  (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
+  (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
+  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
+
+(use-package bibtex-actions
+  :custom
+  (bibtex-completion-bibliography bib-file-loc)
+  :init
+  (use-package all-the-icons)
+
+  (defun bibtex-actions-add-citation (citation)
+    "Add a new key to the bibliography file"
+    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
+    (write-region (concat "\n" citation "\n") nil bibtex-completion-bibliography 'append)
+    (bibtex-actions-refresh))
+
+  (defun bibtex-actions-open-library ()
+    (interactive)
+    (split-window-sensibly)
+    (find-file bibtex-completion-bibliography))
+
+  (setq test-string "@inproceeding{thisisatesrkjerkj,")
+  (and (string-match "{\\(.*\\)?," test-string)
+       (match-string 1 test-string))
+
+  (defun bibtex-actions-add-and-insert-citation (citation)
+    "Add a new key to the bibliography and insert citation into buffer"
+    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
+    (bibtex-actions-add-citation citation)
+    (and (string-match "@.*?{\\(.*\\)?," citation)
+         (bibtex-actions-insert-citation (list (match-string 1 citation)))))
+
+  ;; enable font icons -- taken directly from bibtex-actions README
+  (setq bibtex-actions-symbols
+        `((pdf  . (,(all-the-icons-icon-for-file "foo.pdf" :face 'all-the-icons-dred) .
+                   ,(all-the-icons-icon-for-file "foo.pdf" :face 'bibtex-actions-icon-dim)))
+          (note . (,(all-the-icons-icon-for-file "foo.txt") .
+                   ,(all-the-icons-icon-for-file "foo.txt" :face 'bibtex-actions-icon-dim)))
+          (link . (,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'all-the-icons-dpurple) .
+                   ,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'bibtex-actions-icon-dim)))))
+
+  ;; Here we define a face to dim non 'active' icons, but preserve alignment
+  (defface bibtex-actions-icon-dim
+      '((((background dark)) :foreground "#282c34")
+      (((background light)) :foreground "#fafafa"))
+      "Face for obscuring/dimming icons"
+      :group 'all-the-icons-faces))
+
+(use-package flyspell
+  :init
+  (setq flyspell-default-dictionary "british"))
+
+;; Projectile level syncing between local and remote hosts
+;; set the initial variables to nil
+;; .dir-local.el should set these at a project level
+(setq rsync-source nil
+      rsync-destination nil
+      rsync-base-cmd "rsync -azm"
+      rsync-exclude-list '("data" ".git" "container-dev" "container" "__pycache__" "*.pyc" "renv/library" "renv/local" "renv/python" "renv/staging"))
+
+(defun rsync--build-exclude-list (exclude-list)
+  (mapconcat (lambda (s) (concat " --exclude=" s " ")) exclude-list " "))
+
+(defun rsync--cmd (&optional display)
+  (if display
+      (concat rsync-base-cmd " --progress " (rsync--build-exclude-list rsync-exclude-list))
+    (concat rsync-base-cmd (rsync--build-exclude-list rsync-exclude-list))))
+
+(defun dorsync (src dest is_hidden)
+  "Launch an asynchronuous rsync command"
+  (interactive)
+  (let ((async-value async-shell-command-display-buffer))
+    (if is_hidden
+        (progn
+            (setq async-shell-command-display-buffer nil)
+            (setq rsync-cmd (rsync--cmd)))
+      (setq rsync-cmd (rsync--cmd t)))
+    (async-shell-command (concat rsync-cmd " " src " " dest))
+    (setq async-shell-command-display-buffer async-value)))
+
+(when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
+  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
+  ;; define some custom keybindings
+  (require 'mu4e)
+  (define-key mu4e-compose-mode-map (kbd "C-c C-a") #'mail-add-attachment)
+  (define-key mu4e-view-mode-map (kbd "C-c C-s") #'org-store-link)
+  ;; load the configuration details
+  (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
+    (when (file-exists-p mu4e-config)
+      (load mu4e-config)
+      (add-hook 'mu4e-main-mode-hook #'(lambda () (interactive) (linum-mode -1))))))
+
+(appt-activate 1)
+(setq diary-file "~/Nextcloud/Notes/diary"
+      calendar-date-style "iso"
+      appt-display-mode-line t
+      org-agenda-diary-file "~/Nextcloud/Notes/diary"
+      org-agenda-include-diary t)
+(define-key calendar-mode-map (kbd "C-x i") #'diary-insert-entry)
+(add-hook 'diary-list-entries-hook #'diary-sort-entries t)
