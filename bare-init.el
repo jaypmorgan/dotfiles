@@ -37,7 +37,7 @@
   :bind-keymap ("M-p" . projectile-command-map)
   :init
   (projectile-mode t)
-  (setq projectile-project-search-path '("~/workspace/")))
+  (setq projectile-project-search-path '("/media/hdd/workspace/")))
 
 (use-package vertico
   :init
@@ -124,6 +124,7 @@
   (setq auto-revert-interval 0.5))
 
 (use-package org-ref
+  :defer nil
   :commands (org-ref)
   :config
   (setq reftex-default-bibliography "~/Nextcloud/Notes/Wiki/library.bib"
@@ -131,12 +132,19 @@
         org-ref-default-bibliography '("~/Nextcloud/Notes/Wiki/library.bib")))
 
 (use-package org
+  :ensure org-plus-contrib
   :config
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
-	org-confirm-babel-evaluate nil)
-
+	org-confirm-babel-evaluate nil
+        org-latex-prefer-user-labels t
+        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f"))
+  (add-hook 'org-mode-hook #'(lambda ()
+                              (set-fill-column 85)
+                              (visual-line-mode 1)
+                              (auto-fill-mode 1)))
+  
   (require 'pdf-view)
   (require 'ox-latex)
 
@@ -308,7 +316,7 @@
  ;; remote hosts
  "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
  ;; open maps
- "o t" #'(lambda () (interactive) (find-file "~/Nextcloud/Notes/tasks.org"))
+ "o t" #'(lambda () (interactive) (find-file "/media/hdd/Nextcloud/Notes/tasks.org"))
  "o s" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "init.el")))
  "o C" #'calendar
