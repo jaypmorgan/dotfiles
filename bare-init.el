@@ -86,6 +86,8 @@
   (setenv "WORKON_HOME" (expand-file-name "~/miniconda3/envs")))
 
 (use-package ess)
+(use-package yaml-mode)
+(use-package markdown-mode)
 
 (use-package slurp-mode
   :straight (slurp-mode :type git :host github :repo "jaypmorgan/slurp-mode")
@@ -109,8 +111,6 @@
         plantuml-default-exec-mode 'jar
         org-plantuml-jar-path plantuml-jar-path))
 
-(use-package magit)
-
 (defun conda-activate-once (name)
   (interactive))
 
@@ -118,38 +118,45 @@
 ;; Org mode  ;;
 ;;;;;;;;;;;;;;;
 
-(use-package org
-  :init
+(use-package pdf-tools
+  :config
+  (pdf-loader-install)
+  (setq auto-revert-interval 0.5))
 
+(use-package org-ref
+  :commands (org-ref)
+  :config
+  (setq reftex-default-bibliography "~/Nextcloud/Notes/Wiki/library.bib"
+        org-ref-pdf-directory "~/Nextcloud/Notes/Wiki/Papers/"
+        org-ref-default-bibliography '("~/Nextcloud/Notes/Wiki/library.bib")))
+
+(use-package org
+  :config
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
 	org-confirm-babel-evaluate nil)
 
-  (use-package pdf-tools
-    :init
-    (pdf-loader-install)
-    (setq auto-revert-interval 0.5))
+  (require 'pdf-view)
+  (require 'ox-latex)
 
-  (use-package org-ref
-    :init
-    (setq reftex-default-bibliography "~/Nextcloud/Notes/Wiki/library.bib"
-          org-ref-pdf-directory "~/Nextcloud/Notes/Wiki/Papers/"
-          org-ref-default-bibliography '("~/Nextcloud/Notes/Wiki/library.bib")))
-
-  ;; (add-to-list 'org-latex-classes
-  ;;           '("book-no-parts"
-  ;;               "\\documentclass{book}"
-  ;;               ("\\chapter{%s}" . "\\chapter*{%s}")
-  ;;               ("\\section{%s}" . "\\section*{%s}")
-  ;;               ("\\subsection{%s}" . "\\subsection*{%s}")
-  ;;               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-  ;;               ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+  (add-to-list 'org-latex-classes
+            '("book-no-parts"
+                "\\documentclass{book}"
+                ("\\chapter{%s}" . "\\chapter*{%s}")
+                ("\\section{%s}" . "\\section*{%s}")
+                ("\\subsection{%s}" . "\\subsection*{%s}")
+                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 
   (org-babel-do-load-languages 'org-babel-load-languages '((shell . t)
 							   (python . t)
 							   (R . t)
 							   (plantuml . t)))
+
+  (require 'color)
+  (set-face-attribute 'org-block nil :background
+		      (color-darken-name (face-attribute 'default :background) 3))
   
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -164,7 +171,7 @@
   (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
   (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
   (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
-  ;;(define-key pdf-view-mode-map (kbd "<f4>") #'my/swap-to-org)
+  (define-key pdf-view-mode-map (kbd "<f4>") #'my/swap-to-org)
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
   (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
@@ -173,7 +180,7 @@
 (use-package bibtex-actions
   :custom
   (bibtex-completion-bibliography bib-file-loc)
-  :init
+  :config
   (use-package all-the-icons)
 
   (defun bibtex-actions-add-citation (citation)
@@ -246,23 +253,64 @@
     (async-shell-command (concat rsync-cmd " " src " " dest))
     (setq async-shell-command-display-buffer async-value)))
 
-(when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
-  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
-  ;; define some custom keybindings
-  (require 'mu4e)
-  (define-key mu4e-compose-mode-map (kbd "C-c C-a") #'mail-add-attachment)
-  (define-key mu4e-view-mode-map (kbd "C-c C-s") #'org-store-link)
+(use-package mu4e
+  :commands (mu4e)
+  :load-path  "/usr/local/share/emacs/site-lisp/mu4e/"
+  :bind (:map mu4e-compose-mode-map
+	      ("C-c C-a" . mail-add-attachment)
+	 :map mu4e-view-mode-map
+	      ("C-c C-s" . org-store-link))
+  :config
+  ;;(define-key mu4e-compose-mode-map (kbd "C-c C-a") #'mail-add-attachment)
+  ;;(define-key mu4e-view-mode-map (kbd "C-c C-s") #'org-store-link)
   ;; load the configuration details
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
-      (load mu4e-config)
-      (add-hook 'mu4e-main-mode-hook #'(lambda () (interactive) (linum-mode -1))))))
+      (load mu4e-config))))
 
-(appt-activate 1)
-(setq diary-file "~/Nextcloud/Notes/diary"
-      calendar-date-style "iso"
-      appt-display-mode-line t
-      org-agenda-diary-file "~/Nextcloud/Notes/diary"
-      org-agenda-include-diary t)
-(define-key calendar-mode-map (kbd "C-x i") #'diary-insert-entry)
-(add-hook 'diary-list-entries-hook #'diary-sort-entries t)
+(use-package calendar
+  :hook (diary-list-entries . diary-sort-entries)
+  :bind (:map calendar-mode-map
+	      ("C-x i" . diary-insert-entry))
+  :config
+  (setq diary-file "~/Nextcloud/Notes/diary"
+	calendar-date-style "iso"
+	appt-display-mode-line t
+	org-agenda-diary-file "~/Nextcloud/Notes/diary"
+	org-agenda-include-diary t))
+
+(use-package elfeed
+  :init
+  ;; https://www.theinsaneapp.com/2021/04/top-machine-learning-blogs-to-follow-in-2021.html
+  (setq elfeed-feeds
+        '("https://ruder.io/rss/index.rss"
+          "https://karpathy.github.io/feed.xml"
+          "https://lilianweng.github.io/lil-log/feed.xml"
+          "https://machinelearningmastery.com/feed/"
+          "http://blog.shakirm.com/feed/")))
+
+(use-package general)
+(use-package avy)
+(use-package magit)
+(use-package vterm)
+
+(defmacro dofn (func)
+  "macro to make lambda shorter"
+  `(lambda ()
+     (interactive)
+     ,func))
+
+(general-define-key
+ :prefix "C-c"
+ "a" #'org-agenda
+ "n" #'avy-goto-char-2
+ "p" #'projectile-command-map
+ ;; remote hosts
+ "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
+ ;; open maps
+ "o t" #'(lambda () (interactive) (find-file "~/Nextcloud/Notes/tasks.org"))
+ "o s" #'(lambda () (interactive) (vterm t))
+ "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "init.el")))
+ "o C" #'calendar
+ "o m" #'mu4e
+ "o e" #'elfeed)
