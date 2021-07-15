@@ -37,7 +37,7 @@
   :bind-keymap ("M-p" . projectile-command-map)
   :init
   (projectile-mode t)
-  (setq projectile-project-search-path '("/media/hdd/workspace/")))
+  (setq projectile-project-search-path '("~/workspace/")))
 
 (use-package vertico
   :init
@@ -124,7 +124,6 @@
   (setq auto-revert-interval 0.5))
 
 (use-package org-ref
-  :defer nil
   :commands (org-ref)
   :config
   (setq reftex-default-bibliography "~/Nextcloud/Notes/Wiki/library.bib"
@@ -134,11 +133,13 @@
 (use-package org
   :ensure org-plus-contrib
   :config
+  (require 'org-ref)
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
 	org-confirm-babel-evaluate nil
         org-latex-prefer-user-labels t
+        org-src-window-setup 'current-window
         org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f"))
   (add-hook 'org-mode-hook #'(lambda ()
                               (set-fill-column 85)
@@ -161,7 +162,6 @@
 							   (python . t)
 							   (R . t)
 							   (plantuml . t)))
-
   (require 'color)
   (set-face-attribute 'org-block nil :background
 		      (color-darken-name (face-attribute 'default :background) 3))
@@ -187,7 +187,7 @@
 
 (use-package bibtex-actions
   :custom
-  (bibtex-completion-bibliography bib-file-loc)
+  (bibtex-completion-bibliography "~/Nextcloud/Notes/Wiki/library.bib")
   :config
   (use-package all-the-icons)
 
@@ -302,6 +302,11 @@
 (use-package magit)
 (use-package vterm)
 
+(use-package eyebrowse
+  :init
+  (setq eyebrowse-new-workspace t)
+  (eyebrowse-mode))
+
 (defmacro dofn (func)
   "macro to make lambda shorter"
   `(lambda ()
@@ -315,8 +320,10 @@
  "p" #'projectile-command-map
  ;; remote hosts
  "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
+ "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
+ "l ," #'(lambda () (interactive) (dorsync rsync-source rsync-destination nil))
  ;; open maps
- "o t" #'(lambda () (interactive) (find-file "/media/hdd/Nextcloud/Notes/tasks.org"))
+ "o t" #'(lambda () (interactive) (find-file "~/Nextcloud/Notes/tasks.org"))
  "o s" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "init.el")))
  "o C" #'calendar
