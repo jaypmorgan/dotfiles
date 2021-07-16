@@ -89,6 +89,10 @@
 (use-package yaml-mode)
 (use-package markdown-mode)
 
+(use-package slime
+  :config
+  (setq inferior-lisp-program "sbcl"))
+
 (use-package slurp-mode
   :straight (slurp-mode :type git :host github :repo "jaypmorgan/slurp-mode")
   :init
