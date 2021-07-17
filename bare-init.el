@@ -2,7 +2,7 @@
       backup-inhibited t
       create-lockfiles nil
       custom-file (concat user-emacs-directory "custom.el")
-      revert-without-query t
+      revert-without-query '(".*")
       require-final-newline t
       indent-tabs-mode nil
       dired-listing-switches "-alhgo --group-directories-first"
@@ -89,6 +89,9 @@
 (use-package yaml-mode)
 (use-package markdown-mode)
 
+(use-package auctex
+  :ensure auctex)
+
 (use-package slime
   :config
   (setq inferior-lisp-program "sbcl"))
@@ -144,7 +147,8 @@
 	org-confirm-babel-evaluate nil
         org-latex-prefer-user-labels t
         org-src-window-setup 'current-window
-        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f"))
+        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
+	org-highlight-latex-and-related '(latex))
   (add-hook 'org-mode-hook #'(lambda ()
                               (set-fill-column 85)
                               (visual-line-mode 1)
