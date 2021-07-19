@@ -8,6 +8,9 @@
       dired-listing-switches "-alhgo --group-directories-first"
       ring-bell-function 'ignore)
 
+(load-file custom-file)
+(setq home-path "/media/hdd/")
+
 ;; setup straight.el instead of package.el
 (setq package-enable-at-startup nil
       straight-check-for-modifications 'live)
@@ -37,7 +40,7 @@
   :bind-keymap ("M-p" . projectile-command-map)
   :init
   (projectile-mode t)
-  (setq projectile-project-search-path '("~/workspace/")))
+  (setq projectile-project-search-path (list (concat home-path "workspace/"))))
 
 (use-package vertico
   :init
@@ -45,6 +48,14 @@
     :init
     (marginalia-mode))
   (vertico-mode t))
+
+(use-package which-key
+  :init
+  ;; only show which-key if C-h is trigged during keystroke
+  (setq which-key-show-early-on-C-h t
+        which-key-idle-delay 10000
+        which-key-idle-secondary-delay 0.01)
+  (which-key-mode))
 
 (use-package orderless
   :init
@@ -85,6 +96,7 @@
   :init
   (setenv "WORKON_HOME" (expand-file-name "~/miniconda3/envs")))
 
+(use-package csv-mode)
 (use-package ess)
 (use-package yaml-mode)
 (use-package markdown-mode)
@@ -99,7 +111,7 @@
 (use-package slurp-mode
   :straight (slurp-mode :type git :host github :repo "jaypmorgan/slurp-mode")
   :init
-  (setq slurp-repl-location "~/workspace/slurp/slurp"))
+  (setq slurp-repl-location (concat home-path "workspace/slurp/slurp")))
 
 (use-package slurp-repl-mode
   :straight (slurp-repl-mode :type git :host github :repo "jaypmorgan/slurp-mode")
@@ -133,22 +145,22 @@
 (use-package org-ref
   :commands (org-ref)
   :config
-  (setq reftex-default-bibliography "~/Nextcloud/Notes/Wiki/library.bib"
-        org-ref-pdf-directory "~/Nextcloud/Notes/Wiki/Papers/"
-        org-ref-default-bibliography '("~/Nextcloud/Notes/Wiki/library.bib")))
+  (setq reftex-default-bibliography (concat home-path "Nextcloud/Notes/Wiki/library.bib")
+        org-ref-pdf-directory (concat home-path "Nextcloud/Notes/Wiki/Papers/")
+        org-ref-default-bibliography (list (concat home-path "Nextcloud/Notes/Wiki/library.bib"))))
 
 (use-package org
   :ensure org-plus-contrib
   :config
   (require 'org-ref)
+  (pdf-loader-install)
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
 	org-confirm-babel-evaluate nil
         org-latex-prefer-user-labels t
         org-src-window-setup 'current-window
-        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
-	org-highlight-latex-and-related '(latex))
+        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f"))
   (add-hook 'org-mode-hook #'(lambda ()
                               (set-fill-column 85)
                               (visual-line-mode 1)
@@ -195,7 +207,7 @@
 
 (use-package bibtex-actions
   :custom
-  (bibtex-completion-bibliography "~/Nextcloud/Notes/Wiki/library.bib")
+  (bibtex-completion-bibliography (concat home-path "Nextcloud/Notes/Wiki/library.bib"))
   :config
   (use-package all-the-icons)
 
@@ -289,10 +301,10 @@
   :bind (:map calendar-mode-map
 	      ("C-x i" . diary-insert-entry))
   :config
-  (setq diary-file "~/Nextcloud/Notes/diary"
+  (setq diary-file (concat home-path "Nextcloud/Notes/diary")
 	calendar-date-style "iso"
 	appt-display-mode-line t
-	org-agenda-diary-file "~/Nextcloud/Notes/diary"
+	org-agenda-diary-file (concat home-path "Nextcloud/Notes/diary")
 	org-agenda-include-diary t))
 
 (use-package elfeed
@@ -331,7 +343,7 @@
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
  "l ," #'(lambda () (interactive) (dorsync rsync-source rsync-destination nil))
  ;; open maps
- "o t" #'(lambda () (interactive) (find-file "~/Nextcloud/Notes/tasks.org"))
+ "o t" #'(lambda () (interactive) (find-file (concat home-path "Nextcloud/Notes/tasks.org")))
  "o s" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "init.el")))
  "o C" #'calendar
