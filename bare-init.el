@@ -322,11 +322,11 @@
 (use-package magit)
 (use-package vterm)
 
-(use-package eyebrowse
+(use-package perspective
+  :bind (("C-x k" . persp-kill-buffer*))
   :init
-  (setq eyebrowse-new-workspace t)
-  (eyebrowse-mode))
-
+  (persp-mode))
+  
 (defmacro dofn (func)
   "macro to make lambda shorter"
   `(lambda ()
