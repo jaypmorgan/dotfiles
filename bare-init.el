@@ -71,14 +71,15 @@
   (previous-line)
   (indent-according-to-mode))
 
-(defun insert-line-below ()
-  "Insert and indent to the previous line"
+(defun insert-line-above ()
+  "Insert and indent to the next line"
   (interactive)
-  (end-of-visual-line)
-  (newline-and-indent))
+  (beginning-of-visual-line)
+  (newline-and-indent)
+  (previous-line)
+  (indent-according-to-mode))
 
-(global-set-key (kbd "C-o") #'insert-line-below)
-(global-set-key (kbd "C-S-o") #'insert-line-above)
+(global-set-key (kbd "C-S-j") #'insert-line-above)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defalias 'isearch-forward 'isearch-forward-regexp)
@@ -100,6 +101,9 @@
 (use-package ess)
 (use-package yaml-mode)
 (use-package markdown-mode)
+
+(use-package paredit
+  :hook (lisp-mode . paredit-mode))
 
 (use-package auctex
   :ensure auctex)
