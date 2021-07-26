@@ -6,7 +6,8 @@
       require-final-newline t
       indent-tabs-mode nil
       dired-listing-switches "-alhgo --group-directories-first"
-      ring-bell-function 'ignore)
+      ring-bell-function 'ignore
+      dired-dwim-target t)
 
 (load-file custom-file)
 (setq home-path "/media/hdd/")
@@ -63,13 +64,8 @@
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles basic partial-completion)))))
 
-(defun insert-line-above ()
-  "Insert and indent to the next line"
-  (interactive)
-  (beginning-of-visual-line)
-  (newline-and-indent)
-  (previous-line)
-  (indent-according-to-mode))
+(use-package expand-region
+  :bind ("C-=" . ex/expand-region))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"
@@ -79,7 +75,14 @@
   (previous-line)
   (indent-according-to-mode))
 
-(global-set-key (kbd "C-S-j") #'insert-line-above)
+(defun insert-line-below ()
+  "Insert and indent from any point in a line"
+  (interactive)
+  (end-of-visual-line)
+  (newline-and-indent))
+
+(global-set-key (kbd "C-o") #'insert-line-below)
+(global-set-key (kbd "C-S-o") #'insert-line-above)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defalias 'isearch-forward 'isearch-forward-regexp)
