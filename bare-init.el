@@ -65,7 +65,7 @@
 	completion-category-overrides '((file (styles basic partial-completion)))))
 
 (use-package expand-region
-  :bind ("C-=" . ex/expand-region))
+  :bind ("C-=" . er/expand-region))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"
@@ -353,6 +353,13 @@
  "o t" #'(lambda () (interactive) (find-file (concat home-path "Nextcloud/Notes/tasks.org")))
  "o s" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "init.el")))
+ ;; mark regions
+ "m f" #'er/mark-defun
+ "m w" #'er/mark-word
+ "m p" #'er/mark-inside-pairs
+ "m '" #'er/mark-inside-quotes
+ "m s" #'er/mark-sentence
+ ;; mics
  "o C" #'calendar
  "o m" #'mu4e
  "o e" #'elfeed)
