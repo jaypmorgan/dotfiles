@@ -160,22 +160,27 @@
   :ensure org-plus-contrib
   :config
   (require 'org-ref)
+  (require 'bibtex-actions)  
+  (require 'pdf-view)
+  (require 'ox-latex)
+
   (pdf-loader-install)
+  
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
 	org-confirm-babel-evaluate nil
         org-latex-prefer-user-labels t
         org-src-window-setup 'current-window
-        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f"))
+        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
+	org-highlight-latex-and-related '(latex script entities)
+	org-src-fontify-natively t)
+  
   (add-hook 'org-mode-hook #'(lambda ()
                               (set-fill-column 85)
                               (visual-line-mode 1)
                               (auto-fill-mode 1)))
   
-  (require 'pdf-view)
-  (require 'ox-latex)
-
   (add-to-list 'org-latex-classes
             '("book-no-parts"
                 "\\documentclass{book}"
@@ -185,7 +190,8 @@
                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                 ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 
-  (org-babel-do-load-languages 'org-babel-load-languages '((shell . t)
+  (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)
+							   (shell . t)
 							   (python . t)
 							   (R . t)
 							   (plantuml . t)))
@@ -198,15 +204,18 @@
     (interactive)
     (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
       (find-file (concat filename extension))))
+  
   (defun my/open-to-odf-other-window ()
     (interactive)
     (split-window-right)
     (other-window 1)
     (my/toggle-pdf ".pdf"))
+  
   (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
   (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
-  (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
+  
   (define-key pdf-view-mode-map (kbd "<f4>") #'my/swap-to-org)
+  (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
   (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
