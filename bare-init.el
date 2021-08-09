@@ -166,6 +166,15 @@
 ;; Org mode  ;;
 ;;;;;;;;;;;;;;;
 
+(use-package org-roam
+  :bind (("C-c q l" . org-roam-buffer-toggle)
+	 ("C-c q f" . org-roam-node-find)
+	 ("C-c q i" . org-roam-node-insert))
+  :config
+  (setq org-roam-directory (concat home-path "Nextcloud/Notes/BIOSOFT")
+	org-roam-v2-ack t)
+  (org-roam-setup))
+
 (use-package pdf-tools
   :config
   (pdf-loader-install)
@@ -185,9 +194,7 @@
   (require 'bibtex-actions)  
   (require 'pdf-view)
   (require 'ox-latex)
-
-  (pdf-loader-install)
-  
+ 
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
