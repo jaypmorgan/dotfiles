@@ -7,10 +7,12 @@
       indent-tabs-mode nil
       dired-listing-switches "-alhgo --group-directories-first"
       ring-bell-function 'ignore
-      dired-dwim-target t)
+      dired-dwim-target t
+      home-path "/media/hdd/")
 
-(load-file custom-file)
-(setq home-path "/media/hdd/")
+;; load the customize file to keep this init clean
+(when (file-exists-p custom-file)
+  (load-file custom-file))
 
 ;; setup straight.el instead of package.el
 (setq package-enable-at-startup nil
@@ -81,8 +83,19 @@
   (end-of-visual-line)
   (newline-and-indent))
 
+(defun copy-whole-line ()
+  "Copy the whole line"
+  (interactive)
+  (let ((org (point))
+	(beg (line-beginning-position))
+	(end (progn (next-line)
+		    (line-beginning-position))))
+    (kill-ring-save beg end)
+    (goto-char org)))
+
 (global-set-key (kbd "C-o") #'insert-line-below)
 (global-set-key (kbd "C-S-o") #'insert-line-above)
+(global-set-key (kbd "C-c y") #'copy-whole-line)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defalias 'isearch-forward 'isearch-forward-regexp)
@@ -100,13 +113,22 @@
   :init
   (setenv "WORKON_HOME" (expand-file-name "~/miniconda3/envs")))
 
+(use-package isend-mode)
 (use-package csv-mode)
-(use-package ess)
+
+(use-package ess
+  :config
+  (defun myindent-ess-hook ()
+    (setq ess-indent-level 2)
+    (setq ess-offset-arguments-newline '(prev-line 2)))
+  (add-hook 'ess-mode-hook 'myindent-ess-hook))
+
 (use-package yaml-mode)
 (use-package markdown-mode)
 
 (use-package paredit
-  :hook (lisp-mode . paredit-mode))
+  :hook ((lisp-mode . paredit-mode)
+	 (emacs-lisp-mode . paredit-mode)))
 
 (use-package auctex
   :ensure auctex)
