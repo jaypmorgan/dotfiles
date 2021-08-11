@@ -367,6 +367,7 @@
 (use-package avy)
 (use-package magit)
 (use-package vterm)
+(use-package ace-window)
 
 (use-package multiple-cursors
   :defer nil
@@ -389,6 +390,7 @@
  "a" #'org-agenda
  "n" #'avy-goto-char-2
  "p" #'projectile-command-map
+ "w" #'ace-window
  ;; remote hosts
  "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
