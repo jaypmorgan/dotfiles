@@ -385,6 +385,11 @@
      (interactive)
      ,func))
 
+(use-package org-gcal
+  :config
+  (setq org-agenda-include-diary t)
+  (load (concat user-emacs-directory "gcal.el")))
+
 (general-define-key
  :prefix "C-c"
  "a" #'org-agenda
