@@ -67,6 +67,7 @@
 	completion-category-overrides '((file (styles basic partial-completion)))))
 
 (use-package expand-region
+  :defer nil
   :bind ("C-=" . er/expand-region))
 
 (defun insert-line-above ()
@@ -366,6 +367,11 @@
 (use-package avy)
 (use-package magit)
 (use-package vterm)
+
+(use-package multiple-cursors
+  :defer nil
+  :bind (("C-<" . mc/mark-previous-like-this)
+	 ("C->" . mc/mark-next-like-this)))
 
 (use-package perspective
   :bind (("C-x k" . persp-kill-buffer*))
