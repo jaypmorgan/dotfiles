@@ -268,10 +268,6 @@
     (split-window-sensibly)
     (find-file bibtex-completion-bibliography))
 
-  (setq test-string "@inproceeding{thisisatesrkjerkj,")
-  (and (string-match "{\\(.*\\)?," test-string)
-       (match-string 1 test-string))
-
   (defun bibtex-actions-add-and-insert-citation (citation)
     "Add a new key to the bibliography and insert citation into buffer"
     (interactive (list (read-from-minibuffer "Bibtex citation: ")))
@@ -296,6 +292,8 @@
       :group 'all-the-icons-faces))
 
 (use-package flyspell
+  :hook ((org-mode . flyspell-mode)
+         (prog-mode . flyspell-prog-mode))
   :init
   (setq flyspell-default-dictionary "british"))
 
@@ -305,7 +303,8 @@
 (setq rsync-source nil
       rsync-destination nil
       rsync-base-cmd "rsync -azm"
-      rsync-exclude-list '("data" ".git" "container-dev" "container" "__pycache__" "*.pyc" "renv/library" "renv/local" "renv/python" "renv/staging"))
+      rsync-exclude-list '("data" ".git" "container-dev" "container" "__pycache__" "*.pyc" 
+		           "renv/library" "renv/local" "renv/python" "renv/staging"))
 
 (defun rsync--build-exclude-list (exclude-list)
   (mapconcat (lambda (s) (concat " --exclude=" s " ")) exclude-list " "))
@@ -330,13 +329,9 @@
 (use-package mu4e
   :commands (mu4e)
   :load-path  "/usr/local/share/emacs/site-lisp/mu4e/"
-  :bind (:map mu4e-compose-mode-map
-	      ("C-c C-a" . mail-add-attachment)
-	 :map mu4e-view-mode-map
-	      ("C-c C-s" . org-store-link))
+  :bind (:map mu4e-compose-mode-map ("C-c C-a" . mail-add-attachment)
+	 :map mu4e-view-mode-map ("C-c C-s" . org-store-link))
   :config
-  ;;(define-key mu4e-compose-mode-map (kbd "C-c C-a") #'mail-add-attachment)
-  ;;(define-key mu4e-view-mode-map (kbd "C-c C-s") #'org-store-link)
   ;; load the configuration details
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
@@ -372,7 +367,8 @@
 (use-package multiple-cursors
   :defer nil
   :bind (("C-<" . mc/mark-previous-like-this)
-	 ("C->" . mc/mark-next-like-this)))
+	 ("C->" . mc/mark-next-like-this)
+         ("C-*" . mc/mark-all-like-dwim)))
 
 (use-package perspective
   :bind (("C-x k" . persp-kill-buffer*))
@@ -410,7 +406,7 @@
  "m p" #'er/mark-inside-pairs
  "m '" #'er/mark-inside-quotes
  "m s" #'er/mark-sentence
- ;; mics
+ ;; misc
  "o C" #'calendar
  "o m" #'mu4e
  "o e" #'elfeed)
