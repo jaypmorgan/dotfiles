@@ -10,6 +10,9 @@
       dired-dwim-target t
       home-path "/media/hdd/")
 
+(defun from-home (path)
+  (concat home-path path))
+
 ;; load the customize file to keep this init clean
 (when (file-exists-p custom-file)
   (load-file custom-file))
@@ -43,7 +46,7 @@
   :bind-keymap ("M-p" . projectile-command-map)
   :init
   (projectile-mode t)
-  (setq projectile-project-search-path (list (concat home-path "workspace/"))))
+  (setq projectile-project-search-path (list (from-home "workspace/"))))
 
 (use-package vertico
   :init
@@ -68,6 +71,7 @@
 
 (use-package expand-region
   :defer nil
+  :commands (er/expand-region)
   :bind ("C-=" . er/expand-region))
 
 (defun insert-line-above ()
@@ -84,6 +88,19 @@
   (end-of-visual-line)
   (newline-and-indent))
 
+(defun find-forward ()
+  "Move cursor after character ahead of current position"
+  (interactive)
+  (let ((searchc (byte-to-string (read-char))))
+    (search-forward searchc)))
+
+(defun find-backward ()
+  "Move cursor after character behind current position"
+  (interactive)
+  (let ((searchc (byte-to-string (read-char))))
+    (search-backward searchc)
+    (right-char)))
+
 (defun copy-whole-line ()
   "Copy the whole line"
   (interactive)
@@ -97,6 +114,9 @@
 (global-set-key (kbd "C-o") #'insert-line-below)
 (global-set-key (kbd "C-S-o") #'insert-line-above)
 (global-set-key (kbd "C-c y") #'copy-whole-line)
+(global-set-key (kbd "C-f") #'find-forward)
+(global-set-key (kbd "C-b") #'find-backward)
+(global-set-key (kbd "C-z") #'repeat)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defalias 'isearch-forward 'isearch-forward-regexp)
@@ -104,8 +124,7 @@
 
 (use-package python-mode
   :init
-  (setq python-indent-offset 2)
-  (use-package blacken))
+  (setq python-indent-offset 2))
 
 (use-package elpy
   :hook (python-mode . elpy-enable))
@@ -120,6 +139,7 @@
 
 (use-package ess
   :config
+  (setq ess-indent-level 2)
   (defun myindent-ess-hook ()
     (setq ess-indent-level 2)
     (setq ess-offset-arguments-newline '(prev-line 2)))
@@ -151,7 +171,7 @@
 (use-package slurp-mode
   :straight (slurp-mode :type git :host github :repo "jaypmorgan/slurp-mode")
   :init
-  (setq slurp-repl-location (concat home-path "workspace/slurp/slurp")))
+  (setq slurp-repl-location (from-home "workspace/slurp/slurp")))
 
 (use-package slurp-repl-mode
   :straight (slurp-repl-mode :type git :host github :repo "jaypmorgan/slurp-mode")
@@ -162,13 +182,14 @@
 (use-package plantuml-mode
   :mode ("\\.plantuml\\'" . plantum-mode)
   :init
-  (unless (file-exists-p (expand-file-name "~/plantuml.jar"))
-    (switch-to-buffer (make-temp-name "plantuml"))
-    (ignore-errors (plantuml-mode))
-    (plantuml-download-jar))
-  (setq plantuml-jar-path (expand-file-name "~/plantuml.jar")
-        plantuml-default-exec-mode 'jar
-        org-plantuml-jar-path plantuml-jar-path))
+  (let ((filepath (expand-file-name "~/bin/plantuml.jar")))
+    (unless (file-exists-p filepath)
+      (switch-to-buffer (make-temp-name "plantuml"))
+      (ignore-errors (plantuml-mode))
+      (plantuml-download-jar))
+    (setq plantuml-jar-path filepath
+          plantuml-default-exec-mode 'jar
+          org-plantuml-jar-path plantuml-jar-path)))
 
 (defun conda-activate-once (name)
   "Activate a conda environment only if it is not already set"
@@ -181,11 +202,11 @@
 ;;;;;;;;;;;;;;;
 
 (use-package org-roam
-  :bind (("C-c q l" . org-roam-buffer-toggle)
-	 ("C-c q f" . org-roam-node-find)
-	 ("C-c q i" . org-roam-node-insert))
+  :bind (("C-<tab> n l" . org-roam-buffer-toggle)
+	 ("C-<tab> n f" . org-roam-node-find)
+	 ("C-<tab> n i" . org-roam-node-insert))
   :custom
-  (org-roam-directory (concat home-path "Nextcloud/Notes/BIOSOFT"))
+  (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
   (org-roam-v2-ack t)
   (org-roam-capture-templates
    `(("d" "default" plain
@@ -193,7 +214,7 @@
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
       :unnarrowed t)
      ("m" "meeting" plain
-      (file ,(concat home-path "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
+      (file ,(from-home "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
       :unnarrowed t)))
   :config (org-roam-setup))
@@ -206,17 +227,18 @@
 (use-package org-ref
   :commands (org-ref)
   :config
-  (setq reftex-default-bibliography (concat home-path "Nextcloud/Notes/references.bib")
-        org-ref-pdf-directory (concat home-path "Nextcloud/Notes/Wiki/Papers/")
-        org-ref-default-bibliography (list (concat home-path "Nextcloud/Notes/references.bib"))))
+  (setq reftex-default-bibliography (from-home "Nextcloud/Notes/references.bib")
+        org-ref-default-bibliography (list (from-home "Nextcloud/Notes/references.bib"))))
 
 (use-package org
+  :after (org-ref bibtex-actions pdf-view)
   :ensure org-plus-contrib
   :config
   (require 'org-ref)
   (require 'bibtex-actions)  
   (require 'pdf-view)
   (require 'ox-latex)
+  (require 'color)
   (pdf-loader-install)
  
   (setq	org-hide-emphasis-markers t
@@ -248,9 +270,9 @@
 							   (python . t)
 							   (R . t)
 							   (plantuml . t)))
-  (require 'color)
-  (set-face-attribute 'org-block nil :background
-		      (color-darken-name (face-attribute 'default :background) 3))
+  
+  ;; darken code blocks to easily distinguish body text from source code
+  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 3))
   
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -276,7 +298,7 @@
 
 (use-package bibtex-actions
   :custom
-  (bibtex-completion-bibliography (concat home-path "Nextcloud/Notes/references.bib"))
+  (bibtex-completion-bibliography (from-home "Nextcloud/Notes/references.bib"))
   :config
   (use-package all-the-icons)
 
@@ -349,11 +371,9 @@
 
 (use-package mu4e
   :commands (mu4e)
-  :load-path  "/usr/local/share/emacs/site-lisp/mu4e/"
-  :bind (:map mu4e-compose-mode-map
-	      ("C-c C-a" . mail-add-attachment)
-	 :map mu4e-view-mode-map
-	      ("C-c C-s" . org-store-link))
+  :load-path "/usr/local/share/emacs/site-lisp/mu4e/"
+  :bind (:map mu4e-compose-mode-map ("C-c C-a" . mail-add-attachment)
+	 :map mu4e-view-mode-map ("C-c C-s" . org-store-link))
   :config
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
@@ -361,13 +381,12 @@
 
 (use-package calendar
   :hook (diary-list-entries . diary-sort-entries)
-  :bind (:map calendar-mode-map
-	      ("C-x i" . diary-insert-entry))
+  :bind (:map calendar-mode-map ("C-x i" . diary-insert-entry))
   :config
-  (setq diary-file (concat home-path "Nextcloud/Notes/diary")
+  (setq diary-file (from-home "Nextcloud/Notes/diary")
 	calendar-date-style "iso"
 	appt-display-mode-line t
-	org-agenda-diary-file (concat home-path "Nextcloud/Notes/diary")
+	org-agenda-diary-file (from-home "Nextcloud/Notes/diary")
 	org-agenda-include-diary t))
 
 (use-package org-gcal
@@ -387,14 +406,10 @@
           "https://machinelearningmastery.com/feed/"
           "http://blog.shakirm.com/feed/")))
 
-(use-package general)
 (use-package avy)
 (use-package magit)
 (use-package vterm)
 (use-package ace-window)
-
-(use-package swiper
-  :bind (("C-s" . swiper-isearch)))
 
 (use-package multiple-cursors
   :defer nil
@@ -406,11 +421,12 @@
   :init
   (persp-mode))
 
+(use-package general)
 (general-define-key
- :prefix "C-c"
+ :prefix "C-<tab>"
  ;; buffer/window management
  "a" #'org-agenda
- "n" #'avy-goto-char-2
+ "q" #'avy-goto-char-timer
  "p" #'projectile-command-map
  "w" #'ace-window
  ;; remote hosts
@@ -418,7 +434,7 @@
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
  "l ," #'(lambda () (interactive) (dorsync rsync-source rsync-destination nil))
  ;; open maps
- "o t" #'(lambda () (interactive) (find-file (concat home-path "Nextcloud/Notes/tasks.org")))
+ "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/tasks.org")))
  "o s" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "init.el")))
  ;; mark regions
