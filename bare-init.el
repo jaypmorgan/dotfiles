@@ -104,7 +104,8 @@
 
 (use-package python-mode
   :init
-  (setq python-indent-offset 2))
+  (setq python-indent-offset 2)
+  (use-package blacken))
 
 (use-package elpy
   :hook (python-mode . elpy-enable))
@@ -122,7 +123,8 @@
   (defun myindent-ess-hook ()
     (setq ess-indent-level 2)
     (setq ess-offset-arguments-newline '(prev-line 2)))
-  (add-hook 'ess-mode-hook 'myindent-ess-hook))
+  (add-hook 'ess-mode-hook #'myindent-ess-hook)
+  (add-hook 'R-mode-hook #'myindent-ess-hook))
 
 (use-package yaml-mode)
 (use-package markdown-mode)
@@ -130,6 +132,14 @@
 (use-package paredit
   :hook ((lisp-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
+
+(use-package lisp-mode
+  :straight nil
+  :hook ((lisp-mode . show-paren-mode)))
+
+(use-package emacs-lisp-mode
+  :straight nil
+  :hook ((emacs-lisp-mode . show-paren-mode)))
 
 (use-package auctex
   :ensure auctex)
@@ -161,7 +171,10 @@
         org-plantuml-jar-path plantuml-jar-path))
 
 (defun conda-activate-once (name)
-  (interactive))
+  "Activate a conda environment only if it is not already set"
+  (interactive)
+  (unless (string= pyvenv-virtual-env-name name)
+    (pyvenv-workon name)))
 
 ;;;;;;;;;;;;;;;
 ;; Org mode  ;;
@@ -171,10 +184,19 @@
   :bind (("C-c q l" . org-roam-buffer-toggle)
 	 ("C-c q f" . org-roam-node-find)
 	 ("C-c q i" . org-roam-node-insert))
-  :config
-  (setq org-roam-directory (concat home-path "Nextcloud/Notes/BIOSOFT")
-	org-roam-v2-ack t)
-  (org-roam-setup))
+  :custom
+  (org-roam-directory (concat home-path "Nextcloud/Notes/BIOSOFT"))
+  (org-roam-v2-ack t)
+  (org-roam-capture-templates
+   `(("d" "default" plain
+      "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)
+     ("m" "meeting" plain
+      (file ,(concat home-path "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
+      :unnarrowed t)))
+  :config (org-roam-setup))
 
 (use-package pdf-tools
   :config
@@ -184,9 +206,9 @@
 (use-package org-ref
   :commands (org-ref)
   :config
-  (setq reftex-default-bibliography (concat home-path "Nextcloud/Notes/Wiki/library.bib")
+  (setq reftex-default-bibliography (concat home-path "Nextcloud/Notes/references.bib")
         org-ref-pdf-directory (concat home-path "Nextcloud/Notes/Wiki/Papers/")
-        org-ref-default-bibliography (list (concat home-path "Nextcloud/Notes/Wiki/library.bib"))))
+        org-ref-default-bibliography (list (concat home-path "Nextcloud/Notes/references.bib"))))
 
 (use-package org
   :ensure org-plus-contrib
@@ -195,6 +217,7 @@
   (require 'bibtex-actions)  
   (require 'pdf-view)
   (require 'ox-latex)
+  (pdf-loader-install)
  
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
@@ -253,7 +276,7 @@
 
 (use-package bibtex-actions
   :custom
-  (bibtex-completion-bibliography (concat home-path "Nextcloud/Notes/Wiki/library.bib"))
+  (bibtex-completion-bibliography (concat home-path "Nextcloud/Notes/references.bib"))
   :config
   (use-package all-the-icons)
 
@@ -283,8 +306,7 @@
                    ,(all-the-icons-icon-for-file "foo.txt" :face 'bibtex-actions-icon-dim)))
           (link . (,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'all-the-icons-dpurple) .
                    ,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'bibtex-actions-icon-dim)))))
-
-  ;; Here we define a face to dim non 'active' icons, but preserve alignment
+  
   (defface bibtex-actions-icon-dim
       '((((background dark)) :foreground "#282c34")
       (((background light)) :foreground "#fafafa"))
@@ -292,8 +314,6 @@
       :group 'all-the-icons-faces))
 
 (use-package flyspell
-  :hook ((org-mode . flyspell-mode)
-         (prog-mode . flyspell-prog-mode))
   :init
   (setq flyspell-default-dictionary "british"))
 
@@ -303,8 +323,9 @@
 (setq rsync-source nil
       rsync-destination nil
       rsync-base-cmd "rsync -azm"
-      rsync-exclude-list '("data" ".git" "container-dev" "container" "__pycache__" "*.pyc" 
-		           "renv/library" "renv/local" "renv/python" "renv/staging"))
+      rsync-exclude-list '("data" ".git" "container-dev" "container"
+			   "__pycache__" "*.pyc" "renv/library" "renv/local"
+			   "renv/python" "renv/staging"))
 
 (defun rsync--build-exclude-list (exclude-list)
   (mapconcat (lambda (s) (concat " --exclude=" s " ")) exclude-list " "))
@@ -329,10 +350,11 @@
 (use-package mu4e
   :commands (mu4e)
   :load-path  "/usr/local/share/emacs/site-lisp/mu4e/"
-  :bind (:map mu4e-compose-mode-map ("C-c C-a" . mail-add-attachment)
-	 :map mu4e-view-mode-map ("C-c C-s" . org-store-link))
+  :bind (:map mu4e-compose-mode-map
+	      ("C-c C-a" . mail-add-attachment)
+	 :map mu4e-view-mode-map
+	      ("C-c C-s" . org-store-link))
   :config
-  ;; load the configuration details
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
       (load mu4e-config))))
@@ -347,6 +369,13 @@
 	appt-display-mode-line t
 	org-agenda-diary-file (concat home-path "Nextcloud/Notes/diary")
 	org-agenda-include-diary t))
+
+(use-package org-gcal
+  :config
+  (setq org-agenda-include-diary t)
+  (let ((gcal-config (concat user-emacs-directory "gcal.el")))
+    (when (file-exists-p gcal-config)
+      (load gcal-config))))
 
 (use-package elfeed
   :init
@@ -364,30 +393,22 @@
 (use-package vterm)
 (use-package ace-window)
 
+(use-package swiper
+  :bind (("C-s" . swiper-isearch)))
+
 (use-package multiple-cursors
   :defer nil
   :bind (("C-<" . mc/mark-previous-like-this)
-	 ("C->" . mc/mark-next-like-this)
-         ("C-*" . mc/mark-all-like-dwim)))
+	 ("C->" . mc/mark-next-like-this)))
 
 (use-package perspective
   :bind (("C-x k" . persp-kill-buffer*))
   :init
   (persp-mode))
-  
-(defmacro dofn (func)
-  "macro to make lambda shorter"
-  `(lambda ()
-     (interactive)
-     ,func))
-
-(use-package org-gcal
-  :config
-  (setq org-agenda-include-diary t)
-  (load (concat user-emacs-directory "gcal.el")))
 
 (general-define-key
  :prefix "C-c"
+ ;; buffer/window management
  "a" #'org-agenda
  "n" #'avy-goto-char-2
  "p" #'projectile-command-map
@@ -406,7 +427,12 @@
  "m p" #'er/mark-inside-pairs
  "m '" #'er/mark-inside-quotes
  "m s" #'er/mark-sentence
- ;; misc
+ ;; organisation
  "o C" #'calendar
  "o m" #'mu4e
  "o e" #'elfeed)
+
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(recentf-mode t)
