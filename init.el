@@ -6,11 +6,10 @@
 (setq warning-minimum-level :error)
 (load (concat user-emacs-directory "hiddens.el") 'noerror)
 
-;; Config settings are available in an org-mode
-;; file. This function call loads them.
-(require 'org)
-(org-babel-load-file
- (expand-file-name "config.org" user-emacs-directory))
+;; Load the configuration settings
+;; These settings are tangled from config.org
+;; literature config
+(load (concat user-emacs-directory "config.el"))
 
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file 'noerror)

@@ -248,12 +248,12 @@
     (setq async-shell-command-display-buffer async-value)))
 
 (use-package org-roam
-  :bind (("C-<tab> n l" . org-roam-buffer-toggle)
-	 ("C-<tab> n f" . org-roam-node-find)
-	 ("C-<tab> n i" . org-roam-node-insert))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+	 ("C-c n f" . org-roam-node-find)
+	 ("C-c n i" . org-roam-node-insert))
   :custom
   (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
-  (org-roam-capture-templates
+  (org-roam-capture-templatesq
    `(("d" "default" plain
       "%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
@@ -270,7 +270,7 @@
 	 "* %U\n\n%?" :unnarrowed nil)
 	("t" "Todo Entry" entry (file ,(from-home "Nextcloud/Notes/tasks.org"))
 	 "* TODO %?" :unnarrowed nil)))
-(global-set-key (kbd "C-c n") 'org-capture)
+(global-set-key (kbd "C-c m") 'org-capture)
 
 (use-package pdf-tools
   :config
@@ -281,73 +281,7 @@
   :commands (org-ref)
   :config
   (setq reftex-default-bibliography (from-home "Nextcloud/Notes/references.bib")
-        org-ref-default-bibliography (list (from-home "Nextcloud/Notes/references.bib"))))
-
-(use-package org
-  :after (org-ref bibtex-actions pdf-view)
-  :ensure org-plus-contrib
-  :config
-  (require 'org-ref)
-  (require 'bibtex-actions)  
-  (require 'pdf-view)
-  (require 'ox-latex)
-  (require 'color)
-  (pdf-loader-install)
- 
-  (setq	org-hide-emphasis-markers t
-	org-edit-src-content-indentation 0
-	org-footnote-auto-adjust t
-	org-confirm-babel-evaluate nil
-        org-latex-prefer-user-labels t
-        org-src-window-setup 'current-window
-        org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
-	org-highlight-latex-and-related '(latex script entities)
-	org-src-fontify-natively t)
-  
-  (add-hook 'org-mode-hook #'(lambda ()
-                              (set-fill-column 85)
-                              (visual-line-mode 1)
-                              (auto-fill-mode 1)))
-  
-  (add-to-list 'org-latex-classes
-            '("book-no-parts"
-                "\\documentclass{book}"
-                ("\\chapter{%s}" . "\\chapter*{%s}")
-                ("\\section{%s}" . "\\section*{%s}")
-                ("\\subsection{%s}" . "\\subsection*{%s}")
-                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                ("\\paragraph{%s}" . "\\paragraph*{%s}")))
-
-  (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)
-							   (shell . t)
-							   (python . t)
-							   (R . t)
-							   (plantuml . t)))
-  
-  ;; darken code blocks to easily distinguish body text from source code
-  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 3))
-  
-  ;; swap between exported PDF and Org document by pressing F4
-  (defun my/toggle-pdf (extension)
-    (interactive)
-    (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
-      (find-file (concat filename extension))))
-  
-  (defun my/open-to-odf-other-window ()
-    (interactive)
-    (split-window-right)
-    (other-window 1)
-    (my/toggle-pdf ".pdf"))
-  
-  (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
-  (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
-  
-  (define-key pdf-view-mode-map (kbd "<f4>") #'my/swap-to-org)
-  (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
-  (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
-  (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
-  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
-  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
+	org-ref-default-bibliography (list (from-home "Nextcloud/Notes/references.bib"))))
 
 (use-package bibtex-actions
   :custom
@@ -371,22 +305,90 @@
     (interactive (list (read-from-minibuffer "Bibtex citation: ")))
     (bibtex-actions-add-citation citation)
     (and (string-match "@.*?{\\(.*\\)?," citation)
-         (bibtex-actions-insert-citation (list (match-string 1 citation)))))
+	 (bibtex-actions-insert-citation (list (match-string 1 citation)))))
 
   ;; enable font icons -- taken directly from bibtex-actions README
   (setq bibtex-actions-symbols
-        `((pdf  . (,(all-the-icons-icon-for-file "foo.pdf" :face 'all-the-icons-dred) .
-                   ,(all-the-icons-icon-for-file "foo.pdf" :face 'bibtex-actions-icon-dim)))
-          (note . (,(all-the-icons-icon-for-file "foo.txt") .
-                   ,(all-the-icons-icon-for-file "foo.txt" :face 'bibtex-actions-icon-dim)))
-          (link . (,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'all-the-icons-dpurple) .
-                   ,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'bibtex-actions-icon-dim)))))
-  
+	`((pdf  . (,(all-the-icons-icon-for-file "foo.pdf" :face 'all-the-icons-dred) .
+		   ,(all-the-icons-icon-for-file "foo.pdf" :face 'bibtex-actions-icon-dim)))
+	  (note . (,(all-the-icons-icon-for-file "foo.txt") .
+		   ,(all-the-icons-icon-for-file "foo.txt" :face 'bibtex-actions-icon-dim)))
+	  (link . (,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'all-the-icons-dpurple) .
+		   ,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'bibtex-actions-icon-dim)))))
+
   (defface bibtex-actions-icon-dim
-      '((((background dark)) :foreground "#282c34")
-	(((background light)) :foreground "#fafafa"))
-      "Face for obscuring/dimming icons"
-      :group 'all-the-icons-faces))
+    '((((background dark)) :foreground "#282c34")
+      (((background light)) :foreground "#fafafa"))
+    "Face for obscuring/dimming icons"
+    :group 'all-the-icons-faces))
+
+(straight-override-recipe
+ '(org :type git :host github :repo "emacsmirror/org" :no-build t))
+
+(use-package org
+  :ensure org-plus-contrib
+  :config
+  (require 'org-ref)
+  (require 'bibtex-actions)  
+  (require 'pdf-view)
+  (require 'ox-latex)
+  (pdf-loader-install)
+  
+  (setq	org-hide-emphasis-markers t
+	org-edit-src-content-indentation 0
+	org-footnote-auto-adjust t
+	org-confirm-babel-evaluate nil
+	org-latex-prefer-user-labels t
+	org-src-window-setup 'current-window
+	org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
+	org-highlight-latex-and-related '(latex script entities)
+	org-src-fontify-natively t)
+
+  (add-hook 'org-mode-hook #'(lambda ()
+			       (set-fill-column 85)
+			       (visual-line-mode 1)
+			       (auto-fill-mode 1)))
+
+  (add-to-list 'org-latex-classes
+	       '("book-no-parts"
+		 "\\documentclass{book}"
+		 ("\\chapter{%s}" . "\\chapter*{%s}")
+		 ("\\section{%s}" . "\\section*{%s}")
+		 ("\\subsection{%s}" . "\\subsection*{%s}")
+		 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+		 ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+
+  (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)
+							   (shell . t)
+							   (python . t)
+							   (R . t)
+							   (plantuml . t)))
+
+  ;; darken code blocks to easily distinguish body text from source code
+  (require 'color)
+  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 3))
+
+  ;; swap between exported PDF and Org document by pressing F4
+  (defun my/toggle-pdf (extension)
+    (interactive)
+    (let ((filename (file-name-base (buffer-file-name (window-buffer (minibuffer-selected-window))))))
+      (find-file (concat filename extension))))
+
+  (defun my/open-to-odf-other-window ()
+    (interactive)
+    (split-window-right)
+    (other-window 1)
+    (my/toggle-pdf ".pdf"))
+
+  (defun my/swap-to-pdf () (interactive) (my/toggle-pdf ".pdf"))
+  (defun my/swap-to-org () (interactive) (my/toggle-pdf ".org"))
+
+  (define-key pdf-view-mode-map (kbd "<f4>") #'my/swap-to-org)
+  (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
+  (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
+  (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
+  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
 
 (use-package flyspell
   :init
@@ -432,7 +434,7 @@
 
 (use-package general)
 (general-define-key
- :prefix "C-<tab>"
+ :prefix "C-c"
  ;; buffer/window management
  "a" #'org-agenda
  "q" #'avy-goto-char-timer
@@ -446,13 +448,13 @@
  "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/tasks.org")))
  "o f" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/fleeting.org")))
  "o s" #'(lambda () (interactive) (vterm t))
- "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "init.el")))
+ "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
  ;; mark regions
- "m f" #'er/mark-defun
- "m w" #'er/mark-word
- "m p" #'er/mark-inside-pairs
- "m '" #'er/mark-inside-quotes
- "m s" #'er/mark-sentence
+;; "m f" #'er/mark-defun
+;; "m w" #'er/mark-word
+;; "m p" #'er/mark-inside-pairs
+;; "m '" #'er/mark-inside-quotes
+;; "m s" #'er/mark-sentence
  ;; organisation
  "o C" #'calendar
  "o m" #'mu4e
