@@ -42,7 +42,7 @@
       dired-listing-switches "-alhgo --group-directories-first"
       ring-bell-function 'ignore
       dired-dwim-target t
-      home-path "~/"
+      home-path "/media/hdd/"
       confirm-kill-processes nil
       confirm-kill-emacs nil)
 
@@ -167,6 +167,13 @@
 (use-package magit)
 (use-package vterm)
 
+(defun vterm-below ()
+  "Open a vterm window below"
+  (interactive)
+  (split-window-below -20)
+  (other-window 1)
+  (vterm t))
+
 (use-package projectile
   :defer nil
   :bind-keymap ("M-p" . projectile-command-map)
@@ -186,7 +193,8 @@
   :hook (python-mode . elpy-enable))
 
 (use-package pyvenv
-  :hook (elpy-mode . pyvenv-mode)
+  :hook ((elpy-mode . pyvenv-mode)
+	 (projectile-mode . pyvenv-mode))
   :init
   (setenv "WORKON_HOME" (expand-file-name "~/.bin/miniconda3/envs")))
 
@@ -297,7 +305,7 @@
 	 ("C-c n i" . org-roam-node-insert))
   :custom
   (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
-  (org-roam-capture-templatesq
+  (org-roam-capture-templates
    `(("d" "default" plain
       "%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
@@ -500,7 +508,8 @@
  ;; open maps
  "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/tasks.org")))
  "o f" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/fleeting.org")))
- "o s" #'(lambda () (interactive) (vterm t))
+ "o s" #'vterm-below
+ "o S" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
  ;; mark regions
 ;; "m f" #'er/mark-defun
