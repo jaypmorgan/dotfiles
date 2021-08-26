@@ -29,7 +29,7 @@
       dired-listing-switches "-alhgo --group-directories-first"
       ring-bell-function 'ignore
       dired-dwim-target t
-      home-path "/media/hdd/"
+      home-path "~/"
       confirm-kill-processes nil
       confirm-kill-emacs nil)
 
@@ -148,6 +148,13 @@
   :init
   (projectile-mode t)
   (setq projectile-project-search-path (list (from-home "workspace/"))))
+
+(use-package undo-tree
+  :init
+  (global-undo-tree-mode)
+  :config
+  (setq undo-tree-visualizer-diff t
+	undo-tree-visualizer-timestamps t))
 
 (use-package python-mode
   :init
@@ -399,6 +406,8 @@
   (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
 
 (use-package flyspell
+  :hook ((prog-mode . flyspell-prog-mode)
+	 (text-mode . flyspell-mode))
   :init
   (setq flyspell-default-dictionary "british"))
 
@@ -467,7 +476,8 @@
  ;; organisation
  "o C" #'calendar
  "o m" #'mu4e
- "o e" #'elfeed)
+ "o e" #'elfeed
+ "o u" #'undo-tree-visualize)
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
