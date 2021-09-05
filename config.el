@@ -19,7 +19,9 @@
 (setq straight-use-package-by-default t
       use-package-always-defer t)
 
-(setq auto-save-default nil
+(setq gc-cons-threshold 100000000
+      read-process-output-max (* 1024 1024)
+      auto-save-default nil
       backup-inhibited t
       create-lockfiles nil
       custom-file (concat user-emacs-directory "custom.el")
@@ -119,8 +121,6 @@
 (global-set-key (kbd "C-o") #'insert-line-below)
 (global-set-key (kbd "C-S-o") #'insert-line-above)
 (global-set-key (kbd "C-c y") #'copy-whole-line)
-(global-set-key (kbd "C-f") #'find-forward)
-(global-set-key (kbd "C-b") #'find-backward)
 (global-set-key (kbd "C-z") #'repeat)
 
 (use-package ace-window)
@@ -158,31 +158,29 @@
 
 (use-package python-mode
   :init
-  (setq python-indent-offset 2))
+  (setq python-indent-offset 4))
 
 (use-package elpy
-  :hook (python-mode . elpy-enable))
+  :hook (python-mode . elpy-enable)
+  :init
+  (setq elpy-rpc-python-command (expand-file-name "~/.bin/miniconda3/bin/python3")))
 
 (use-package pyvenv
+  :defer nil
   :hook ((elpy-mode . pyvenv-mode)
 	 (projectile-mode . pyvenv-mode))
   :init
-  (setenv "WORKON_HOME" (expand-file-name "~/.bin/miniconda3/envs")))
+  (setenv "WORKON_HOME" (expand-file-name "~/.bin/miniconda3/envs"))
+  (pyvenv-mode))
 
 (use-package isend-mode)
 (use-package csv-mode)
+(use-package yaml-mode)
+(use-package markdown-mode)
 
 (use-package ess
   :config
-  (setq ess-indent-level 2)
-  (defun myindent-ess-hook ()
-    (setq ess-indent-level 2)
-    (setq ess-offset-arguments-newline '(prev-line 2)))
-  (add-hook 'ess-mode-hook #'myindent-ess-hook)
-  (add-hook 'R-mode-hook #'myindent-ess-hook))
-
-(use-package yaml-mode)
-(use-package markdown-mode)
+  (setq ess-indent-level 2))
 
 (use-package paredit
   :hook ((lisp-mode . paredit-mode)
@@ -201,7 +199,8 @@
 
 (use-package slime
   :config
-  (setq inferior-lisp-program "sbcl"))
+  (setq inferior-lisp-program "sbcl")
+  (define-key slime-mode-map (kbd "<f5>") #'slime-selector))
 
 (use-package slurp-mode
   :straight (slurp-mode :type git :host github :repo "jaypmorgan/slurp-mode")
@@ -348,6 +347,9 @@
   (require 'pdf-view)
   (require 'ox-latex)
   (pdf-loader-install)
+
+  (use-package org-tree-slide
+    :bind (:map org-mode-map ("<f8>" . org-tree-slide-mode)))
   
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
@@ -355,6 +357,8 @@
 	org-confirm-babel-evaluate nil
 	org-latex-prefer-user-labels t
 	org-src-window-setup 'current-window
+	org-latex-listings 'minted
+	org-latex-packages-alist '(("" "minted"))
 	org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
 	org-highlight-latex-and-related '(latex script entities)
 	org-src-fontify-natively t)
@@ -381,7 +385,9 @@
 
   ;; darken code blocks to easily distinguish body text from source code
   (require 'color)
-  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
+  (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -449,6 +455,8 @@
           "http://blog.shakirm.com/feed/"
 	  "http://planet.lisp.org/rss20.xml")))
 
+(global-set-key (kbd "C-]") #'join-line)
+
 (use-package general)
 (general-define-key
  :prefix "C-c"
@@ -457,6 +465,7 @@
  "q" #'avy-goto-char-timer
  "p" #'projectile-command-map
  "w" #'ace-window
+ "e" #'eww
  ;; remote hosts
  "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
@@ -467,17 +476,13 @@
  "o s" #'vterm-below
  "o S" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
- ;; mark regions
-;; "m f" #'er/mark-defun
-;; "m w" #'er/mark-word
-;; "m p" #'er/mark-inside-pairs
-;; "m '" #'er/mark-inside-quotes
-;; "m s" #'er/mark-sentence
  ;; organisation
  "o C" #'calendar
  "o m" #'mu4e
  "o e" #'elfeed
  "o u" #'undo-tree-visualize)
+
+(add-hook 'dired-mode-hook 'hl-line-mode)
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
