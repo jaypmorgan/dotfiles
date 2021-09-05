@@ -351,6 +351,12 @@
   (use-package org-tree-slide
     :bind (:map org-mode-map ("<f8>" . org-tree-slide-mode)))
   
+  (use-package olivetti
+    :hook (org-tree-slide-mode . olivetti-mode)
+    :init
+    (setq olivetti-body-width 130
+	  olivetti-style 'fancy))
+  
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
@@ -483,6 +489,8 @@
  "o u" #'undo-tree-visualize)
 
 (add-hook 'dired-mode-hook 'hl-line-mode)
+
+(load-theme 'leuven t)
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)

@@ -4,6 +4,14 @@
 
 * Package Init (Straight)
 
+Instead of =package.el=, I've opted to used =straight.el=. It has many benefits over the
+default package manager shipped in Emacs. Firstly, it is possible to pull directly
+from a git repository, and secondly it can compile to native machine code if that
+configuration option is available in the Emacs build.
+
+To get =straight.el= to work, we first disable =package.el= and use the bootstrap
+boilerplate code provided by the maintainers of =straight.el=.
+
 #+begin_src emacs-lisp
 ;; setup straight.el instead of package.el
 (setq package-enable-at-startup nil
@@ -21,7 +29,16 @@
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
+#+end_src
 
+While =straight.el= has its own system for specifying and installing packages, I prefer
+to use =use-package=. Luckily, this can easily be enabled and used by
+default. =use-package= has a configuration variable to always defer the loading of a
+package unless its needed. Setting this value to =t= can speed up the loading of Emacs
+if Emacs is not running in a daemon mode (and therefore only ever loaded once when
+the computer is booted). 
+
+#+begin_src emacs-lisp
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t
       use-package-always-defer t)
@@ -392,6 +409,12 @@
   (use-package org-tree-slide
     :bind (:map org-mode-map ("<f8>" . org-tree-slide-mode)))
   
+  (use-package olivetti
+    :hook (org-tree-slide-mode . olivetti-mode)
+    :init
+    (setq olivetti-body-width 130
+	  olivetti-style 'fancy))
+  
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
@@ -539,6 +562,15 @@ and directories.
 
 #+begin_src emacs-lisp
 (add-hook 'dired-mode-hook 'hl-line-mode)
+#+end_src
+
+I like the contrast that the default theme =leuven= makes. Though, I do want to make
+some changes to this theme to make it less /rash/. For example, the mode-line blue is
+rather distracting, and the yellow highlight in the message area is very
+bright. These colours can be changed in future.
+
+#+begin_src emacs-lisp
+(load-theme 'leuven t)
 #+end_src
 
 Finally, let's remove the GUI toolkit elements. These include the scroll bars, the
