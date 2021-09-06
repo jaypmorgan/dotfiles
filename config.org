@@ -36,7 +36,7 @@ to use =use-package=. Luckily, this can easily be enabled and used by
 default. =use-package= has a configuration variable to always defer the loading of a
 package unless its needed. Setting this value to =t= can speed up the loading of Emacs
 if Emacs is not running in a daemon mode (and therefore only ever loaded once when
-the computer is booted). 
+the computer is booted).
 
 #+begin_src emacs-lisp
 (straight-use-package 'use-package)
@@ -223,7 +223,10 @@ the computer is booted).
   (setenv "WORKON_HOME" (expand-file-name "~/.bin/miniconda3/envs"))
   (pyvenv-mode))
 
-(use-package isend-mode)
+(use-package isend-mode
+  :config
+  (setq isend-send-region-function 'isend--ipython-cpaste))
+
 (use-package csv-mode)
 (use-package yaml-mode)
 (use-package markdown-mode)
@@ -341,8 +344,8 @@ the computer is booted).
       `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
 	 "* %U\n\n%?" :unnarrowed nil)
 	("t" "Todo Entry" entry (file ,(from-home "Nextcloud/Notes/tasks.org"))
-	 "* TODO %?" :unnarrowed nil)))
-(global-set-key (kbd "C-c m") 'org-capture)
+	 "* TODO %?\n:PROPERTIES:\n:CREATED: %T\n:END:" :unnarrowed nil)))
+(global-set-key (kbd "C-c C-/") 'org-capture)
 
 (use-package pdf-tools
   :config
@@ -406,9 +409,19 @@ the computer is booted).
   (require 'ox-latex)
   (pdf-loader-install)
 
+  ;; Slide show setup. First we use org-tree slide to provide the
+  ;; basic and critical functionality of the slide show and only show
+  ;; one heading at one time.
   (use-package org-tree-slide
     :bind (:map org-mode-map ("<f8>" . org-tree-slide-mode)))
-  
+
+  ;; It's nice to have a mixed pitch (variable-pitch for body text,
+  ;; and fixed-pitch for source code) when viewing the slide shows.
+  (use-package mixed-pitch
+    :hook (org-tree-slide-mode . mixed-pitch-mode))
+
+  ;; Centre the screen when entering the slide show, and put a fancy
+  ;; border around it!
   (use-package olivetti
     :hook (org-tree-slide-mode . olivetti-mode)
     :init
@@ -528,6 +541,21 @@ the computer is booted).
 
 #+begin_src emacs-lisp
 (global-set-key (kbd "C-]") #'join-line)
+(global-set-key (kbd "C-x x g") #'revert-buffer)
+
+(defun source-code-format--python ()
+  "Instructions to format a python buffer"
+  (elpy-format-code))
+
+(defun source-code-format ()
+  "Format a source code buffer"
+  (interactive)
+  (cond ((eq major-mode 'python-mode) (source-code-format--python))
+	(t (message "Unknown format instructions for %s" major-mode))))
+
+(defun source-code-refactor ()
+  "Invoke a code action to refactor"
+  (interactive))
 
 (use-package general)
 (general-define-key
@@ -538,6 +566,9 @@ the computer is booted).
  "p" #'projectile-command-map
  "w" #'ace-window
  "e" #'eww
+ ;; code actions
+ "c f" #'source-code-format
+ "c r" #'source-code-refactor
  ;; remote hosts
  "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
@@ -548,6 +579,9 @@ the computer is booted).
  "o s" #'vterm-below
  "o S" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
+ ;; modify buffer
+ "m o" #'olivetti-mode
+ "m b" #'ibuffer
  ;; organisation
  "o C" #'calendar
  "o m" #'mu4e
