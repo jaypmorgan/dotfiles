@@ -404,9 +404,9 @@
 
   ;; darken code blocks to easily distinguish body text from source code
   (require 'color)
-  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
-  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  ;;(set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
+  ;;(set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  ;;(set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -466,13 +466,15 @@
 (use-package elfeed
   :init
   ;; https://www.theinsaneapp.com/2021/04/top-machine-learning-blogs-to-follow-in-2021.html
-  (setq elfeed-feeds
+  (setq elfeed-db-directory "~/.cache/elfeed/"
+	elfeed-feeds
         '("https://ruder.io/rss/index.rss"
           "https://karpathy.github.io/feed.xml"
           "https://lilianweng.github.io/lil-log/feed.xml"
           "https://machinelearningmastery.com/feed/"
           "http://blog.shakirm.com/feed/"
-	  "http://planet.lisp.org/rss20.xml")))
+	  "http://planet.lisp.org/rss20.xml"
+	  "https://protesilaos.com/books.xml")))
 
 (global-set-key (kbd "C-]") #'join-line)
 (global-set-key (kbd "C-x x g") #'revert-buffer)
@@ -480,6 +482,9 @@
 (defun source-code-format--python ()
   "Instructions to format a python buffer"
   (elpy-format-code))
+
+(defun source-code-refactor--python ()
+  (elpy-refactor-rename))
 
 (defun source-code-format ()
   "Format a source code buffer"
@@ -489,7 +494,9 @@
 
 (defun source-code-refactor ()
   "Invoke a code action to refactor"
-  (interactive))
+  (interactive)
+  (cond ((eq major-mode 'python-mode) (source-code-refactor--python))
+	(t (message "Unknown format instructions for %s" major-mode))))
 
 (use-package general)
 (general-define-key
@@ -525,6 +532,13 @@
 (add-hook 'dired-mode-hook 'hl-line-mode)
 
 (load-theme 'leuven t)
+
+(custom-set-faces
+ '(mode-line ((t (:background "slate gray" :foreground "white"))))
+ '(mode-line-inactive ((t (:background "gray" :foreground "white"))))
+ '(vertico-current ((t (:foreground "black" :background "azure2"))))
+ '(minibuffer-prompt ((t (:foreground "black" :background "powder blue"))))
+ '(header-line ((t (:background "snow 2")))))
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)

@@ -4,7 +4,7 @@
 
 * Package Init (Straight)
 
-Instead of =package.el=, I've opted to used =straight.el=. It has many benefits over the
+Instead of =package.el=, I've opted to use =straight.el=. It has many benefits over the
 default package manager shipped in Emacs. Firstly, it is possible to pull directly
 from a git repository, and secondly it can compile to native machine code if that
 configuration option is available in the Emacs build.
@@ -462,9 +462,9 @@ the computer is booted).
 
   ;; darken code blocks to easily distinguish body text from source code
   (require 'color)
-  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
-  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  ;;(set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
+  ;;(set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  ;;(set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -528,13 +528,15 @@ the computer is booted).
 (use-package elfeed
   :init
   ;; https://www.theinsaneapp.com/2021/04/top-machine-learning-blogs-to-follow-in-2021.html
-  (setq elfeed-feeds
+  (setq elfeed-db-directory "~/.cache/elfeed/"
+	elfeed-feeds
         '("https://ruder.io/rss/index.rss"
           "https://karpathy.github.io/feed.xml"
           "https://lilianweng.github.io/lil-log/feed.xml"
           "https://machinelearningmastery.com/feed/"
           "http://blog.shakirm.com/feed/"
-	  "http://planet.lisp.org/rss20.xml")))
+	  "http://planet.lisp.org/rss20.xml"
+	  "https://protesilaos.com/books.xml")))
 #+end_src
 
 * Keybindings
@@ -547,6 +549,9 @@ the computer is booted).
   "Instructions to format a python buffer"
   (elpy-format-code))
 
+(defun source-code-refactor--python ()
+  (elpy-refactor-rename))
+
 (defun source-code-format ()
   "Format a source code buffer"
   (interactive)
@@ -555,7 +560,9 @@ the computer is booted).
 
 (defun source-code-refactor ()
   "Invoke a code action to refactor"
-  (interactive))
+  (interactive)
+  (cond ((eq major-mode 'python-mode) (source-code-refactor--python))
+	(t (message "Unknown format instructions for %s" major-mode))))
 
 (use-package general)
 (general-define-key
@@ -598,13 +605,19 @@ and directories.
 (add-hook 'dired-mode-hook 'hl-line-mode)
 #+end_src
 
-I like the contrast that the default theme =leuven= makes. Though, I do want to make
-some changes to this theme to make it less /rash/. For example, the mode-line blue is
-rather distracting, and the yellow highlight in the message area is very
-bright. These colours can be changed in future.
+I like the contrast that the default theme =leuven= makes. Though, I do make some
+changes to this theme to make it less /rash/. For example, the mode-line blue is rather
+distracting, and the yellow highlight in the message area is very bright.
 
 #+begin_src emacs-lisp
 (load-theme 'leuven t)
+
+(custom-set-faces
+ '(mode-line ((t (:background "slate gray" :foreground "white"))))
+ '(mode-line-inactive ((t (:background "gray" :foreground "white"))))
+ '(vertico-current ((t (:foreground "black" :background "azure2"))))
+ '(minibuffer-prompt ((t (:foreground "black" :background "powder blue"))))
+ '(header-line ((t (:background "snow 2")))))
 #+end_src
 
 Finally, let's remove the GUI toolkit elements. These include the scroll bars, the
