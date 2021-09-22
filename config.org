@@ -13,7 +13,6 @@ To get =straight.el= to work, we first disable =package.el= and use the bootstra
 boilerplate code provided by the maintainers of =straight.el=.
 
 #+begin_src emacs-lisp
-;; setup straight.el instead of package.el
 (setq package-enable-at-startup nil
       straight-check-for-modifications 'live)
 
@@ -76,17 +75,17 @@ the computer is booted).
 (defalias 'isearch-backward 'isearch-backward-regexp)
 
 (recentf-mode t)
+(global-auto-revert-mode)
 #+end_src
 
 ** Command invocation
 
 #+begin_src emacs-lisp
 (use-package vertico
-  :init
-  (use-package marginalia
-    :init
-    (marginalia-mode))
-  (vertico-mode t))
+  :init (vertico-mode t))
+
+(use-package marginalia
+  :init (marginalia-mode))
 
 (use-package which-key
   :init
@@ -167,8 +166,19 @@ the computer is booted).
 (use-package ace-window)
 (use-package perspective
   :bind (("C-x k" . persp-kill-buffer*))
-  :init
-  (persp-mode))
+  :init (persp-mode))
+#+end_src
+
+Better Emacs window management.
+
+#+begin_src emacs-lisp
+(use-package popper
+  :bind (("C-`"   . popper-toggle-latest)
+         ("M-`"   . popper-cycle)
+         ("C-M-`" . popper-toggle-type))
+  :config
+  (setq popper-display-control nil)
+  (popper-mode t))
 #+end_src
 
 * Programming Environment
@@ -179,7 +189,10 @@ the computer is booted).
   :hook (after-init . global-company-mode))
 
 (use-package magit)
-(use-package vterm)
+
+(use-package vterm
+  :config
+  (setq vterm-kill-buffer-on-exit t))
 
 (defun vterm-below ()
   "Open a vterm window below"
@@ -285,6 +298,57 @@ the computer is booted).
     (pyvenv-workon name)))
 #+end_src
 
+** Cohesive Programming System
+
+As I am not currently using =lsp-mode=, but instead using focused packages, the
+keybindings between these packages differ. To make it easier to remember the
+keybindings, I am creating a system that collects the code actions that then can be
+mapped to a keybinding later on. This means that no matter the programming language
+(and thus the different package) the keybindings should be consistent (as long as
+I've added them to this system of course!).
+
+The first step is to define the mapping for each of the different languages to the
+code actions and functions that perform said code action. To do this I am creating an
+alist:
+
+#+begin_src emacs-lisp
+(setq language-mode->functions
+      '((python-mode . ((:format . elpy-black-fix-code)
+			(:refacor . elpy-refactor-rename)
+			(:goto-definition . elpy-goto-definition)))
+	(emacs-lisp-mode . ((:format . nil)))))
+
+(defun get-language-function (language fun-type)
+  "Get a function associated with language"
+  (cdr (assoc fun-type (assoc language language-mode->functions))))
+
+(defun get-registered-languages ()
+  "Get a list of languages defined in programming system"
+  (mapcar 'car language-mode->functions))
+#+end_src
+
+Next, I define a macro that builds a function definition. This function is the entry
+point for a keybinding. For example, this function can create a formatting function
+that can be bound to say =SPC c f= if you're using =evil-mode=. When this generated
+function is called, it will detect the current major-mode and call the format
+function specified in =language-mode->function=.
+
+#+begin_src emacs-lisp
+(defmacro register-source-code-fun (fun-name fun-type)
+  `(defun ,fun-name ()
+     (interactive)
+     (cond
+      ,@(append (cl-loop for lang in (get-registered-languages) collect
+			 `((eq major-mode ',lang)
+			   (get-language-function ',lang ,fun-type)))
+		'((t (message "Unknown instructions for %s" major-mode)))))))
+
+;; Generate some functions
+(register-source-code-fun source-code-format :format)
+(register-source-code-fun source-code-refactor :refactor)
+(register-source-code-fun source-code-goto-definition :goto-definition)
+#+end_src
+
 ** Project management
 
 #+begin_src emacs-lisp
@@ -299,12 +363,15 @@ the computer is booted).
 			   "renv/python" "renv/staging"))
 
 (defun rsync--build-exclude-list (exclude-list)
-  (mapconcat (lambda (s) (concat " --exclude=" s " ")) exclude-list " "))
+  (mapconcat
+   (lambda (s) (concat " --exclude=" s " "))
+   exclude-list " "))
 
 (defun rsync--cmd (&optional display)
-  (if display
-      (concat rsync-base-cmd " --progress " (rsync--build-exclude-list rsync-exclude-list))
-    (concat rsync-base-cmd (rsync--build-exclude-list rsync-exclude-list))))
+  (let ((exclude-list (rsync--build-exclude-list rsync-exclude-list)))
+    (if display
+	(concat rsync-base-cmd " --progress " exclude-list)
+      (concat rsync-base-cmd exclude-list))))
 
 (defun dorsync (src dest is_hidden)
   "Launch an asynchronuous rsync command"
@@ -320,6 +387,8 @@ the computer is booted).
 #+end_src
 
 * Org-mode
+
+Note taking
 
 #+begin_src emacs-lisp
 (use-package org-roam
@@ -347,6 +416,17 @@ the computer is booted).
 	 "* TODO %?\n:PROPERTIES:\n:CREATED: %T\n:END:" :unnarrowed nil)))
 (global-set-key (kbd "C-c C-/") 'org-capture)
 
+(use-package org-roam-ui
+  :straight (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+	org-roam-ui-follow t
+	org-roam-ui-update-on-save t
+	org-roam-open-on-start t))
+#+end_src
+
+#+begin_src emacs-lisp
 (use-package pdf-tools
   :config
   (pdf-loader-install)
@@ -407,6 +487,7 @@ the computer is booted).
   (require 'bibtex-actions)  
   (require 'pdf-view)
   (require 'ox-latex)
+  (use-package gnuplot)
   (pdf-loader-install)
 
   ;; Slide show setup. First we use org-tree slide to provide the
@@ -418,7 +499,8 @@ the computer is booted).
   ;; It's nice to have a mixed pitch (variable-pitch for body text,
   ;; and fixed-pitch for source code) when viewing the slide shows.
   (use-package mixed-pitch
-    :hook (org-tree-slide-mode . mixed-pitch-mode))
+    :hook ((org-tree-slide-mode . mixed-pitch-mode)
+	   (org-mode . mixed-pitch-mode)))
 
   ;; Centre the screen when entering the slide show, and put a fancy
   ;; border around it!
@@ -445,6 +527,13 @@ the computer is booted).
 			       (visual-line-mode 1)
 			       (auto-fill-mode 1)))
 
+  ;; re-display any inline images after a source code block is executed.
+  (define-key org-mode-map (kbd "C-c C-c")
+    (lambda ()
+      (interactive)
+      (org-ctrl-c-ctrl-c)
+      (org-display-inline-images)))
+
   (add-to-list 'org-latex-classes
 	       '("book-no-parts"
 		 "\\documentclass{book}"
@@ -458,13 +547,14 @@ the computer is booted).
 							   (shell . t)
 							   (python . t)
 							   (R . t)
+							   (gnuplot . t)
 							   (plantuml . t)))
 
   ;; darken code blocks to easily distinguish body text from source code
   (require 'color)
-  ;;(set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
-  ;;(set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
-  ;;(set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
+  (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -495,7 +585,9 @@ the computer is booted).
   (setq flyspell-default-dictionary "british"))
 #+end_src
 
-* Email+Calendar+RSS
+* Do everything in Emacs
+
+** Email
 
 #+begin_src emacs-lisp
 (use-package mu4e
@@ -507,7 +599,43 @@ the computer is booted).
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
       (load mu4e-config))))
+#+end_src
 
+** Social
+
+#+begin_src emacs-lisp
+(use-package alert
+  :config
+  (setq alert-default-style 'libnotify
+	alert-libnotify-command "/usr/bin/notify-send"))
+
+(defmacro my/slack-team (host user)
+  "Connect to a team with a token and cookie"
+  `(slack-register-team
+    :full-and-display-names t
+    :name ,(car (split-string host ".slack.com"))
+    :token (auth-source-pick-first-password :host ,host :user ,user)
+    :cookie (auth-source-pick-first-password :host ,host :user ,(concat user "^cookie"))))
+
+(defmacro load-if-exists (file)
+  (let ((load-file (gensym)))
+    `(let ((load-file ,(expand-file-name (eval file))))
+       (when (file-exists-p load-file)
+	 (load load-file)))))
+
+(use-package slack
+  :commands (slack-start)
+  :config
+  (setq slack-buffer-emojify t
+	slack-thread-also-send-to-room nil
+	lui-time-stamp-format "[%Y-%m-%d %H:%M]"
+	lui-time-stamp-only-when-changed-p t)
+  (load-if-exists (concat user-emacs-directory "slack-init.el")))
+#+end_src
+
+** Calendar
+
+#+begin_src emacs-lisp
 (use-package calendar
   :hook (diary-list-entries . diary-sort-entries)
   :bind (:map calendar-mode-map ("C-x i" . diary-insert-entry))
@@ -524,19 +652,62 @@ the computer is booted).
   (let ((gcal-config (concat user-emacs-directory "gcal.el")))
     (when (file-exists-p gcal-config)
       (load gcal-config))))
+#+end_src
 
+** RSS Feed & Podcasts
+
+#+begin_src emacs-lisp
 (use-package elfeed
   :init
   ;; https://www.theinsaneapp.com/2021/04/top-machine-learning-blogs-to-follow-in-2021.html
-  (setq elfeed-db-directory "~/.cache/elfeed/"
+  (setq elfeed-db-directory "~/.cache/elfeed/"  ;; keep the home directory clean
 	elfeed-feeds
-        '("https://ruder.io/rss/index.rss"
-          "https://karpathy.github.io/feed.xml"
-          "https://lilianweng.github.io/lil-log/feed.xml"
-          "https://machinelearningmastery.com/feed/"
-          "http://blog.shakirm.com/feed/"
-	  "http://planet.lisp.org/rss20.xml"
-	  "https://protesilaos.com/books.xml")))
+        '(("https://ruder.io/rss/index.rss" machine-learning)
+          ("https://karpathy.github.io/feed.xml" machine-learning)
+          ("https://lilianweng.github.io/lil-log/feed.xml" machine-learning)
+          ("https://machinelearningmastery.com/feed/" machine-learning)
+          ("http://blog.shakirm.com/feed/" machine-learning)
+	  ("http://planet.lisp.org/rss20.xml" lisp programming)
+	  ("https://protesilaos.com/books.xml" misc)))
+
+  ;; mark entries with a media enclosure (i.e. contains an mp3) as a podcast
+  ;; this is taken from https://www.reddit.com/r/emacs/comments/g1o36p/emacs_way_to_listen_podcasts/
+  ;; as an easy way to configure elfeed to handle podcast lists
+  (defun elfeed-podcast-tagger (entry)
+    (when (elfeed-entry-enclosures entry)
+      (elfeed-tag entry 'podcast)))
+
+  (add-hook 'elfeed-new-entry-hook #'elfeed-podcast-tagger)
+
+  ;; A list of podcasts to include the elfeed list
+  (setq elfeed-feeds
+	(append elfeed-feeds
+		'("http://feeds.soundcloud.com/users/soundcloud:users:27399956/sounds.rss" ;; cox-n-crendor
+		  "https://audioboom.com/channels/5031584.rss" ;; chilluminati
+		  ))))
+#+end_src
+
+Use [[https://www.gnu.org/software/emms/][EMMS]] to play podcasts/music.
+
+#+begin_src emacs-lisp
+(use-package emms
+  :defer nil
+  :init
+  (require 'emms-setup)
+  (emms-all)
+  (emms-default-players))
+#+end_src
+
+** Read e-books
+
+#+begin_src emacs-lisp
+(use-package nov
+  :mode ("\\.epub\\'" . nov-mode)
+  :straight (nov :type git
+		 :repo "https://depp.brause.cc/nov.el.git"
+		 :local-repo "nov")
+  :config
+  (setq nov-text-width 80))
 #+end_src
 
 * Keybindings
@@ -544,25 +715,8 @@ the computer is booted).
 #+begin_src emacs-lisp
 (global-set-key (kbd "C-]") #'join-line)
 (global-set-key (kbd "C-x x g") #'revert-buffer)
-
-(defun source-code-format--python ()
-  "Instructions to format a python buffer"
-  (elpy-format-code))
-
-(defun source-code-refactor--python ()
-  (elpy-refactor-rename))
-
-(defun source-code-format ()
-  "Format a source code buffer"
-  (interactive)
-  (cond ((eq major-mode 'python-mode) (source-code-format--python))
-	(t (message "Unknown format instructions for %s" major-mode))))
-
-(defun source-code-refactor ()
-  "Invoke a code action to refactor"
-  (interactive)
-  (cond ((eq major-mode 'python-mode) (source-code-refactor--python))
-	(t (message "Unknown format instructions for %s" major-mode))))
+(global-set-key (kbd "C-;") #'comment-line)
+(global-set-key (kbd "C-<tab>") #'expand-abbrev)
 
 (use-package general)
 (general-define-key
@@ -576,6 +730,7 @@ the computer is booted).
  ;; code actions
  "c f" #'source-code-format
  "c r" #'source-code-refactor
+ "c g d" #'source-code-goto-definition
  ;; remote hosts
  "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
@@ -589,9 +744,17 @@ the computer is booted).
  ;; modify buffer
  "m o" #'olivetti-mode
  "m b" #'ibuffer
+ ;; EMMS
+ "v v" #'emms
+ "v p" #'emms-pause
+ "v >" #'emms-seek-forward
+ "v <" #'emms-seek-backward
+ "v ," #'emms-previous
+ "v ." #'emms-next
  ;; organisation
  "o C" #'calendar
- "o m" #'mu4e
+ "o m s" #'slack-im-select
+ "o m m" #'mu4e
  "o e" #'elfeed
  "o u" #'undo-tree-visualize)
 #+end_src
@@ -610,14 +773,9 @@ changes to this theme to make it less /rash/. For example, the mode-line blue is
 distracting, and the yellow highlight in the message area is very bright.
 
 #+begin_src emacs-lisp
-(load-theme 'leuven t)
-
-(custom-set-faces
- '(mode-line ((t (:background "slate gray" :foreground "white"))))
- '(mode-line-inactive ((t (:background "gray" :foreground "white"))))
- '(vertico-current ((t (:foreground "black" :background "azure2"))))
- '(minibuffer-prompt ((t (:foreground "black" :background "powder blue"))))
- '(header-line ((t (:background "snow 2")))))
+(set-frame-font "Hack 11" nil t)
+(set-face-font 'variable-pitch "Noto Sans")
+(setq default-frame-alist '((font . "Hack-11")))
 #+end_src
 
 Finally, let's remove the GUI toolkit elements. These include the scroll bars, the
