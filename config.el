@@ -47,6 +47,7 @@
 
 (recentf-mode t)
 (global-auto-revert-mode)
+(delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
 
 (use-package vertico
   :init (vertico-mode t))

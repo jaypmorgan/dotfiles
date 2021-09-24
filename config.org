@@ -76,6 +76,7 @@ the computer is booted).
 
 (recentf-mode t)
 (global-auto-revert-mode)
+(delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
 #+end_src
 
 ** Command invocation
@@ -351,6 +352,18 @@ function specified in =language-mode->function=.
 
 ** Project management
 
+I code locally, and push changes to a remote server for computation. Instead of using
+tramp, which at times, can be quite slow (especially with magit), I've written some
+functions to interact and upload the files with =rsync=.
+
+In each =projectile= project, I define the =rsync-source= (i.e. the projectile root), and
+the =rsync-destination= (where the host and directory the files should be uploaded
+to).
+
+Two other variables control what and how the files are uploaded. =rsync-base-cmd= is
+the command and flags to execute, while the =rsync-exclude-list= is a list of paths to
+exclude from uploading.
+
 #+begin_src emacs-lisp
 ;; Projectile level syncing between local and remote hosts
 ;; set the initial variables to nil
@@ -361,18 +374,36 @@ function specified in =language-mode->function=.
       rsync-exclude-list '("data" ".git" "container-dev" "container"
 			   "__pycache__" "*.pyc" "renv/library" "renv/local"
 			   "renv/python" "renv/staging"))
+#+end_src
 
+Next, I create the functions. For every element in =rsync-exclude-list= we need to add
+a =--exclude= flag for rsync. Maybe these could be combined, but this seems to work fine.
+
+#+begin_src emacs-lisp
 (defun rsync--build-exclude-list (exclude-list)
   (mapconcat
    (lambda (s) (concat " --exclude=" s " "))
    exclude-list " "))
+#+end_src
 
+The rsync command builds the find command, and adds the =--progress= flag if a
+verbose/display mode is set.
+
+#+begin_src emacs-lisp
 (defun rsync--cmd (&optional display)
   (let ((exclude-list (rsync--build-exclude-list rsync-exclude-list)))
     (if display
 	(concat rsync-base-cmd " --progress " exclude-list)
       (concat rsync-base-cmd exclude-list))))
+#+end_src
 
+Finally, we have the callable =dorsync= command that takes the source destination and
+verbose Boolean as arguments.
+
+Later in this configuration file, I bind this command (both verbose and non-verbose
+version) to some keybindings.
+
+#+begin_src emacs-lisp
 (defun dorsync (src dest is_hidden)
   "Launch an asynchronuous rsync command"
   (interactive)
