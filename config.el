@@ -1,3 +1,11 @@
+(defun add-to-exec-path (path)
+  (let ((fp (expand-file-name path)))
+    (unless (member fp exec-path)
+      (setq exec-path (cons fp exec-path)))))
+
+(add-to-exec-path "~/.bin")
+(add-to-exec-path "~/.bin/julia")
+
 (setq package-enable-at-startup nil
       straight-check-for-modifications 'live)
 
@@ -18,7 +26,10 @@
 (setq straight-use-package-by-default t
       use-package-always-defer t)
 
-(setq gc-cons-threshold 100000000
+(straight-override-recipe
+ '(org :type git :host github :repo "emacsmirror/org" :no-build t))
+
+(setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024)
       auto-save-default nil
       backup-inhibited t
@@ -28,6 +39,7 @@
       require-final-newline t
       indent-tabs-mode nil
       dired-listing-switches "-alhgo --group-directories-first"
+      dired-auto-revert-buffer t
       ring-bell-function 'ignore
       dired-dwim-target t
       home-path "~/"
@@ -46,30 +58,55 @@
 (defalias 'isearch-backward 'isearch-backward-regexp)
 
 (recentf-mode t)
+(setq recentf-max-menu-items 100
+      recentf-max-saved-items 100)
+
+(defun my/recentf (file)
+  "Select from recentf files using the minibuffer"
+  (interactive
+   (list (completing-read "Recent file: " (recentf-menu-elements recentf-max-menu-items))))
+  (find-file file))
+
 (global-auto-revert-mode)
 (delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
+(add-hook 'write-file-hooks 'delete-trailing-whitespace nil t)
 
-(use-package vertico
-  :init (vertico-mode t))
+;; (use-package vertico
+;;   :init (vertico-mode t))
 
-(use-package marginalia
-  :init (marginalia-mode))
+;; (use-package marginalia
+;;   :init (marginalia-mode))
 
-(use-package which-key
-  :init
-  ;; only show which-key if C-h is trigged during keystroke
-  (setq which-key-show-early-on-C-h t
-        which-key-idle-delay 10000
-        which-key-idle-secondary-delay 0.01)
-  (which-key-mode))
+;; (use-package which-key
+;;   :init
+;;   ;; only show which-key if C-h is trigged during keystroke
+;;   (setq which-key-show-early-on-C-h t
+;;         which-key-idle-delay 10000
+;;         which-key-idle-secondary-delay 0.01)
+;;   (which-key-mode))
 
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles basic partial-completion)))))
+;; (use-package orderless
+;;   :init
+;;   (setq completion-styles '(orderless)
+;; 	completion-category-defaults nil
+;; 	completion-category-overrides '((file (styles basic partial-completion)))))
+
+
+(icomplete-mode t)
+(setq icomplete-prospects-height 1
+      icomplete-delay-completions-threshold 100)
+(fido-mode t)
 
 (use-package avy)
+
+(setq my/window-config (current-window-configuration))
+(defun my/fullscreen-toggle ()
+  (interactive)
+  (if (= (length (window-list)) 1)
+      (set-window-configuration my/window-config)
+    (progn
+      (setq my/window-config (current-window-configuration))
+      (delete-other-windows))))
 
 (use-package expand-region
   :defer nil
@@ -78,8 +115,8 @@
 
 (use-package multiple-cursors
   :defer nil
-  :bind (("C-<" . mc/mark-previous-like-this)
-	 ("C->" . mc/mark-next-like-this)))
+  :bind (("C-M-<" . mc/mark-previous-like-this)
+	 ("C-M->" . mc/mark-next-like-this)))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"
@@ -118,26 +155,17 @@
     (kill-ring-save beg end)
     (goto-char org)))
 
-(global-set-key (kbd "C-o") #'insert-line-below)
-(global-set-key (kbd "C-S-o") #'insert-line-above)
-(global-set-key (kbd "C-c y") #'copy-whole-line)
-(global-set-key (kbd "C-z") #'repeat)
-
 (use-package ace-window)
 (use-package perspective
   :bind (("C-x k" . persp-kill-buffer*))
   :init (persp-mode))
 
-(use-package popper
-  :bind (("C-`"   . popper-toggle-latest)
-         ("M-`"   . popper-cycle)
-         ("C-M-`" . popper-toggle-type))
-  :config
-  (setq popper-display-control nil)
-  (popper-mode t))
-
 (use-package company
-  :hook (after-init . global-company-mode))
+  :bind ("M-n" . company-complete)
+  :hook (after-init . global-company-mode)
+  :config
+  (setq company-minimum-prefix-length 2
+	company-idle-delay 0.2))
 
 (use-package magit)
 
@@ -150,46 +178,119 @@
   (interactive)
   (split-window-below -20)
   (other-window 1)
-  (vterm t))
+  (vterm t)
+  (activate-projectile-project-in-terminal))
+
+(defun activate-projectile-project-in-terminal ()
+  (interactive)
+  (let ((project-name pyvenv-virtual-env-name))
+    (vterm-send-string (format "conda activate %s" project-name))
+    (vterm-send-return)
+    (vterm-clear)))
 
 (use-package projectile
   :defer nil
   :bind-keymap ("M-p" . projectile-command-map)
+  :bind (:map projectile-mode-map
+	      ("C-c p t p" . run-python-projectile))
   :init
   (projectile-mode t)
   (setq projectile-project-search-path (list (from-home "workspace/"))))
+
+(defun run-repl-projectile (cmd)
+  (interactive)
+  (let ((default-directory (projectile-project-root)))
+    (funcall cmd)))
+
+(defun run-python-projectile ()
+  (interactive)
+  (run-repl-projectile #'run-python))
 
 (use-package undo-tree
   :init
   (global-undo-tree-mode)
   :config
   (setq undo-tree-visualizer-diff t
-	undo-tree-visualizer-timestamps t))
+	undo-tree-visualizer-timestamps t
+	undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
+
+;; (use-package flymake
+;;   :load-path "~/.emacs.d/elpa/flymake-1.2.2")
+
+(use-package c-mode
+  :straight nil
+  :hook ((c++-mode . electric-pair-mode)
+	 (c-mode . electric-pair-mode))
+  :init
+  (setq c-default-style "linux"
+	c-basic-offset 4))
+
+(require 'flymake)
 
 (use-package python-mode
+  :bind (:map python-mode-map
+	      ("C-c C-c" . python-shell-send-buffer)
+	      ("C-c C-r" . python-shell-send-region))
   :init
-  (setq python-indent-offset 4))
+  (setq python-indent-offset 4
+	python-shell-interpreter "ipython"
+	python-shell-interpreter-args "--pprint --autoindent --simple-prompt -i --matplotlib"
+	py-default-interpreter "ipython"))
 
-(use-package elpy
-  :hook (python-mode . elpy-enable)
-  :init
-  (setq elpy-rpc-python-command (expand-file-name "~/.bin/miniconda3/bin/python3")))
+(use-package eglot)
 
 (use-package pyvenv
   :defer nil
-  :hook ((elpy-mode . pyvenv-mode)
+  :hook ((python-mode . pyvenv-mode)
 	 (projectile-mode . pyvenv-mode))
   :init
   (setenv "WORKON_HOME" (expand-file-name "~/.bin/miniconda3/envs"))
   (pyvenv-mode))
 
-(use-package isend-mode
-  :config
-  (setq isend-send-region-function 'isend--ipython-cpaste))
+(defun code-cells-highlight-and-send ()
+  "Highlight a code send and send it via isend"
+  (interactive)
+  (code-cells-mark-cell)
+  (isend-send))
 
+(use-package code-cells
+  :hook (python-mode . code-cells-mode-maybe)
+  :bind (:map code-cells-mode
+	      ("C-c <return>" . code-cells-highlight-and-send)
+	      ("C-<left>" . code-cells-backward-cell)
+	      ("C-<right>" . code-cells-forward-cell)))
+
+(defun string-replace (fromstring tostring instring)
+  (replace-regexp-in-string (regexp-quote fromstring) tostring instring nil 'literal))
+
+(defun conda-activate-once (name)
+  "Activate a conda environment only if it is not already set"
+  (interactive)
+  (unless (string= pyvenv-virtual-env-name name)
+    (pyvenv-workon name)))
+
+(use-package highlight-indent-guides
+  :hook ((prog-mode . highlight-indent-guides-mode))
+  :config (setq highlight-indent-guides-method 'character))
+
+(use-package numpydoc
+  :config
+  (setq numpydoc-insert-parameter-types t
+	numpydoc-insert-return-without-typehint t))
+
+(use-package good-scroll
+  :defer nil
+  :init
+  (good-scroll-mode t))
+
+(use-package zeal-at-point)
 (use-package csv-mode)
 (use-package yaml-mode)
 (use-package markdown-mode)
+
+(use-package isend-mode
+  :config
+  (setq isend-send-region-function 'isend--ipython-cpaste))
 
 (use-package ess
   :config
@@ -199,20 +300,25 @@
   :hook ((lisp-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
 
+;; racket
+(use-package racket-mode
+  :hook (racket-mode . paredit-mode)
+  :init
+  (use-package quack)
+  (use-package geiser-racket))
+
 (use-package lisp-mode
   :straight nil
-  :hook ((lisp-mode . show-paren-mode)))
+  :hook ((lisp-mode . show-paren-mode)
+	 (lisp-mode . prettify-symbols-mode)))
 
 (use-package emacs-lisp-mode
   :straight nil
   :hook ((emacs-lisp-mode . show-paren-mode)))
 
-(use-package auctex
-  :ensure auctex)
-
 (use-package slime
   :config
-  (setq inferior-lisp-program "sbcl")
+  (setq inferior-lisp-program "sbcl --dynamic-space-size 3000")
   (define-key slime-mode-map (kbd "<f5>") #'slime-selector))
 
 (use-package slurp-mode
@@ -238,17 +344,11 @@
           plantuml-default-exec-mode 'jar
           org-plantuml-jar-path plantuml-jar-path)))
 
-(defun conda-activate-once (name)
-  "Activate a conda environment only if it is not already set"
-  (interactive)
-  (unless (string= pyvenv-virtual-env-name name)
-    (pyvenv-workon name)))
-
 (setq language-mode->functions
-      '((python-mode . ((:format . elpy-black-fix-code)
-			(:refacor . elpy-refactor-rename)
-			(:goto-definition . elpy-goto-definition)))
-	(emacs-lisp-mode . ((:format . nil)))))
+      '((python-mode . ((:format . lsp-format-buffer)
+			(:refacor . lsp-rename)
+			(:goto-definition . xref-find-definitions)))
+	(emacs-lisp-mode . ((:goto-definition . xref-find-definitions)))))
 
 (defun get-language-function (language fun-type)
   "Get a function associated with language"
@@ -277,10 +377,10 @@
 ;; .dir-local.el should set these at a project level
 (setq rsync-source nil
       rsync-destination nil
-      rsync-base-cmd "rsync -azm"
+      rsync-base-cmd "rsync -am"
       rsync-exclude-list '("data" ".git" "container-dev" "container"
 			   "__pycache__" "*.pyc" "renv/library" "renv/local"
-			   "renv/python" "renv/staging"))
+			   "renv/python" "renv/staging" "build" "dist"))
 
 (defun rsync--build-exclude-list (exclude-list)
   (mapconcat
@@ -305,102 +405,19 @@
     (async-shell-command (concat rsync-cmd " " src " " dest))
     (setq async-shell-command-display-buffer async-value)))
 
-(use-package org-roam
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-	 ("C-c n f" . org-roam-node-find)
-	 ("C-c n i" . org-roam-node-insert))
-  :custom
-  (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
-  (org-roam-capture-templates
-   `(("d" "default" plain
-      "%?"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-      :unnarrowed t)
-     ("m" "meeting" plain
-      (file ,(from-home "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
-      :unnarrowed t)))
-  :init (setq org-roam-v2-ack t)
-  :config (org-roam-setup))
-
-(setq org-capture-templates
-      `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
-	 "* %U\n\n%?" :unnarrowed nil)
-	("t" "Todo Entry" entry (file ,(from-home "Nextcloud/Notes/tasks.org"))
-	 "* TODO %?\n:PROPERTIES:\n:CREATED: %T\n:END:" :unnarrowed nil)))
-(global-set-key (kbd "C-c C-/") 'org-capture)
-
-(use-package org-roam-ui
-  :straight (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
-  :after org-roam
-  :config
-  (setq org-roam-ui-sync-theme t
-	org-roam-ui-follow t
-	org-roam-ui-update-on-save t
-	org-roam-open-on-start t))
-
-(use-package pdf-tools
-  :config
-  (pdf-loader-install)
-  (setq auto-revert-interval 0.5))
-
-(use-package org-ref
-  :commands (org-ref)
-  :config
-  (setq reftex-default-bibliography (from-home "Nextcloud/Notes/references.bib")
-	org-ref-default-bibliography (list (from-home "Nextcloud/Notes/references.bib"))))
-
-(use-package bibtex-actions
-  :custom
-  (bibtex-completion-bibliography (from-home "Nextcloud/Notes/references.bib"))
-  :config
-  (use-package all-the-icons)
-
-  (defun bibtex-actions-add-citation (citation)
-    "Add a new key to the bibliography file"
-    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
-    (write-region (concat "\n" citation "\n") nil bibtex-completion-bibliography 'append)
-    (bibtex-actions-refresh))
-
-  (defun bibtex-actions-open-library ()
-    (interactive)
-    (split-window-sensibly)
-    (find-file bibtex-completion-bibliography))
-
-  (defun bibtex-actions-add-and-insert-citation (citation)
-    "Add a new key to the bibliography and insert citation into buffer"
-    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
-    (bibtex-actions-add-citation citation)
-    (and (string-match "@.*?{\\(.*\\)?," citation)
-	 (bibtex-actions-insert-citation (list (match-string 1 citation)))))
-
-  ;; enable font icons -- taken directly from bibtex-actions README
-  (setq bibtex-actions-symbols
-	`((pdf  . (,(all-the-icons-icon-for-file "foo.pdf" :face 'all-the-icons-dred) .
-		   ,(all-the-icons-icon-for-file "foo.pdf" :face 'bibtex-actions-icon-dim)))
-	  (note . (,(all-the-icons-icon-for-file "foo.txt") .
-		   ,(all-the-icons-icon-for-file "foo.txt" :face 'bibtex-actions-icon-dim)))
-	  (link . (,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'all-the-icons-dpurple) .
-		   ,(all-the-icons-faicon "external-link-square" :v-adjust 0.02 :face 'bibtex-actions-icon-dim)))))
-
-  (defface bibtex-actions-icon-dim
-    '((((background dark)) :foreground "#282c34")
-      (((background light)) :foreground "#fafafa"))
-    "Face for obscuring/dimming icons"
-    :group 'all-the-icons-faces))
-
-(straight-override-recipe
- '(org :type git :host github :repo "emacsmirror/org" :no-build t))
-
 (use-package org
-  :ensure org-plus-contrib
+  :straight (:type built-in)
+  ;;:ensure org-plus-contrib
   :config
   (require 'org-ref)
-  (require 'bibtex-actions)  
+  ;;(require 'citar)
   (require 'pdf-view)
   (require 'ox-latex)
   (use-package gnuplot)
+  (use-package ox-rst)
+  (use-package ob-async)
   (pdf-loader-install)
+  (require 'ox-rst)
 
   ;; Slide show setup. First we use org-tree slide to provide the
   ;; basic and critical functionality of the slide show and only show
@@ -412,16 +429,9 @@
   ;; and fixed-pitch for source code) when viewing the slide shows.
   (use-package mixed-pitch
     :hook ((org-tree-slide-mode . mixed-pitch-mode)
-	   (org-mode . mixed-pitch-mode)))
+	   ;(org-mode . mixed-pitch-mode)
+	   ))
 
-  ;; Centre the screen when entering the slide show, and put a fancy
-  ;; border around it!
-  (use-package olivetti
-    :hook (org-tree-slide-mode . olivetti-mode)
-    :init
-    (setq olivetti-body-width 130
-	  olivetti-style 'fancy))
-  
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
@@ -460,13 +470,8 @@
 							   (python . t)
 							   (R . t)
 							   (gnuplot . t)
-							   (plantuml . t)))
-
-  ;; darken code blocks to easily distinguish body text from source code
-  (require 'color)
-  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
-  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+							   (plantuml . t)
+							   (C . t)))
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -488,7 +493,12 @@
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
   (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
-  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
+  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block)
+
+  (require 'color)
+  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
+  (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4)))
 
 (use-package flyspell
   :hook ((prog-mode . flyspell-prog-mode)
@@ -496,43 +506,148 @@
   :init
   (setq flyspell-default-dictionary "british"))
 
-(use-package mu4e
-  :commands (mu4e)
-  :load-path "/usr/local/share/emacs/site-lisp/mu4e/"
-  :bind (:map mu4e-compose-mode-map ("C-c C-a" . mail-add-attachment)
-	 :map mu4e-view-mode-map ("C-c C-s" . org-store-link))
+(use-package org-roam
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+	 ("C-c n f" . org-roam-node-find)
+	 ("C-c n i" . org-roam-node-insert))
+  :custom
+  (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
+  (org-roam-capture-templates
+   `(("d" "default" plain
+      "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)
+     ("m" "meeting" plain
+      (file ,(from-home "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
+      :unnarrowed t)
+     ("p" "paper" plain
+      "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+FILETAGS: bibliography\n")
+      :unnarrowed t)))
+  :init (setq org-roam-v2-ack t)
+  :config (org-roam-setup))
+
+(use-package deft
+  :bind ("C-c n d" . deft)
   :config
-  (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
-    (when (file-exists-p mu4e-config)
-      (load mu4e-config))))
+  (setq deft-directory (from-home "Nextcloud/Notes")
+	deft-recursive t
+	deft-strip-summary-regexp ":PROPERTIES:\n\\(.+\n\\)+:END:\n"
+	deft-use-filename-as-title t))
 
-(use-package alert
+;; (use-package helm)
+;; (use-package helm-bibtex
+;;   :config
+;;   (setq helm-bibtex-bibliography (from-home "Nextcloud/Notes/references.bib")))
+
+(setq org-capture-templates
+      `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
+	 "* %U\n\n%?" :unnarrowed nil)
+	("t" "Todo Entry" entry (file ,(from-home "Nextcloud/Notes/tasks.org"))
+	 "* TODO %?\n:PROPERTIES:\n:CREATED: %T\n:END:" :unnarrowed nil)
+	("b" "Bug Log" entry (file ,(from-home "Nextcloud/Notes/bugs.org"))
+	 "* %T\n\n- Type: %?\n- Severity:\n- What happened:\n" :unnarrowed nil)))
+(global-set-key (kbd "C-c C-/") 'org-capture)
+
+(use-package org-roam-ui
+  :straight (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+  :after org-roam
   :config
-  (setq alert-default-style 'libnotify
-	alert-libnotify-command "/usr/bin/notify-send"))
+  (setq org-roam-ui-sync-theme t
+	org-roam-ui-follow t
+	org-roam-ui-update-on-save t
+	org-roam-open-on-start t))
 
-(defmacro my/slack-team (host user)
-  "Connect to a team with a token and cookie"
-  `(slack-register-team
-    :full-and-display-names t
-    :name ,(car (split-string host ".slack.com"))
-    :token (auth-source-pick-first-password :host ,host :user ,user)
-    :cookie (auth-source-pick-first-password :host ,host :user ,(concat user "^cookie"))))
+(setq global-bib-file (from-home "Nextcloud/Notes/references.bib")
+      global-bib-pdf (from-home "Nextcloud/Notes/PDFs"))
 
-(defmacro load-if-exists (file)
-  (let ((load-file (gensym)))
-    `(let ((load-file ,(expand-file-name (eval file))))
-       (when (file-exists-p load-file)
-	 (load load-file)))))
+;; Centre the screen when entering the slide show, and put a fancy
+;; border around it!
+(use-package olivetti
+  :hook (org-tree-slide-mode . olivetti-mode)
+  :init
+  (setq olivetti-body-width 130
+	olivetti-style 'fancy))
 
-(use-package slack
-  :commands (slack-start)
+(use-package pdf-tools
   :config
-  (setq slack-buffer-emojify t
-	slack-thread-also-send-to-room nil
-	lui-time-stamp-format "[%Y-%m-%d %H:%M]"
-	lui-time-stamp-only-when-changed-p t)
-  (load-if-exists (concat user-emacs-directory "slack-init.el")))
+  (pdf-loader-install)
+  (setq auto-revert-interval 0.5
+	pdf-annot-activate-created-annotations t
+	pdf-view-display-size 'fit-page))
+
+(use-package org-ref
+  :commands (org-ref)
+  :config
+  (setq reftex-default-bibliography global-bib-file
+	bibtex-completion-bibliography (list global-bib-file (from-home "Nextcloud/Notes/zotero.bib"))
+	org-ref-default-bibliography (list global-bib-file (from-home "Nextcloud/Notes/zotero.bib"))))
+
+(use-package org-roam-bibtex
+  :init
+  (org-roam-bibtex-mode t)
+  :config
+  (require 'org-ref))
+
+(use-package citar
+  :bind (("C-c o b f" . citar-open-library-files)
+	 ("C-c o b i" . citar-insert-citation)
+	 ("C-c o b a" . citar-add-citation)
+	 ("C-c o b n" . citar-open-notes))
+  :custom
+  (citar-bibliography (list
+		       (from-home "Nextcloud/Notes/zotero.bib")
+		       (from-home "Nextcloud/Notes/references.bib")))
+  (citar-library-paths (list (from-home "Nextcloud/Notes/PDFs")))
+  :config
+  (use-package all-the-icons)
+
+  (defun citar-add-citation (citation)
+    "Add a new key to the bibliography file"
+    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
+    (write-region (concat "\n" citation "\n") nil citar-bibliography 'append)
+    (citar-refresh))
+
+  (defun citar-add-and-insert-citation (citation)
+    "Add a new key to the bibliography and insert citation into buffer"
+    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
+    (citar-add-citation citation)
+    (and (string-match "@.*?{\\(.*\\)?," citation)
+	 (citar-insert-citation (list (match-string 1 citation)))))
+
+  (defun citar-add-pdf-for-citation (citation)
+    (interactive (list (completing-read "Citation key: " (citar--extract-keys (citar--get-candidates)))))
+    (let* ((citation (car (last (split-string citation " "))))
+	   (pdf-link-loc (read-from-minibuffer "PDF location: " ))
+	   (new-loc (concat (car citar-library-paths) "/" citation ".pdf")))
+      (url-copy-file pdf-link-loc new-loc)
+      (citar-refresh)
+      new-loc))
+
+  (defun citar-add-pdf-for-citation-and-open (citation)
+    (interactive (list (completing-read "Citation key: " (citar--extract-keys (citar--get-candidates)))))
+    (let ((loc (citar-add-pdf-for-citation citation)))
+      (find-file loc)))
+
+  (setq citar-open-note-function 'orb-citar-edit-note))
+
+;; (use-package mu4e
+;;   :ensure nil
+;;   :hook (mu4e-view-mode . mixed-pitch-mode)
+;;   :load-path "/usr/local/share/emacs/site-lisp/mu4e/"
+;;   :commands (mu4e)
+;;   :bind (:map mu4e-compose-mode-map ("C-c C-a" . mail-add-attachment)
+;; 	 :map mu4e-view-mode-map ("C-c C-s" . org-store-link))
+;;   :config
+;;   (require 'org-mu4e)
+;;   (setq mail-user-agent 'mu4e-user-agent)
+;;   (setq org-mu4e-convert-to-html t)
+;;   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
+;;     (when (file-exists-p mu4e-config)
+;;       (load mu4e-config))))
+
+;; (use-package org-msg :after mu4e)
 
 (use-package calendar
   :hook (diary-list-entries . diary-sort-entries)
@@ -562,43 +677,26 @@
           ("https://machinelearningmastery.com/feed/" machine-learning)
           ("http://blog.shakirm.com/feed/" machine-learning)
 	  ("http://planet.lisp.org/rss20.xml" lisp programming)
-	  ("https://protesilaos.com/books.xml" misc)))
-
-  ;; mark entries with a media enclosure (i.e. contains an mp3) as a podcast
-  ;; this is taken from https://www.reddit.com/r/emacs/comments/g1o36p/emacs_way_to_listen_podcasts/
-  ;; as an easy way to configure elfeed to handle podcast lists
-  (defun elfeed-podcast-tagger (entry)
-    (when (elfeed-entry-enclosures entry)
-      (elfeed-tag entry 'podcast)))
-
-  (add-hook 'elfeed-new-entry-hook #'elfeed-podcast-tagger)
-
-  ;; A list of podcasts to include the elfeed list
-  (setq elfeed-feeds
-	(append elfeed-feeds
-		'("http://feeds.soundcloud.com/users/soundcloud:users:27399956/sounds.rss" ;; cox-n-crendor
-		  "https://audioboom.com/channels/5031584.rss" ;; chilluminati
-		  ))))
-
-(use-package emms
-  :defer nil
-  :init
-  (require 'emms-setup)
-  (emms-all)
-  (emms-default-players))
-
-(use-package nov
-  :mode ("\\.epub\\'" . nov-mode)
-  :straight (nov :type git
-		 :repo "https://depp.brause.cc/nov.el.git"
-		 :local-repo "nov")
-  :config
-  (setq nov-text-width 80))
+	  ("https://protesilaos.com/books.xml" misc))))
 
 (global-set-key (kbd "C-]") #'join-line)
 (global-set-key (kbd "C-x x g") #'revert-buffer)
 (global-set-key (kbd "C-;") #'comment-line)
 (global-set-key (kbd "C-<tab>") #'expand-abbrev)
+(global-set-key (kbd "M-n") #'avy-goto-char-2)
+(global-set-key (kbd "M-j") #'avy-goto-line)
+(global-set-key (kbd "M-k") 'avy-move-line)
+(global-set-key (kbd "s-f") #'forward-sexp)
+(global-set-key (kbd "s-b") #'backward-sexp)
+(global-set-key (kbd "C-o") #'insert-line-below)
+(global-set-key (kbd "C-S-o") #'insert-line-above)
+(global-set-key (kbd "C-c y") #'copy-whole-line)
+(global-set-key (kbd "C-z") #'repeat)
+(global-set-key (kbd "C-f") #'find-forward)
+(global-set-key (kbd "C-b") #'find-backward)
+(global-set-key (kbd "C-c C-j") #'imenu)
+(global-set-key (kbd "M-o") 'other-window)
+(global-set-key (kbd "M-'") 'my/fullscreen-toggle)
 
 (use-package general)
 (general-define-key
@@ -623,6 +721,7 @@
  "o s" #'vterm-below
  "o S" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
+ "o r" 'my/recentf
  ;; modify buffer
  "m o" #'olivetti-mode
  "m b" #'ibuffer
@@ -642,10 +741,21 @@
 
 (add-hook 'dired-mode-hook 'hl-line-mode)
 
-(set-frame-font "Hack 11" nil t)
-(set-face-font 'variable-pitch "Noto Sans")
-(setq default-frame-alist '((font . "Hack-11")))
+(add-to-list 'default-frame-alist '(font . "IBM Plex Mono Text-10"))
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
+
+(use-package root-mode
+  :load-path "~/workspace/root-mode"
+  :bind (:map c++-mode-map
+	      (("C-c C-c" . root-eval-defun-maybe)
+	       ("C-c C-b" . root-eval-buffer)
+	       ("C-c C-l" . root-eval-file)
+	       ("C-c C-r" . root-eval-region)
+	       ("C-c C-z" . run-root-other-window)))
+  :straight (root-mode :type git :host github :repo "jaypmorgan/root-mode")
+  :config
+  (setq root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
+	root-terminal-backend 'vterm))
