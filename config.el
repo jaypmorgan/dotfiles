@@ -71,31 +71,31 @@
 (delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
 (add-hook 'write-file-hooks 'delete-trailing-whitespace nil t)
 
-;; (use-package vertico
-;;   :init (vertico-mode t))
+(use-package vertico
+  :init (vertico-mode t))
 
-;; (use-package marginalia
-;;   :init (marginalia-mode))
+(use-package marginalia
+  :init (marginalia-mode))
 
-;; (use-package which-key
-;;   :init
-;;   ;; only show which-key if C-h is trigged during keystroke
-;;   (setq which-key-show-early-on-C-h t
-;;         which-key-idle-delay 10000
-;;         which-key-idle-secondary-delay 0.01)
-;;   (which-key-mode))
+(use-package which-key
+  :init
+  ;; only show which-key if C-h is trigged during keystroke
+  (setq which-key-show-early-on-C-h t
+        which-key-idle-delay 10000
+        which-key-idle-secondary-delay 0.01)
+  (which-key-mode))
 
-;; (use-package orderless
-;;   :init
-;;   (setq completion-styles '(orderless)
-;; 	completion-category-defaults nil
-;; 	completion-category-overrides '((file (styles basic partial-completion)))))
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless)
+	completion-category-defaults nil
+	completion-category-overrides '((file (styles basic partial-completion)))))
 
 
-(icomplete-mode t)
-(setq icomplete-prospects-height 1
-      icomplete-delay-completions-threshold 100)
-(fido-mode t)
+;; (icomplete-mode t)
+;; (setq icomplete-prospects-height 1
+;;       icomplete-delay-completions-threshold 100)
+;; (fido-mode t)
 
 (use-package avy)
 
@@ -154,6 +154,17 @@
 		    (line-beginning-position))))
     (kill-ring-save beg end)
     (goto-char org)))
+
+;; don't recenter the cursor in the vertical plane when the cursor
+;; moves to the end of the page. Instead, increment the page
+;; (i.e. move the page up or down) therefore preserving the context of
+;; the cursor.
+(setq scroll-margin 3
+      scroll-conservatively 101
+      scroll-up-aggressively 0.01
+      scroll-down-aggressively 0.01
+      scroll-preserve-screen-position t
+      auto-window-vscroll nil)
 
 (use-package ace-window)
 (use-package perspective
@@ -247,16 +258,18 @@
   (setenv "WORKON_HOME" (expand-file-name "~/.bin/miniconda3/envs"))
   (pyvenv-mode))
 
-(defun code-cells-highlight-and-send ()
+(defun highlight-and-send ()
   "Highlight a code send and send it via isend"
   (interactive)
-  (code-cells-mark-cell)
+  (cond ((eq major-mode 'org-mode) (org-babel-mark-block))
+	((eq major-mode 'code-cells-mode) (code-cells-mark-cell))
+	(t (error "Unknown major mode")))
   (isend-send))
 
 (use-package code-cells
   :hook (python-mode . code-cells-mode-maybe)
   :bind (:map code-cells-mode
-	      ("C-c <return>" . code-cells-highlight-and-send)
+	      ("C-c <return>" . highlight-and-send)
 	      ("C-<left>" . code-cells-backward-cell)
 	      ("C-<right>" . code-cells-forward-cell)))
 
@@ -423,7 +436,12 @@
   ;; basic and critical functionality of the slide show and only show
   ;; one heading at one time.
   (use-package org-tree-slide
-    :bind (:map org-mode-map ("<f8>" . org-tree-slide-mode)))
+    :bind (:map org-mode-map ("<f8>" . org-tree-slide-mode)
+		("<f9>" . org-tree-slide-move-next-tree)
+		("<f7>" . org-tree-slide-move-previous-tree))
+    :config
+    (setq org-tree-slide-modeline-display nil
+	  org-tree-slide-header t))
 
   ;; It's nice to have a mixed pitch (variable-pitch for body text,
   ;; and fixed-pitch for source code) when viewing the slide shows.
@@ -531,15 +549,10 @@
 (use-package deft
   :bind ("C-c n d" . deft)
   :config
-  (setq deft-directory (from-home "Nextcloud/Notes")
+  (setq deft-directory (from-home "Nextcloud/Notes/BIOSOFT")
 	deft-recursive t
 	deft-strip-summary-regexp ":PROPERTIES:\n\\(.+\n\\)+:END:\n"
 	deft-use-filename-as-title t))
-
-;; (use-package helm)
-;; (use-package helm-bibtex
-;;   :config
-;;   (setq helm-bibtex-bibliography (from-home "Nextcloud/Notes/references.bib")))
 
 (setq org-capture-templates
       `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
@@ -567,7 +580,7 @@
 (use-package olivetti
   :hook (org-tree-slide-mode . olivetti-mode)
   :init
-  (setq olivetti-body-width 130
+  (setq olivetti-body-width 90
 	olivetti-style 'fancy))
 
 (use-package pdf-tools
@@ -697,7 +710,7 @@
 (global-set-key (kbd "C-c C-j") #'imenu)
 (global-set-key (kbd "M-o") 'other-window)
 (global-set-key (kbd "M-'") 'my/fullscreen-toggle)
-
+(global-set-key (kbd "C-c <Return>") 'highlight-and-send)
 (use-package general)
 (general-define-key
  :prefix "C-c"
@@ -742,6 +755,7 @@
 (add-hook 'dired-mode-hook 'hl-line-mode)
 
 (add-to-list 'default-frame-alist '(font . "IBM Plex Mono Text-10"))
+(load-theme 'leuven t)
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
@@ -758,4 +772,4 @@
   :straight (root-mode :type git :host github :repo "jaypmorgan/root-mode")
   :config
   (setq root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
-	root-terminal-backend 'vterm))
+	root-terminal-backend 'inferior))
