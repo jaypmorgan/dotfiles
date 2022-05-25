@@ -91,12 +91,6 @@
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles basic partial-completion)))))
 
-
-;; (icomplete-mode t)
-;; (setq icomplete-prospects-height 1
-;;       icomplete-delay-completions-threshold 100)
-;; (fido-mode t)
-
 (use-package avy)
 
 (setq my/window-config (current-window-configuration))
@@ -172,11 +166,16 @@
   :init (persp-mode))
 
 (use-package company
-  :bind ("M-n" . company-complete)
+  :bind ("M-/" . company-complete)
   :hook (after-init . global-company-mode)
   :config
   (setq company-minimum-prefix-length 2
 	company-idle-delay 0.2))
+
+(use-package company-quickhelp
+  :after company
+  :config
+  (company-quickhelp-mode t))
 
 (use-package magit)
 
@@ -225,9 +224,6 @@
 	undo-tree-visualizer-timestamps t
 	undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
 
-;; (use-package flymake
-;;   :load-path "~/.emacs.d/elpa/flymake-1.2.2")
-
 (use-package c-mode
   :straight nil
   :hook ((c++-mode . electric-pair-mode)
@@ -248,7 +244,10 @@
 	python-shell-interpreter-args "--pprint --autoindent --simple-prompt -i --matplotlib"
 	py-default-interpreter "ipython"))
 
-(use-package eglot)
+(use-package eglot
+  :hook (python-mode . eglot-mode))
+
+(use-package blacken)
 
 (use-package pyvenv
   :defer nil
@@ -262,8 +261,8 @@
   "Highlight a code send and send it via isend"
   (interactive)
   (cond ((eq major-mode 'org-mode) (org-babel-mark-block))
-	((eq major-mode 'code-cells-mode) (code-cells-mark-cell))
-	(t (error "Unknown major mode")))
+	((eq major-mode 'python-mode) (code-cells-mark-cell))
+	(t (error (format "Unknown major mode: %s" major-mode))))
   (isend-send))
 
 (use-package code-cells
@@ -290,11 +289,6 @@
   :config
   (setq numpydoc-insert-parameter-types t
 	numpydoc-insert-return-without-typehint t))
-
-(use-package good-scroll
-  :defer nil
-  :init
-  (good-scroll-mode t))
 
 (use-package zeal-at-point)
 (use-package csv-mode)
@@ -329,10 +323,9 @@
   :straight nil
   :hook ((emacs-lisp-mode . show-paren-mode)))
 
-(use-package slime
-  :config
-  (setq inferior-lisp-program "sbcl --dynamic-space-size 3000")
-  (define-key slime-mode-map (kbd "<f5>") #'slime-selector))
+(use-package sly
+  :init
+  (setq inferior-lisp-program "sbcl"))
 
 (use-package slurp-mode
   :straight (slurp-mode :type git :host github :repo "jaypmorgan/slurp-mode")
@@ -356,6 +349,18 @@
     (setq plantuml-jar-path filepath
           plantuml-default-exec-mode 'jar
           org-plantuml-jar-path plantuml-jar-path)))
+
+(use-package cern-root-mode
+  :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
+  :bind (:map c++-mode-map
+	      (("C-c C-c" . cern-root-eval-defun-maybe)
+	       ("C-c C-b" . cern-root-eval-buffer)
+	       ("C-c C-l" . cern-root-eval-file)
+	       ("C-c C-r" . cern-root-eval-region)
+	       ("C-c C-z" . run-cern-root-other-window)))
+  :config
+  (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
+	cern-root-terminal-backend 'inferior))
 
 (setq language-mode->functions
       '((python-mode . ((:format . lsp-format-buffer)
@@ -406,6 +411,10 @@
 	(concat rsync-base-cmd " --progress " exclude-list)
       (concat rsync-base-cmd exclude-list))))
 
+(defun select-rsync-destination (dest)
+  (interactive (list (completing-read "Destination: " *available-destinations*)))
+  (setq rsync-destination dest))
+
 (defun dorsync (src dest is_hidden)
   "Launch an asynchronuous rsync command"
   (interactive)
@@ -431,6 +440,9 @@
   (use-package ob-async)
   (pdf-loader-install)
   (require 'ox-rst)
+
+  (use-package org-fragtog
+    :hook (org-mode . org-fragtog-mode))
 
   ;; Slide show setup. First we use org-tree slide to provide the
   ;; basic and critical functionality of the slide show and only show
@@ -645,22 +657,14 @@
 
   (setq citar-open-note-function 'orb-citar-edit-note))
 
-;; (use-package mu4e
-;;   :ensure nil
-;;   :hook (mu4e-view-mode . mixed-pitch-mode)
-;;   :load-path "/usr/local/share/emacs/site-lisp/mu4e/"
-;;   :commands (mu4e)
-;;   :bind (:map mu4e-compose-mode-map ("C-c C-a" . mail-add-attachment)
-;; 	 :map mu4e-view-mode-map ("C-c C-s" . org-store-link))
-;;   :config
-;;   (require 'org-mu4e)
-;;   (setq mail-user-agent 'mu4e-user-agent)
-;;   (setq org-mu4e-convert-to-html t)
-;;   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
-;;     (when (file-exists-p mu4e-config)
-;;       (load mu4e-config))))
-
-;; (use-package org-msg :after mu4e)
+(when (file-exists-p "/usr/share/emacs/site-lisp/mu4e/mu4e.el")
+  (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+  (require 'org-mu4e)
+  (setq mail-user-agent 'mu4e-user-agent)
+  (setq org-mu4e-convert-to-html t)
+  (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
+    (when (file-exists-p mu4e-config)
+      (load mu4e-config))))
 
 (use-package calendar
   :hook (diary-list-entries . diary-sort-entries)
@@ -754,22 +758,10 @@
 
 (add-hook 'dired-mode-hook 'hl-line-mode)
 
-(add-to-list 'default-frame-alist '(font . "IBM Plex Mono Text-10"))
-(load-theme 'leuven t)
+(add-to-list 'default-frame-alist '(font . "Iosevka-11"))
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
-(use-package root-mode
-  :load-path "~/workspace/root-mode"
-  :bind (:map c++-mode-map
-	      (("C-c C-c" . root-eval-defun-maybe)
-	       ("C-c C-b" . root-eval-buffer)
-	       ("C-c C-l" . root-eval-file)
-	       ("C-c C-r" . root-eval-region)
-	       ("C-c C-z" . run-root-other-window)))
-  :straight (root-mode :type git :host github :repo "jaypmorgan/root-mode")
-  :config
-  (setq root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
-	root-terminal-backend 'inferior))
+(add-hook 'prog-mode-hook 'linum-mode)
