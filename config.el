@@ -71,8 +71,8 @@
 (delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
 (add-hook 'write-file-hooks 'delete-trailing-whitespace nil t)
 
-(use-package vertico
-  :init (vertico-mode t))
+;; (use-package vertico
+;;   :init (vertico-mode t))
 
 (use-package marginalia
   :init (marginalia-mode))
@@ -90,6 +90,9 @@
   (setq completion-styles '(orderless)
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles basic partial-completion)))))
+
+(icomplete-mode t)
+(setq icomplete-prospects-height 1)
 
 (use-package avy)
 
@@ -161,9 +164,11 @@
       auto-window-vscroll nil)
 
 (use-package ace-window)
+
 (use-package perspective
   :bind (("C-x k" . persp-kill-buffer*))
-  :init (persp-mode))
+  :init (persp-mode)
+  :custom (persp-mode-prefix-key (kbd "C-x x")))
 
 (use-package company
   :bind ("M-/" . company-complete)
@@ -216,6 +221,8 @@
   (interactive)
   (run-repl-projectile #'run-python))
 
+(use-package ripgrep :after projectile)
+
 (use-package undo-tree
   :init
   (global-undo-tree-mode)
@@ -235,6 +242,7 @@
 (require 'flymake)
 
 (use-package python-mode
+  :hook (python-mode . prettify-symbols-mode)
   :bind (:map python-mode-map
 	      ("C-c C-c" . python-shell-send-buffer)
 	      ("C-c C-r" . python-shell-send-region))
@@ -244,8 +252,8 @@
 	python-shell-interpreter-args "--pprint --autoindent --simple-prompt -i --matplotlib"
 	py-default-interpreter "ipython"))
 
-(use-package eglot
-  :hook (python-mode . eglot-mode))
+(use-package eglot; :hook (python-mode . eglot-mode)
+  )
 
 (use-package blacken)
 
@@ -350,18 +358,6 @@
           plantuml-default-exec-mode 'jar
           org-plantuml-jar-path plantuml-jar-path)))
 
-(use-package cern-root-mode
-  :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
-  :bind (:map c++-mode-map
-	      (("C-c C-c" . cern-root-eval-defun-maybe)
-	       ("C-c C-b" . cern-root-eval-buffer)
-	       ("C-c C-l" . cern-root-eval-file)
-	       ("C-c C-r" . cern-root-eval-region)
-	       ("C-c C-z" . run-cern-root-other-window)))
-  :config
-  (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
-	cern-root-terminal-backend 'inferior))
-
 (setq language-mode->functions
       '((python-mode . ((:format . lsp-format-buffer)
 			(:refacor . lsp-rename)
@@ -428,6 +424,7 @@
     (setq async-shell-command-display-buffer async-value)))
 
 (use-package org
+  :hook (org-mode . mixed-pitch-mode)
   :straight (:type built-in)
   ;;:ensure org-plus-contrib
   :config
@@ -523,12 +520,12 @@
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
   (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
-  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block)
+  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
 
-  (require 'color)
-  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
-  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4)))
+  ;; (require 'color)
+  ;; (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
+  ;; (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  ;; (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4)))
 
 (use-package flyspell
   :hook ((prog-mode . flyspell-prog-mode)
@@ -616,7 +613,7 @@
   (require 'org-ref))
 
 (use-package citar
-  :bind (("C-c o b f" . citar-open-library-files)
+  :bind (("C-c o b f" . citar-open-library-file)
 	 ("C-c o b i" . citar-insert-citation)
 	 ("C-c o b a" . citar-add-citation)
 	 ("C-c o b n" . citar-open-notes))
@@ -715,6 +712,7 @@
 (global-set-key (kbd "M-o") 'other-window)
 (global-set-key (kbd "M-'") 'my/fullscreen-toggle)
 (global-set-key (kbd "C-c <Return>") 'highlight-and-send)
+
 (use-package general)
 (general-define-key
  :prefix "C-c"
@@ -739,6 +737,7 @@
  "o S" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
  "o r" 'my/recentf
+ "o g" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/google-calendar.org")))
  ;; modify buffer
  "m o" #'olivetti-mode
  "m b" #'ibuffer
@@ -758,10 +757,164 @@
 
 (add-hook 'dired-mode-hook 'hl-line-mode)
 
-(add-to-list 'default-frame-alist '(font . "Iosevka-11"))
+(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-10"))
+
+(use-package modus-themes
+  ;; this is some text
+  :defer nil
+  :init
+  (setq modus-themes-italic-constructs t
+	modus-themes-subtle-line-numbers t
+	modus-themes-syntax '(yellow-comments)
+	modus-themes-region '(accented bg-only no-extend)
+	modus-themes-mode-line '(borderless padding)
+	modus-themes-org-blocks 'gray-background)
+  (load-theme 'modus-operandi t))
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
 (add-hook 'prog-mode-hook 'linum-mode)
+
+(use-package cern-root-mode
+  :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
+  :bind (:map c++-mode-map
+	      (("C-c C-c" . cern-root-eval-defun-maybe)
+	       ("C-c C-b" . cern-root-eval-buffer)
+	       ("C-c C-l" . cern-root-eval-file)
+	       ("C-c C-r" . cern-root-eval-region)
+	       ("C-c C-z" . run-cern-root-other-window)))
+  :config
+  (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
+	cern-root-terminal-backend 'inferior))
+
+(use-package exwm
+  :init
+  (require 'exwm)
+  (require 'exwm-randr)
+  
+  ;; send keys chords directly to emacs instead of underlying window
+  (setq exwm-input-prefix-keys
+        '(?\C-x
+          ?\C-u
+          ?\C-h
+          ?\C-c
+          ?\C-w
+          ?\C-\s
+          ?\M-x
+          ?\M-`
+          ?\M-&
+          ?\M-:
+          ?\s-\ ))
+
+  ;; but if prefixed with C-q then send the next keystroke to window
+  (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+  (defun launch-program-with-completion ()
+    "Launch a program inside EXWM reading from PATH"
+    (interactive)
+    (let* ((cmds (split-string (shell-command-to-string "compgen -c") "\n"))
+           (cmd  (completing-read "Program: " cmds)))
+      (start-process-shell-command cmd nil cmd)))
+
+  (defun launch-program (cmd)
+    "Launch a program inside EXWM"
+    (interactive (list (read-shell-command "$ ")))
+    (start-process-shell-command cmd nil cmd))
+
+  (defun exwm-logout ()
+    (interactive)
+    (recentf-save-list)
+    (save-some-buffers)
+    (start-process-shell-command "logout" nil "lxsession-logout"))
+
+  ;; Make buffer name more meaningful
+  (add-hook 'exwm-update-class-hook
+            (lambda ()
+            (exwm-workspace-rename-buffer exwm-class-name)))
+  ;; remove modeline for floating windows
+  (add-hook 'exwm-floating-setup-hook 'exwm-layout-hide-mode-line)
+
+  ;; start up applications
+  (setq my/exwm-startup-applications '("nextcloud" "nm-applet" "blueman-applet"))
+  (defun my/launch-startup ()
+    (interactive)
+    (mapc #'launch-program my/exwm-startup-applications))
+  (add-hook 'exwm-init-hook #'my/launch-startup)
+
+  (setq window-size-delta 10)
+
+  ;; define keys to manage EXWM environment
+  (setq exwm-input-global-keys
+        `(([?\s-r] . exwm-reset)
+         ([?\s-&]  . launch-program-with-completion)
+         ([?\s-g]  . launch-program-with-completion)
+         ([?\s-w]  . exwm-workspace-switch)
+         ([?\s-b]  . exwm-layout-toggle-mode-line)
+         ([?\s-i]  . (lambda () (interactive) (launch-program "firefox")))
+         ;; window management
+         ([?\s-h]    . windmove-left)
+         ([?\s-l]    . windmove-right)
+         ([?\s-k]    . windmove-up)
+         ([?\s-j]    . windmove-down)
+         (,(kbd "S-H") . #'(lambda () (exwm-layout-enlarge-window-horizontally window-size-delta)))
+         (,(kbd "S-L") . #'(lambda () (exwm-layout-shrink-window-horizontally window-size-delta)))
+         (,(kbd "S-J") . #'(lambda () (exwm-layout-shrink-window window-size-delta)))
+         (,(kbd "S-K") . #'(lambda () (exwm-layout-enlarge-window window-size-delta)))
+         ;; worskspace management
+         ;; swap to workspace with s-N
+         ,@(mapcar (lambda (i)
+                      `(,(kbd (format "s-%d" i)) .
+                        (lambda ()
+                          (interactive)
+                          (exwm-workspace-switch-create ,i))))
+                    (number-sequence 0 9))))
+
+  (use-package xbacklight
+    :straight (xbacklight :fetcher git :host github :repo "dakra/xbacklight")
+    :bind (("<XF86MonBrightnessUp>" . xbacklight-increase)
+           ("<XF86MonBrightnessDown>" . xbacklight-decrease)
+           :map exwm-mode-map
+           ("<XF86MonBrightnessUp>" . xbacklight-increase)
+           ("<XF86MonBrightnessDown>" . xbacklight-decrease))
+    :init (setq xbacklight-step 1))
+
+  (use-package pulseaudio-control
+    :bind (("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
+           ("<XF86AudioLowerVolume>" . pulseaudio-control-decrease-volume)
+           ("<XF86AudioMute>" . pulseaudio-control-toggle-current-sink-mute)
+           :map exwm-mode-map
+           ("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
+           ("<XF86AudioLowerVolume>" . pulseaudio-control-decrease-volume)
+           ("<XF86AudioMute>" . pulseaudio-control-toggle-current-sink-mute))
+    :init (setq pulseaudio-control-volume-step "5%"))
+
+  ;; display time and battery
+  (setq display-time-format " %H:%M:%S %a,%d %b ")
+  (display-time-mode)
+  (use-package fancy-battery :init (fancy-battery-mode))
+
+  ;; TODO: move window to workspace with super+shift+N where N is the
+  ;; workspace number to move it to
+  ;; TODO: show workspace number in modeline
+  ;; TODO: improve battery and time format
+  ;; TODO: exwm doesn't start on workspace one
+  ;; TODO: enlarge and skrink windows with super+[jklh]
+
+  (require 'exwm-systemtray)
+  (exwm-systemtray-enable)
+
+  ;; start in workspace 1
+  (setq exwm-workspace-number 4)
+  (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
+
+  (exwm-enable)
+
+  (exwm-randr-enable)
+  (call-process "/bin/bash" "/home/jaymorgan/Applications/startup.sh")
+  (exwm-randr--init))
+
+(use-package doom-modeline
+  :init (setq doom-modeline-height 20)
+  (doom-modeline-mode))
