@@ -91,8 +91,7 @@
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles basic partial-completion)))))
 
-(icomplete-mode t)
-(setq icomplete-prospects-height 1)
+(fido-mode t)
 
 (use-package avy)
 
@@ -713,6 +712,14 @@
 (global-set-key (kbd "M-'") 'my/fullscreen-toggle)
 (global-set-key (kbd "C-c <Return>") 'highlight-and-send)
 
+
+(defun google (search-terms)
+  "Google search for search terms in a web browser"
+  (interactive "sSearch for: ")
+  (call-process-shell-command
+   (format "xdg-open %s &" (url-encode-url (format "http://www.google.com/search?q=%s" search-terms)))
+   nil 0))
+
 (use-package general)
 (general-define-key
  :prefix "C-c"
@@ -722,6 +729,7 @@
  "p" #'projectile-command-map
  "w" #'ace-window
  "e" #'eww
+ "s" #'google
  ;; code actions
  "c f" #'source-code-format
  "c r" #'source-code-refactor
