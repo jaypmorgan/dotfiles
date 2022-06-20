@@ -46,6 +46,8 @@
       confirm-kill-processes nil
       confirm-kill-emacs nil)
 
+(dired-async-mode t)  ;; stop emacs for locking up for large files
+
 (defun from-home (path)
   (concat home-path path))
 
@@ -168,6 +170,8 @@
   :bind (("C-x k" . persp-kill-buffer*))
   :init (persp-mode)
   :custom (persp-mode-prefix-key (kbd "C-x x")))
+
+(winner-mode t)
 
 (use-package company
   :bind ("M-/" . company-complete)
@@ -845,7 +849,7 @@
   (add-hook 'exwm-floating-setup-hook 'exwm-layout-hide-mode-line)
 
   ;; start up applications
-  (setq my/exwm-startup-applications '("nextcloud" "nm-applet" "blueman-applet"))
+  (setq my/exwm-startup-applications '("/home/jaymorgan/Applications/Nextcloud-3.3.6-x86_64.AppImage" "nm-applet" "blueman-applet"))
   (defun my/launch-startup ()
     (interactive)
     (mapc #'launch-program my/exwm-startup-applications))
