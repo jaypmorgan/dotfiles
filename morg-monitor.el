@@ -3,8 +3,8 @@
 ;; Copyright (C) 2022  Jay Morgan
 
 ;; Author: Jay Morgan <jay@morganwastaken.com>
-;; Keywords: languages, tools
-;; Version: 0.1.4
+;; Keywords: extensions
+;; Version: 0.1
 ;; Homepage: https://github.com/jaypmorgan
 ;; Package-Requires: ((emacs "26.1"))
 
@@ -29,13 +29,17 @@
   "Control monitor brightness"
   :group 'extensions)
 
+(defun morg-monitor--parse-brightness-file (filename)
+  (with-temp-buffer
+    (insert-file-contents-literally (format "%s/%s" morg-monitor-brightness-root filename))
+    (cl-parse-integer (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defcustom morg-monitor-brightness-root "/sys/class/backlight/intel_backlight"
   ""
   :type 'string
   :group 'morg-monitor)
 
-(defcustom morg-monitor-max-brightness (parse-brightness-file "max_brightness")
+(defcustom morg-monitor-max-brightness (morg-monitor--parse-brightness-file "max_brightness")
   ""
   :type 'integer
   :group 'morg-monitor)
@@ -45,15 +49,10 @@
   :type 'integer
   :group 'morg-monitor)
 
-(defun parse-brightness-file (filename)
-  (with-temp-buffer
-    (insert-file-contents-literally (format "%s/%s" morg-monitor-brightness-root filename))
-    (cl-parse-integer (buffer-substring-no-properties (point-min) (point-max)))))
-
-(defun get-current-brightness ()
+(defun morg-monitor--get-current-brightness ()
   (parse-brightness-file "brightness"))
 
-(defun set-brightness (val)
+(defun morg-monitor--set-brightness (val)
   (cl-flet ((set-val (val)
 		     (call-process-shell-command
 		      (format "echo %s > %s/brightness" val morg-monitor-brightness-root)
@@ -62,20 +61,28 @@
 	  ((<= val 0) (set-val 0))
 	  (t (set-val val)))))
 
-(cl-defun change-brightness (fun amt)
+(cl-defun morg-monitor--change-brightness (fun amt)
   (if (null amt)
-      (set-brightness (funcall fun (get-current-brightness) morg-monitor-step-size))
-    (set-brightness (funcall fun (get-current-brightness) amt))))
+      (set-brightness (funcall fun (morg-monitor--get-current-brightness) morg-monitor-step-size))
+    (set-brightness (funcall fun (morg-monitor--get-current-brightness) amt)))
+  (morg-monitor--print-message))
+
+(defun morg-monitor--print-message ()
+  (message
+   "Brightness: %.2f%% (%s/%s)"
+   (* (/ (float (morg-monitor--get-current-brightness)) morg-monitor-max-brightness) 100)
+   (morg-monitor--get-current-brightness)
+   morg-monitor-max-brightness))
 
 ;;;###autoload
-(cl-defun morg-monitor-increase-brightness (&optional (amt nil))
+(defun morg-monitor-increase-brightness ()
   (interactive)
-  (change-brightness #'+ amt))
+  (morg-monitor--change-brightness #'+ morg-monitor-step-size))
 
 ;;;###autoload
-(cl-defun morg-monitor-decrease-brightness (&optional (amt nil))
+(defun morg-monitor-decrease-brightness ()
   (interactive)
-  (change-brightness #'- amt))
+  (morg-monitor--change-brightness #'- morg-monitor-step-size))
 
 
 (provide 'morg-monitor)

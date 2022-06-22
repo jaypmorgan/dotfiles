@@ -1144,12 +1144,14 @@ tool-bar icons and the text menus.
 (use-package morg-monitor
   :straight nil
   :defer nil
-  :load-path "~/workspace/dotfiles/morg-monitor.el"
+  :ensure nil
   :bind (("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
 	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness)
 	 :map exwm-mode-map
 	 ("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
 	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness))
   :init
+  (load "~/workspace/dotfiles/morg-monitor.el")
   (setq morg-monitor-step-size 10))
+
 #+end_src

@@ -932,40 +932,53 @@
   :init (setq doom-modeline-height 20)
   (doom-modeline-mode))
 
-(defun parse-brightness-file (filename)
-  (with-temp-buffer
-    (insert-file-contents-literally (format "%s/%s" *brightness-root* filename))
-    (cl-parse-integer (buffer-substring-no-properties (point-min) (point-max)))))
+;; (defun parse-brightness-file (filename)
+;;   (with-temp-buffer
+;;     (insert-file-contents-literally (format "%s/%s" *brightness-root* filename))
+;;     (cl-parse-integer (buffer-substring-no-properties (point-min) (point-max)))))
 
-(defvar *brightness-root* "/sys/class/backlight/intel_backlight")
-(defvar *max-brightness* (parse-brightness-file "max_brightness"))
-(defvar *step-size* 10)
-(defvar *step-type* 'linear)
+;; (defvar *brightness-root* "/sys/class/backlight/intel_backlight")
+;; (defvar *max-brightness* (parse-brightness-file "max_brightness"))
+;; (defvar *step-size* 10)
+;; (defvar *step-type* 'linear)
 
-(defun get-current-brightness ()
-  (parse-brightness-file "brightness"))
+;; (defun get-current-brightness ()
+;;   (parse-brightness-file "brightness"))
 
-(defun set-brightness (val)
-  (cl-flet ((set-val (val)
-		     (call-process-shell-command
-		      (format "echo %s > %s/brightness" val *brightness-root*)
-		      nil 0)))
-    (cond ((>= val *max-brightness*) (set-val *max-brightness*))
-	  ((<= val 0) (set-val 0))
-	  (t (set-val val)))))
+;; (defun set-brightness (val)
+;;   (cl-flet ((set-val (val)
+;; 		     (call-process-shell-command
+;; 		      (format "echo %s > %s/brightness" val *brightness-root*)
+;; 		      nil 0)))
+;;     (cond ((>= val *max-brightness*) (set-val *max-brightness*))
+;; 	  ((<= val 0) (set-val 0))
+;; 	  (t (set-val val)))))
 
-(cl-defun change-brightness (fun amt)
-  (if (null amt)
-      (set-brightness (funcall fun (get-current-brightness) *step-size*))
-    (set-brightness (funcall fun (get-current-brightness) amt))))
+;; (cl-defun change-brightness (fun amt)
+;;   (if (null amt)
+;;       (set-brightness (funcall fun (get-current-brightness) *step-size*))
+;;     (set-brightness (funcall fun (get-current-brightness) amt))))
 
-(cl-defun increase-brightness (&optional (amt nil))
-  (interactive)
-  (change-brightness #'+ amt))
+;; (cl-defun increase-brightness (&optional (amt nil))
+;;   (interactive)
+;;   (change-brightness #'+ amt))
 
-(cl-defun decrease-brightness (&optional (amt nil))
-  (interactive)
-  (change-brightness #'- amt))
+;; (cl-defun decrease-brightness (&optional (amt nil))
+;;   (interactive)
+;;   (change-brightness #'- amt))
 
-(exwm-input-set-key (kbd "<XF86MonBrightnessUp>") 'increase-brightness)
-(exwm-input-set-key (kbd "<XF86MonBrightnessDown>") 'decrease-brightness)
+;; (exwm-input-set-key (kbd "<XF86MonBrightnessUp>") 'increase-brightness)
+;; (exwm-input-set-key (kbd "<XF86MonBrightnessDown>") 'decrease-brightness)
+
+(use-package morg-monitor
+  :straight nil
+  :defer nil
+  :ensure nil
+  :bind (("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
+	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness)
+	 :map exwm-mode-map
+	 ("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
+	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness))
+  :init
+  (load "~/workspace/dotfiles/morg-monitor.el")
+  (setq morg-monitor-step-size 10))
