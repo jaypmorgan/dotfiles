@@ -46,7 +46,8 @@
       confirm-kill-processes nil
       confirm-kill-emacs nil)
 
-(dired-async-mode t)  ;; stop emacs for locking up for large files
+;; (dired-async-mode t)  ;; stop emacs for locking up for large files
+;; (setq global-auto-revert-non-file-buffers t)
 
 (defun from-home (path)
   (concat home-path path))
@@ -883,14 +884,14 @@
                           (exwm-workspace-switch-create ,i))))
                     (number-sequence 0 9))))
 
-  (use-package xbacklight
-    :straight (xbacklight :fetcher git :host github :repo "dakra/xbacklight")
-    :bind (("<XF86MonBrightnessUp>" . xbacklight-increase)
-           ("<XF86MonBrightnessDown>" . xbacklight-decrease)
-           :map exwm-mode-map
-           ("<XF86MonBrightnessUp>" . xbacklight-increase)
-           ("<XF86MonBrightnessDown>" . xbacklight-decrease))
-    :init (setq xbacklight-step 1))
+  ;; (use-package xbacklight
+  ;;   :straight (xbacklight :fetcher git :host github :repo "dakra/xbacklight")
+  ;;   :bind (("<XF86MonBrightnessUp>" . xbacklight-increase)
+  ;;          ("<XF86MonBrightnessDown>" . xbacklight-decrease)
+  ;;          :map exwm-mode-map
+  ;;          ("<XF86MonBrightnessUp>" . xbacklight-increase)
+  ;;          ("<XF86MonBrightnessDown>" . xbacklight-decrease))
+  ;;   :init (setq xbacklight-step 1))
 
   (use-package pulseaudio-control
     :bind (("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
@@ -930,3 +931,41 @@
 (use-package doom-modeline
   :init (setq doom-modeline-height 20)
   (doom-modeline-mode))
+
+(defun parse-brightness-file (filename)
+  (with-temp-buffer
+    (insert-file-contents-literally (format "%s/%s" *brightness-root* filename))
+    (cl-parse-integer (buffer-substring-no-properties (point-min) (point-max)))))
+
+(defvar *brightness-root* "/sys/class/backlight/intel_backlight")
+(defvar *max-brightness* (parse-brightness-file "max_brightness"))
+(defvar *step-size* 10)
+(defvar *step-type* 'linear)
+
+(defun get-current-brightness ()
+  (parse-brightness-file "brightness"))
+
+(defun set-brightness (val)
+  (cl-flet ((set-val (val)
+		     (call-process-shell-command
+		      (format "echo %s > %s/brightness" val *brightness-root*)
+		      nil 0)))
+    (cond ((>= val *max-brightness*) (set-val *max-brightness*))
+	  ((<= val 0) (set-val 0))
+	  (t (set-val val)))))
+
+(cl-defun change-brightness (fun amt)
+  (if (null amt)
+      (set-brightness (funcall fun (get-current-brightness) *step-size*))
+    (set-brightness (funcall fun (get-current-brightness) amt))))
+
+(cl-defun increase-brightness (&optional (amt nil))
+  (interactive)
+  (change-brightness #'+ amt))
+
+(cl-defun decrease-brightness (&optional (amt nil))
+  (interactive)
+  (change-brightness #'- amt))
+
+(exwm-input-set-key (kbd "<XF86MonBrightnessUp>") 'increase-brightness)
+(exwm-input-set-key (kbd "<XF86MonBrightnessDown>") 'decrease-brightness)
