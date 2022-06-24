@@ -1080,3 +1080,11 @@ tool-bar icons and the text menus.
   (setq morg-monitor-step-size 10))
 
 #+end_src
+
+#+begin_src emacs-lisp
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+(use-package display-fill-column-indicator
+  :straight nil
+  :init
+  (setq display-fill-column-indicator-column 99))
+#+end_src

@@ -25,6 +25,9 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'notifications)
+
 (defgroup morg-monitor ()
   "Control monitor brightness"
   :group 'extensions)
@@ -35,18 +38,26 @@
     (cl-parse-integer (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defcustom morg-monitor-brightness-root "/sys/class/backlight/intel_backlight"
-  ""
+  "The root path to the brightness files."
   :type 'string
   :group 'morg-monitor)
 
 (defcustom morg-monitor-max-brightness (morg-monitor--parse-brightness-file "max_brightness")
-  ""
+  "The maximum brightness the monitor is capable of. This can be
+found in the max_brightness file of the system."
   :type 'integer
   :group 'morg-monitor)
 
 (defcustom morg-monitor-step-size 10
-  ""
+  "The amount of change in brightness (absolute) to make."
   :type 'integer
+  :group 'morg-monitor)
+
+(defcustom morg-monitor-message-fn #'morg-monitor--alert-message
+  "The function to call after the monitor brightness has been
+changed. This function should alert the user about the currently
+set brightness."
+  :type 'function
   :group 'morg-monitor)
 
 (defun morg-monitor--get-current-brightness ()
@@ -65,7 +76,19 @@
   (if (null amt)
       (morg-monitor--set-brightness (funcall fun (morg-monitor--get-current-brightness) morg-monitor-step-size))
     (morg-monitor--set-brightness (funcall fun (morg-monitor--get-current-brightness) amt)))
-  (morg-monitor--print-message))
+  (funcall morg-monitor-message-fn))
+
+(defvar morg-monitor--notification-id nil)
+
+(defun morg-monitor--alert-message ()
+  (setq morg-monitor--notification-id
+	(notifications-notify
+	 :title "Monitor brightness"
+	 :replaces-id morg-monitor--notification-id
+	 :body (format "Brightness set to: %.2f%% (%s/%s)"
+		       (* (/ (float (morg-monitor--get-current-brightness)) morg-monitor-max-brightness) 100)
+		       (morg-monitor--get-current-brightness)
+		       morg-monitor-max-brightness))))
 
 (defun morg-monitor--print-message ()
   (message
