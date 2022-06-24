@@ -107,12 +107,6 @@ the computer is booted).
 ** Command invocation
 
 #+begin_src emacs-lisp
-;; (use-package vertico
-;;   :init (vertico-mode t))
-
-(use-package marginalia
-  :init (marginalia-mode))
-
 (use-package which-key
   :init
   ;; only show which-key if C-h is trigged during keystroke
@@ -134,15 +128,6 @@ the computer is booted).
 
 #+begin_src emacs-lisp
 (use-package avy)
-
-(setq my/window-config (current-window-configuration))
-(defun my/fullscreen-toggle ()
-  (interactive)
-  (if (= (length (window-list)) 1)
-      (set-window-configuration my/window-config)
-    (progn
-      (setq my/window-config (current-window-configuration))
-      (delete-other-windows))))
 
 (use-package expand-region
   :defer nil
@@ -295,8 +280,6 @@ Better Emacs window management.
   (setq c-default-style "linux"
 	c-basic-offset 4))
 
-(require 'flymake)
-
 (use-package python-mode
   :hook (python-mode . prettify-symbols-mode)
   :bind (:map python-mode-map
@@ -308,10 +291,12 @@ Better Emacs window management.
 	python-shell-interpreter-args "--pprint --autoindent --simple-prompt -i --matplotlib"
 	py-default-interpreter "ipython"))
 
-(use-package eglot; :hook (python-mode . eglot-mode)
-  )
-
+(use-package eglot)
 (use-package blacken)
+(use-package zeal-at-point)
+(use-package csv-mode)
+(use-package yaml-mode)
+(use-package markdown-mode)
 
 (use-package pyvenv
   :defer nil
@@ -354,11 +339,6 @@ Better Emacs window management.
   (setq numpydoc-insert-parameter-types t
 	numpydoc-insert-return-without-typehint t))
 
-(use-package zeal-at-point)
-(use-package csv-mode)
-(use-package yaml-mode)
-(use-package markdown-mode)
-
 (use-package isend-mode
   :config
   (setq isend-send-region-function 'isend--ipython-cpaste))
@@ -371,7 +351,6 @@ Better Emacs window management.
   :hook ((lisp-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
 
-;; racket
 (use-package racket-mode
   :hook (racket-mode . paredit-mode)
   :init
@@ -550,14 +529,16 @@ version) to some keybindings.
   ;;:ensure org-plus-contrib
   :config
   (require 'org-ref)
-  ;;(require 'citar)
+  ;(require 'citar)
   (require 'pdf-view)
   (require 'ox-latex)
   (use-package gnuplot)
   (use-package ox-rst)
   (use-package ob-async)
-  (pdf-loader-install)
   (require 'ox-rst)
+  (pdf-loader-install)
+
+  (add-to-list 'org-modules 'org-habit)
 
   (use-package org-fragtog
     :hook (org-mode . org-fragtog-mode))
@@ -642,11 +623,6 @@ version) to some keybindings.
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
   (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
   (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
-
-  ;; (require 'color)
-  ;; (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 2))
-  ;; (set-face-attribute 'org-block-begin-line nil :background (color-darken-name (face-attribute 'default :background) 4))
-  ;; (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4)))
 
 (use-package flyspell
   :hook ((prog-mode . flyspell-prog-mode)
@@ -862,7 +838,6 @@ Bibliography management:
 (global-set-key (kbd "M-'") 'my/fullscreen-toggle)
 (global-set-key (kbd "C-c <Return>") 'highlight-and-send)
 
-
 (defun google (search-terms)
   "Google search for search terms in a web browser"
   (interactive "sSearch for: ")
@@ -1017,7 +992,9 @@ tool-bar icons and the text menus.
   (add-hook 'exwm-floating-setup-hook 'exwm-layout-hide-mode-line)
 
   ;; start up applications
-  (setq my/exwm-startup-applications '("/home/jaymorgan/Applications/Nextcloud-3.3.6-x86_64.AppImage" "nm-applet" "blueman-applet"))
+  (setq my/exwm-startup-applications
+	'("/home/jaymorgan/Applications/Nextcloud-3.3.6-x86_64.AppImage"
+	  "nm-applet" "blueman-applet" "blueman-tray"))
   (defun my/launch-startup ()
     (interactive)
     (mapc #'launch-program my/exwm-startup-applications))
@@ -1050,15 +1027,6 @@ tool-bar icons and the text menus.
                           (interactive)
                           (exwm-workspace-switch-create ,i))))
                     (number-sequence 0 9))))
-
-  ;; (use-package xbacklight
-  ;;   :straight (xbacklight :fetcher git :host github :repo "dakra/xbacklight")
-  ;;   :bind (("<XF86MonBrightnessUp>" . xbacklight-increase)
-  ;;          ("<XF86MonBrightnessDown>" . xbacklight-decrease)
-  ;;          :map exwm-mode-map
-  ;;          ("<XF86MonBrightnessUp>" . xbacklight-increase)
-  ;;          ("<XF86MonBrightnessDown>" . xbacklight-decrease))
-  ;;   :init (setq xbacklight-step 1))
 
   (use-package pulseaudio-control
     :bind (("<XF86AudioRaiseVolume>" . pulseaudio-control-increase-volume)
@@ -1093,53 +1061,10 @@ tool-bar icons and the text menus.
 
   (exwm-randr-enable)
   (call-process "/bin/bash" "/home/jaymorgan/Applications/startup.sh")
-  (exwm-randr--init))
-#+end_src
+  (exwm-randr--init)
 
-#+begin_src emacs-lisp
-(use-package doom-modeline
-  :init (setq doom-modeline-height 20)
-  (doom-modeline-mode))
-#+end_src
-
-#+begin_src emacs-lisp
-;; (defun parse-brightness-file (filename)
-;;   (with-temp-buffer
-;;     (insert-file-contents-literally (format "%s/%s" *brightness-root* filename))
-;;     (cl-parse-integer (buffer-substring-no-properties (point-min) (point-max)))))
-
-;; (defvar *brightness-root* "/sys/class/backlight/intel_backlight")
-;; (defvar *max-brightness* (parse-brightness-file "max_brightness"))
-;; (defvar *step-size* 10)
-;; (defvar *step-type* 'linear)
-
-;; (defun get-current-brightness ()
-;;   (parse-brightness-file "brightness"))
-
-;; (defun set-brightness (val)
-;;   (cl-flet ((set-val (val)
-;; 		     (call-process-shell-command
-;; 		      (format "echo %s > %s/brightness" val *brightness-root*)
-;; 		      nil 0)))
-;;     (cond ((>= val *max-brightness*) (set-val *max-brightness*))
-;; 	  ((<= val 0) (set-val 0))
-;; 	  (t (set-val val)))))
-
-;; (cl-defun change-brightness (fun amt)
-;;   (if (null amt)
-;;       (set-brightness (funcall fun (get-current-brightness) *step-size*))
-;;     (set-brightness (funcall fun (get-current-brightness) amt))))
-
-;; (cl-defun increase-brightness (&optional (amt nil))
-;;   (interactive)
-;;   (change-brightness #'+ amt))
-
-;; (cl-defun decrease-brightness (&optional (amt nil))
-;;   (interactive)
-;;   (change-brightness #'- amt))
-
-;; (exwm-input-set-key (kbd "<XF86MonBrightnessUp>") 'increase-brightness)
-;; (exwm-input-set-key (kbd "<XF86MonBrightnessDown>") 'decrease-brightness)
+  (setq exwm-input-simulation-keys
+	'(((kbd "C-s") . [?\C-f]))))
 
 (use-package morg-monitor
   :straight nil

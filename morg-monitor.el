@@ -50,7 +50,7 @@
   :group 'morg-monitor)
 
 (defun morg-monitor--get-current-brightness ()
-  (parse-brightness-file "brightness"))
+  (morg-monitor--parse-brightness-file "brightness"))
 
 (defun morg-monitor--set-brightness (val)
   (cl-flet ((set-val (val)
@@ -63,8 +63,8 @@
 
 (cl-defun morg-monitor--change-brightness (fun amt)
   (if (null amt)
-      (set-brightness (funcall fun (morg-monitor--get-current-brightness) morg-monitor-step-size))
-    (set-brightness (funcall fun (morg-monitor--get-current-brightness) amt)))
+      (morg-monitor--set-brightness (funcall fun (morg-monitor--get-current-brightness) morg-monitor-step-size))
+    (morg-monitor--set-brightness (funcall fun (morg-monitor--get-current-brightness) amt)))
   (morg-monitor--print-message))
 
 (defun morg-monitor--print-message ()
