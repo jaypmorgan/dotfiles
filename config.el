@@ -38,16 +38,10 @@
       revert-without-query '(".*")
       require-final-newline t
       indent-tabs-mode nil
-      dired-listing-switches "-alhgo --group-directories-first"
-      dired-auto-revert-buffer t
       ring-bell-function 'ignore
-      dired-dwim-target t
       home-path "~/"
       confirm-kill-processes nil
       confirm-kill-emacs nil)
-
-;; (dired-async-mode t)  ;; stop emacs for locking up for large files
-;; (setq global-auto-revert-non-file-buffers t)
 
 (defun from-home (path)
   (concat home-path path))
@@ -74,6 +68,14 @@
 (delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
 (add-hook 'write-file-hooks 'delete-trailing-whitespace nil t)
 
+(use-package vertico
+  :defer nil
+  :init
+  (vertico-mode t)
+  (load "~/.emacs.d/straight/build/vertico/extensions/vertico-flat.el")
+  (require 'vertico-flat)
+  (vertico-flat-mode t))
+
 (use-package which-key
   :init
   ;; only show which-key if C-h is trigged during keystroke
@@ -88,9 +90,12 @@
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles basic partial-completion)))))
 
-(fido-mode t)
-
 (use-package avy)
+
+(use-package pulsar
+  :defer nil
+  :init
+  (pulsar-global-mode t))
 
 (use-package expand-region
   :defer nil
@@ -632,7 +637,8 @@
     (let ((loc (citar-add-pdf-for-citation citation)))
       (find-file loc)))
 
-  (setq citar-open-note-function 'orb-citar-edit-note))
+  (setq citar-open-note-function 'orb-citar-edit-note
+	citar-notes-paths (list (from-home "Nextcloud/Notes/BIOSOFT"))))
 
 (when (file-exists-p "/usr/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
@@ -642,6 +648,22 @@
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
       (load mu4e-config))))
+
+(add-to-list 'org-agenda-custom-commands
+	     '("u" "Urgency view using Eisenhower Method"
+	       ((tags-todo
+		 "+PRIORITY=\"A\"+DEADLINE<=\"<+2d>\""
+		 ((org-agenda-overriding-header "Urgent and important")))
+		(tags-todo
+		 "+PRIORITY=\"A\"+DEADLINE>\"<+2d>\"|+PRIORITY=\"A\"-DEADLINE={.}"
+		 ((org-agenda-overriding-header "Important but not urgent")))
+		(tags-todo
+		 "-PRIORITY=\"A\"+DEADLINE<=\"<+2d>\""
+		 ((org-agenda-overriding-header "Urgent but not important")))
+		(tags-todo
+		 "-PRIORITY=\"A\"+DEADLINE>\"<+2d>\"|-PRIORITY=\"A\"-DEADLINE={.}"
+		 ((org-agenda-overriding-header "Not urgent or important"))))
+	       nil))
 
 (use-package calendar
   :hook (diary-list-entries . diary-sort-entries)
@@ -743,9 +765,17 @@
  "o e" #'elfeed
  "o u" #'undo-tree-visualize)
 
-(add-hook 'dired-mode-hook 'hl-line-mode)
+(use-package dired
+  :ensure nil
+  :straight nil
+  :hook (dired-mode . hl-line-mode)
+  :init
+  (dired-async-mode t)
+  (setq dired-listing-switches "-alhgo --group-directories-first"
+	dired-auto-revert-buffer t
+	dired-dwim-target t))
 
-(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-10"))
+;(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-10"))
 
 (use-package modus-themes
   ;; this is some text
@@ -758,6 +788,10 @@
 	modus-themes-mode-line '(borderless padding)
 	modus-themes-org-blocks 'gray-background)
   (load-theme 'modus-operandi t))
+
+(set-face-attribute 'default nil :family "Iosevka" :height 110 :weight 'normal)
+(set-face-attribute 'fixed-pitch nil :family "Iosevka")
+(set-face-attribute 'variable-pitch nil :family "Iosevka")
 
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
@@ -911,3 +945,10 @@
   :init
   (load "~/workspace/dotfiles/morg-monitor.el")
   (setq morg-monitor-step-size 10))
+
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+(use-package display-fill-column-indicator
+  :defer nil
+  :straight nil
+  :init
+  (setq display-fill-column-indicator-column 99))
