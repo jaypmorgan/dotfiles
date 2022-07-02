@@ -226,6 +226,11 @@ Better Emacs window management.
 
 (use-package magit)
 
+(use-package diff-hl
+  :hook (dired-mode . diff-hl-dired-mode)
+  :init
+  (global-diff-hl-mode t))
+
 (use-package vterm
   :config
   (setq vterm-kill-buffer-on-exit t))
@@ -639,35 +644,49 @@ version) to some keybindings.
 Note taking
 
 #+begin_src emacs-lisp
-(use-package org-roam
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-	 ("C-c n f" . org-roam-node-find)
-	 ("C-c n i" . org-roam-node-insert))
-  :custom
-  (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
-  (org-roam-capture-templates
-   `(("d" "default" plain
-      "%?"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-      :unnarrowed t)
-     ("m" "meeting" plain
-      (file ,(from-home "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
-      :unnarrowed t)
-     ("p" "paper" plain
-      "%?"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+FILETAGS: bibliography\n")
-      :unnarrowed t)))
-  :init (setq org-roam-v2-ack t)
-  :config (org-roam-setup))
+(use-package denote
+  :straight (denote :fetcher git :repo "https://git.sr.ht/~protesilaos/denote")
+  :bind (("C-c n n" . denote-create-note)
+	 ("C-c n d" . denote-go-to-directory)
+	 ("C-c n f" . denote-search))
+  :init
+  (defun denote-go-to-directory ()
+    (interactive)
+    (find-file denote-directory))
+  (defun denote-search (search-term)
+    (interactive "sSearch for: ")
+    (ripgrep-regexp search-term denote-directory))
+  (setq denote-directory (from-home "Nextcloud/Notes/library")))
 
-(use-package deft
-  :bind ("C-c n d" . deft)
-  :config
-  (setq deft-directory (from-home "Nextcloud/Notes/BIOSOFT")
-	deft-recursive t
-	deft-strip-summary-regexp ":PROPERTIES:\n\\(.+\n\\)+:END:\n"
-	deft-use-filename-as-title t))
+;; (use-package org-roam
+;;   :bind (("C-c n l" . org-roam-buffer-toggle)
+;; 	 ("C-c n f" . org-roam-node-find)
+;; 	 ("C-c n i" . org-roam-node-insert))
+;;   :custom
+;;   (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
+;;   (org-roam-capture-templates
+;;    `(("d" "default" plain
+;;       "%?"
+;;       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+;;       :unnarrowed t)
+;;      ("m" "meeting" plain
+;;       (file ,(from-home "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
+;;       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
+;;       :unnarrowed t)
+;;      ("p" "paper" plain
+;;       "%?"
+;;       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+FILETAGS: bibliography\n")
+;;       :unnarrowed t)))
+;;   :init (setq org-roam-v2-ack t)
+;;   :config (org-roam-setup))
+
+;; (use-package deft
+;;   :bind ("C-c n d" . deft)
+;;   :config
+;;   (setq deft-directory (from-home "Nextcloud/Notes/BIOSOFT")
+;; 	deft-recursive t
+;; 	deft-strip-summary-regexp ":PROPERTIES:\n\\(.+\n\\)+:END:\n"
+;; 	deft-use-filename-as-title t))
 
 (setq org-capture-templates
       `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
@@ -678,14 +697,14 @@ Note taking
 	 "* %T\n\n- Type: %?\n- Severity:\n- What happened:\n" :unnarrowed nil)))
 (global-set-key (kbd "C-c C-/") 'org-capture)
 
-(use-package org-roam-ui
-  :straight (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
-  :after org-roam
-  :config
-  (setq org-roam-ui-sync-theme t
-	org-roam-ui-follow t
-	org-roam-ui-update-on-save t
-	org-roam-open-on-start t))
+;; (use-package org-roam-ui
+;;   :straight (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+;;   :after org-roam
+;;   :config
+;;   (setq org-roam-ui-sync-theme t
+;; 	org-roam-ui-follow t
+;; 	org-roam-ui-update-on-save t
+;; 	org-roam-open-on-start t))
 #+end_src
 
 #+begin_src emacs-lisp
