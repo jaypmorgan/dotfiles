@@ -183,24 +183,11 @@
   :init
   (global-diff-hl-mode t))
 
-(use-package vterm
-  :config
-  (setq vterm-kill-buffer-on-exit t))
-
-(defun vterm-below ()
-  "Open a vterm window below"
-  (interactive)
-  (split-window-below -20)
-  (other-window 1)
-  (vterm t)
-  (activate-projectile-project-in-terminal))
-
-(defun activate-projectile-project-in-terminal ()
-  (interactive)
-  (let ((project-name pyvenv-virtual-env-name))
-    (vterm-send-string (format "conda activate %s" project-name))
-    (vterm-send-return)
-    (vterm-clear)))
+(use-package morg-term
+  :straight nil
+  :load-path "~/workspace/dotfiles/morg-term.el"
+  :init
+  (setq morg-term-start-locations '("adeline.me" "lesia")))
 
 (use-package projectile
   :defer nil
@@ -762,11 +749,14 @@
  ;; open maps
  "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/tasks.org")))
  "o f" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/fleeting.org")))
- "o s" #'vterm-below
+ "o s" #'morg-term-vterm-below
+ "o v" #'morg-term-start-at-location
  "o S" #'(lambda () (interactive) (vterm t))
  "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
  "o r" 'my/recentf
  "o g" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/google-calendar.org")))
+ "o e" #'elfeed
+ "o u" #'undo-tree-visualize
  ;; modify buffer
  "m o" #'olivetti-mode
  "m b" #'ibuffer
@@ -780,9 +770,7 @@
  ;; organisation
  "o C" #'calendar
  "o m s" #'slack-im-select
- "o m m" #'mu4e
- "o e" #'elfeed
- "o u" #'undo-tree-visualize)
+ "o m m" #'mu4e)
 
 (use-package dired
   :ensure nil
