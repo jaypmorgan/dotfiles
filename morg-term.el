@@ -24,7 +24,6 @@
 
 ;;; Code:
 
-(require 'vterm)
 (require 'cl-lib)
 (require 'use-package)
 
