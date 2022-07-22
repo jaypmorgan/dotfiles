@@ -129,10 +129,10 @@ the computer is booted).
 #+begin_src emacs-lisp
 (use-package avy)
 
-(use-package pulsar
-  :defer nil
-  :init
-  (pulsar-global-mode t))
+;; (use-package pulsar
+;;   :defer nil
+;;   :init
+;;   (pulsar-global-mode t))
 
 (use-package expand-region
   :defer nil
@@ -229,7 +229,8 @@ Better Emacs window management.
 (use-package diff-hl
   :hook (dired-mode . diff-hl-dired-mode)
   :init
-  (global-diff-hl-mode t))
+  (global-diff-hl-mode t)
+  (setq diff-hl-disable-on-remote t))
 
 (use-package morg-term
   :straight nil
@@ -789,6 +790,19 @@ Bibliography management:
       (load mu4e-config))))
 #+end_src
 
+Here we have the HTML formatting of emails using org-mode. This is really only
+necessary for me for discussing source code.
+
+#+begin_src emacs-lisp
+(use-package org-mime
+  :init
+  (setq org-mime-export-options
+	'(:with-latex dvipng   ; render latex codes as png
+	  :section-numbers nil ; don't display numbered headings and toc and author
+	  :with-toc nil
+	  :with-author nil)))
+#+end_src
+
 ** Tasks
 
 There is not so much that I need to configure -- the defaults org-mode TODO entries
@@ -1106,6 +1120,19 @@ tool-bar icons and the text menus.
   ;; start in workspace 1
   (setq exwm-workspace-number 4)
   (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
+
+  (setq exwm-randr-workspace-monitor-plist '(2 "HDMI1" 3 "HDMI1")
+	exwm-workspace-warp-cursor t
+	focus-follows-mouse t
+	mouse-autoselect-window t)
+
+  ;; automatically configure the monitor setup based upon the
+  ;; previously saved settings with autorandr.
+  (defun my/update-monitor-config ()
+    (shell-command "autorandr --change --force")
+    (message "Set monitor configuration to %s"
+	     (string-trim (shell-command-to-string "autorandr --current"))))
+  (add-hook 'exwm-randr-screen-change-hook 'my/update-monitor-config)
 
   (exwm-enable)
 

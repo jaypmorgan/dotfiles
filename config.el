@@ -92,10 +92,10 @@
 
 (use-package avy)
 
-(use-package pulsar
-  :defer nil
-  :init
-  (pulsar-global-mode t))
+;; (use-package pulsar
+;;   :defer nil
+;;   :init
+;;   (pulsar-global-mode t))
 
 (use-package expand-region
   :defer nil
@@ -181,7 +181,8 @@
 (use-package diff-hl
   :hook (dired-mode . diff-hl-dired-mode)
   :init
-  (global-diff-hl-mode t))
+  (global-diff-hl-mode t)
+  (setq diff-hl-disable-on-remote t))
 
 (use-package morg-term
   :straight nil
@@ -655,6 +656,14 @@
     (when (file-exists-p mu4e-config)
       (load mu4e-config))))
 
+(use-package org-mime
+  :init
+  (setq org-mime-export-options
+	'(:with-latex dvipng   ; render latex codes as png
+	  :section-numbers nil ; don't display numbered headings and toc and author
+	  :with-toc nil
+	  :with-author nil)))
+
 (add-to-list 'org-agenda-custom-commands
 	     '("u" "Urgency view using Eisenhower Method"
 	       ((tags-todo
@@ -930,6 +939,19 @@
   ;; start in workspace 1
   (setq exwm-workspace-number 4)
   (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
+
+  (setq exwm-randr-workspace-monitor-plist '(2 "HDMI1" 3 "HDMI1")
+	exwm-workspace-warp-cursor t
+	focus-follows-mouse t
+	mouse-autoselect-window t)
+
+  ;; automatically configure the monitor setup based upon the
+  ;; previously saved settings with autorandr.
+  (defun my/update-monitor-config ()
+    (shell-command "autorandr --change --force")
+    (message "Set monitor configuration to %s"
+	     (string-trim (shell-command-to-string "autorandr --current"))))
+  (add-hook 'exwm-randr-screen-change-hook 'my/update-monitor-config)
 
   (exwm-enable)
 
