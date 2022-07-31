@@ -54,6 +54,10 @@
 (defalias 'isearch-forward 'isearch-forward-regexp)
 (defalias 'isearch-backward 'isearch-backward-regexp)
 
+(use-package swiper
+  :bind (("C-r" . swiper)
+	 ("C-s" . swiper)))
+
 (recentf-mode t)
 (setq recentf-max-menu-items 100
       recentf-max-saved-items 100)
@@ -148,7 +152,7 @@
 ;; moves to the end of the page. Instead, increment the page
 ;; (i.e. move the page up or down) therefore preserving the context of
 ;; the cursor.
-(setq scroll-margin 3
+(setq scroll-margin 10
       scroll-conservatively 101
       scroll-up-aggressively 0.01
       scroll-down-aggressively 0.01
@@ -296,6 +300,12 @@
 (use-package paredit
   :hook ((lisp-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
+
+(use-package scheme
+  :straight nil
+  :hook (scheme-mode . paredit-mode))
+
+(use-package geiser-chez)
 
 (use-package racket-mode
   :hook (racket-mode . paredit-mode)
@@ -483,6 +493,18 @@
 							   (plantuml . t)
 							   (C . t)))
 
+  (require 'color)
+  (set-face-attribute 'org-block nil :background
+                      (color-darken-name
+                       (face-attribute 'default :background) 2))
+  (set-face-attribute 'org-block-begin-line nil :background
+		      (color-darken-name
+                       (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-block-end-line nil :background
+		      (color-darken-name
+                       (face-attribute 'default :background) 3))
+
+
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
     (interactive)
@@ -664,6 +686,16 @@
 	  :with-toc nil
 	  :with-author nil)))
 
+(use-package nov
+  :init
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+  (setq nov-text-width 80))
+
+(use-package ledger-mode
+  :init
+  (add-to-exec-path "~/Applications/ledger/")
+  (setq ledger-reconcile-default-commodity "£"))
+
 (add-to-list 'org-agenda-custom-commands
 	     '("u" "Urgency view using Eisenhower Method"
 	       ((tags-todo
@@ -793,17 +825,21 @@
 
 ;(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-10"))
 
-(use-package modus-themes
-  ;; this is some text
-  :defer nil
+;; (use-package modus-themes
+;;   ;; this is some text
+;;   :defer nil
+;;   :init
+;;   (setq modus-themes-italic-constructs t
+;; 	modus-themes-subtle-line-numbers t
+;; 	modus-themes-syntax '(yellow-comments)
+;; 	modus-themes-region '(accented bg-only no-extend)
+;; 	modus-themes-mode-line '(borderless padding)
+;; 	modus-themes-org-blocks 'gray-background)
+;;   (load-theme 'modus-operandi t))
+
+(use-package atom-one-dark-theme
   :init
-  (setq modus-themes-italic-constructs t
-	modus-themes-subtle-line-numbers t
-	modus-themes-syntax '(yellow-comments)
-	modus-themes-region '(accented bg-only no-extend)
-	modus-themes-mode-line '(borderless padding)
-	modus-themes-org-blocks 'gray-background)
-  (load-theme 'modus-operandi t))
+  (load-theme 'atom-one-dark t))
 
 (set-face-attribute 'default nil :family "Iosevka" :height 110 :weight 'normal)
 (set-face-attribute 'fixed-pitch nil :family "Iosevka")
@@ -814,6 +850,10 @@
 (tool-bar-mode -1)
 
 (add-hook 'prog-mode-hook 'linum-mode)
+
+(setq jm-background-alpha 95)
+(set-frame-parameter (selected-frame) 'alpha `(,jm-background-alpha . jm-background-alpha))
+(add-to-list 'default-frame-alist `(alpha . (,jm-background-alpha . ,jm-background-alpha)))
 
 (use-package cern-root-mode
   :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
@@ -877,7 +917,8 @@
   ;; start up applications
   (setq my/exwm-startup-applications
 	'("/home/jaymorgan/Applications/Nextcloud-3.3.6-x86_64.AppImage"
-	  "nm-applet" "blueman-applet" "blueman-tray"))
+	  "nm-applet" "blueman-applet" "blueman-tray"; "nitrogen"
+	  ))
   (defun my/launch-startup ()
     (interactive)
     (mapc #'launch-program my/exwm-startup-applications))
@@ -937,7 +978,7 @@
   (exwm-systemtray-enable)
 
   ;; start in workspace 1
-  (setq exwm-workspace-number 4)
+  (setq exwm-workspace-number 9)
   (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
 
   (setq exwm-randr-workspace-monitor-plist '(2 "HDMI1" 3 "HDMI1")
@@ -981,3 +1022,5 @@
   :straight nil
   :init
   (setq display-fill-column-indicator-column 99))
+
+(setq gc-cons-threshold (* 2 1000 1000))
