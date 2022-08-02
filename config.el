@@ -4,7 +4,7 @@
       (setq exec-path (cons fp exec-path)))))
 
 (add-to-exec-path "~/.bin")
-(add-to-exec-path "~/.bin/julia")
+(add-to-exec-path "~/Applications/julia-1.7.3/bin")
 
 (setq package-enable-at-startup nil
       straight-check-for-modifications 'live)
@@ -152,7 +152,7 @@
 ;; moves to the end of the page. Instead, increment the page
 ;; (i.e. move the page up or down) therefore preserving the context of
 ;; the cursor.
-(setq scroll-margin 10
+(setq scroll-margin 5
       scroll-conservatively 101
       scroll-up-aggressively 0.01
       scroll-down-aggressively 0.01
@@ -229,6 +229,8 @@
   :init
   (setq c-default-style "linux"
 	c-basic-offset 4))
+
+(use-package julia-mode)
 
 (use-package python-mode
   :hook (python-mode . prettify-symbols-mode)
@@ -449,8 +451,7 @@
   ;; and fixed-pitch for source code) when viewing the slide shows.
   (use-package mixed-pitch
     :hook ((org-tree-slide-mode . mixed-pitch-mode)
-	   ;(org-mode . mixed-pitch-mode)
-	   ))
+	   (org-mode . mixed-pitch-mode)))
 
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
@@ -462,7 +463,8 @@
 	org-latex-packages-alist '(("" "minted"))
 	org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -pdf %f")
 	org-highlight-latex-and-related '(latex script entities)
-	org-src-fontify-natively t)
+	org-src-fontify-natively t
+	org-image-actual-width '(800))
 
   (add-hook 'org-mode-hook #'(lambda ()
 			       (set-fill-column 85)
@@ -487,23 +489,12 @@
 
   (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)
 							   (shell . t)
+							   (julia . t)
 							   (python . t)
 							   (R . t)
 							   (gnuplot . t)
 							   (plantuml . t)
 							   (C . t)))
-
-  (require 'color)
-  (set-face-attribute 'org-block nil :background
-                      (color-darken-name
-                       (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background
-		      (color-darken-name
-                       (face-attribute 'default :background) 3))
-  (set-face-attribute 'org-block-end-line nil :background
-		      (color-darken-name
-                       (face-attribute 'default :background) 3))
-
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -798,6 +789,7 @@
  "o g" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/google-calendar.org")))
  "o e" #'elfeed
  "o u" #'undo-tree-visualize
+ "o l" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/accounts.ledger")))
  ;; modify buffer
  "m o" #'olivetti-mode
  "m b" #'ibuffer
@@ -845,15 +837,22 @@
 (set-face-attribute 'fixed-pitch nil :family "Iosevka")
 (set-face-attribute 'variable-pitch nil :family "Iosevka")
 
+(require 'color)
+(set-face-attribute 'org-block nil :background
+                    (color-darken-name (face-attribute 'default :background) 2))
+(set-face-attribute 'org-block-begin-line nil :background
+		    (color-darken-name (face-attribute 'default :background) 3))
+(set-face-attribute 'org-block-end-line nil :background
+		    (color-darken-name (face-attribute 'default :background) 3))
+
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
 (add-hook 'prog-mode-hook 'linum-mode)
 
-(setq jm-background-alpha 95)
-(set-frame-parameter (selected-frame) 'alpha `(,jm-background-alpha . jm-background-alpha))
-(add-to-list 'default-frame-alist `(alpha . (,jm-background-alpha . ,jm-background-alpha)))
+(set-frame-parameter (selected-frame) 'alpha '(95 . 95))
+(add-to-list 'default-frame-alist '(alpha . (95 . 95)))
 
 (use-package cern-root-mode
   :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
@@ -917,8 +916,7 @@
   ;; start up applications
   (setq my/exwm-startup-applications
 	'("/home/jaymorgan/Applications/Nextcloud-3.3.6-x86_64.AppImage"
-	  "nm-applet" "blueman-applet" "blueman-tray"; "nitrogen"
-	  ))
+	  "nm-applet" "blueman-applet" "blueman-tray" "nitrogen --restore"))
   (defun my/launch-startup ()
     (interactive)
     (mapc #'launch-program my/exwm-startup-applications))
