@@ -58,6 +58,12 @@
   :bind (("C-r" . swiper)
 	 ("C-s" . swiper)))
 
+;; delete trailing whitespace only on programming modes
+(defun delete-whitespace-prog-mode ()
+  (when (derived-mode-p 'prog-mode)
+    (delete-trailing-whitespace)))
+(add-hook 'before-save-hook 'delete-whitespace-prog-mode)
+
 (recentf-mode t)
 (setq recentf-max-menu-items 100
       recentf-max-saved-items 100)
@@ -525,7 +531,7 @@
   (setq flyspell-default-dictionary "british"))
 
 (use-package denote
-  :straight (denote :fetcher git :repo "https://git.sr.ht/~protesilaos/denote")
+  :straight (denote :fetcher git :host nil :repo "https://git.sr.ht/~protesilaos/denote")
   :bind (("C-c n n" . denote-create-note)
 	 ("C-c n d" . denote-go-to-directory)
 	 ("C-c n f" . denote-search))
@@ -611,11 +617,11 @@
 	bibtex-completion-bibliography (list global-bib-file (from-home "Nextcloud/Notes/zotero.bib"))
 	org-ref-default-bibliography (list global-bib-file (from-home "Nextcloud/Notes/zotero.bib"))))
 
-(use-package org-roam-bibtex
-  :init
-  (org-roam-bibtex-mode t)
-  :config
-  (require 'org-ref))
+;; (use-package org-roam-bibtex
+;;   :init
+;;   (org-roam-bibtex-mode t)
+;;   :config
+;;   (require 'org-ref))
 
 (use-package citar
   :bind (("C-c o b f" . citar-open-library-file)
@@ -845,14 +851,33 @@
 (set-face-attribute 'org-block-end-line nil :background
 		    (color-darken-name (face-attribute 'default :background) 3))
 
+
+(use-package ligature
+  :straight (ligature.el :repo "mickeynp/ligature.el" :fetcher git :host github)
+  :config
+  (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+                                       ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+                                       "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+                                       "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+                                       "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+                                       "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+                                       "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+                                       "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+                                       ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+                                       "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+                                       "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+                                       "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+                                       "\\\\" "://"))
+  (global-ligature-mode t))
+
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
 (add-hook 'prog-mode-hook 'linum-mode)
 
-(set-frame-parameter (selected-frame) 'alpha '(95 . 95))
-(add-to-list 'default-frame-alist '(alpha . (95 . 95)))
+(set-frame-parameter (selected-frame) 'alpha '(97 . 97))
+(add-to-list 'default-frame-alist '(alpha . (97 . 97)))
 
 (use-package cern-root-mode
   :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
