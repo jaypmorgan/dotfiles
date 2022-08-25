@@ -1,3 +1,18 @@
+#+TITLE: Emacs Configuration
+#+AUTHOR: Jay Morgan
+#+PROPERTY: header-args:emacs-lisp :tangle ./config.el :results none :exports none
+
+* Package Init (Straight)
+
+Instead of =package.el=, I've opted to use =straight.el=. It has many benefits over the
+default package manager shipped in Emacs. Firstly, it is possible to pull directly
+from a git repository, and secondly it can compile to native machine code if that
+configuration option is available in the Emacs build.
+
+To get =straight.el= to work, we first disable =package.el= and use the bootstrap
+boilerplate code provided by the maintainers of =straight.el=.
+
+#+begin_src emacs-lisp
 (defun add-to-exec-path (path)
   (let ((fp (expand-file-name path)))
     (unless (member fp exec-path)
@@ -21,14 +36,28 @@
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
+#+end_src
 
+While =straight.el= has its own system for specifying and installing packages, I prefer
+to use =use-package=. Luckily, this can easily be enabled and used by
+default. =use-package= has a configuration variable to always defer the loading of a
+package unless its needed. Setting this value to =t= can speed up the loading of Emacs
+if Emacs is not running in a daemon mode (and therefore only ever loaded once when
+the computer is booted).
+
+#+begin_src emacs-lisp
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t
       use-package-always-defer t)
 
 (straight-override-recipe
  '(org :type git :host github :repo "emacsmirror/org" :no-build t))
+#+end_src
 
+* Make things easier
+** Customise
+
+#+begin_src emacs-lisp
 (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024)
       auto-save-default nil
@@ -55,8 +84,7 @@
 (defalias 'isearch-backward 'isearch-backward-regexp)
 
 (use-package swiper
-  :bind (("C-r" . swiper)
-	 ("C-s" . swiper)))
+  :bind (("C-s" . swiper)))
 
 ;; delete trailing whitespace only on programming modes
 (defun delete-whitespace-prog-mode ()
@@ -77,7 +105,11 @@
 (global-auto-revert-mode)
 (delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
 (add-hook 'write-file-hooks 'delete-trailing-whitespace nil t)
+#+end_src
 
+** Command invocation
+
+#+begin_src emacs-lisp
 (use-package vertico
   :defer nil
   :init
@@ -86,26 +118,17 @@
   (require 'vertico-flat)
   (vertico-flat-mode t))
 
-(use-package which-key
-  :init
-  ;; only show which-key if C-h is trigged during keystroke
-  (setq which-key-show-early-on-C-h t
-        which-key-idle-delay 10000
-        which-key-idle-secondary-delay 0.01)
-  (which-key-mode))
-
 (use-package orderless
   :init
   (setq completion-styles '(orderless)
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles basic partial-completion)))))
+#+end_src
 
+** Buffer movement
+
+#+begin_src emacs-lisp
 (use-package avy)
-
-;; (use-package pulsar
-;;   :defer nil
-;;   :init
-;;   (pulsar-global-mode t))
 
 (use-package expand-region
   :defer nil
@@ -164,7 +187,11 @@
       scroll-down-aggressively 0.01
       scroll-preserve-screen-position t
       auto-window-vscroll nil)
+#+end_src
 
+** Window movement
+
+#+begin_src emacs-lisp
 (use-package ace-window)
 
 (use-package perspective
@@ -173,7 +200,14 @@
   :custom (persp-mode-prefix-key (kbd "C-x x")))
 
 (winner-mode t)
+#+end_src
 
+Better Emacs window management.
+
+* Programming Environment
+** Environment
+
+#+begin_src emacs-lisp
 (use-package company
   :bind ("M-/" . company-complete)
   :hook (after-init . global-company-mode)
@@ -183,7 +217,8 @@
 
 (use-package company-quickhelp
   :after company
-  :config
+  :init
+  (setq company-quickhelp-delay 0.001)
   (company-quickhelp-mode t))
 
 (use-package magit)
@@ -197,7 +232,7 @@
 (use-package morg-term
   :straight nil
   :init
-  (load "~/workspace/dotfiles/morg-term.el")
+  (load "~/workspace/dotfiles/emacs/morg-term.el")
   (setq morg-term-start-locations '("adeline.me" "lesia")))
 
 (use-package projectile
@@ -218,8 +253,6 @@
   (interactive)
   (run-repl-projectile #'run-python))
 
-(use-package ripgrep :after projectile)
-
 (use-package undo-tree
   :init
   (global-undo-tree-mode)
@@ -227,7 +260,11 @@
   (setq undo-tree-visualizer-diff t
 	undo-tree-visualizer-timestamps t
 	undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
+#+end_src
 
+** Languages
+
+#+begin_src emacs-lisp
 (use-package c-mode
   :straight nil
   :hook ((c++-mode . electric-pair-mode)
@@ -237,6 +274,7 @@
 	c-basic-offset 4))
 
 (use-package julia-mode)
+(use-package julia-repl)
 
 (use-package python-mode
   :hook (python-mode . prettify-symbols-mode)
@@ -248,13 +286,6 @@
 	python-shell-interpreter "ipython"
 	python-shell-interpreter-args "--pprint --autoindent --simple-prompt -i --matplotlib"
 	py-default-interpreter "ipython"))
-
-(use-package eglot)
-(use-package blacken)
-(use-package zeal-at-point)
-(use-package csv-mode)
-(use-package yaml-mode)
-(use-package markdown-mode)
 
 (use-package pyvenv
   :defer nil
@@ -272,12 +303,23 @@
 	(t (error (format "Unknown major mode: %s" major-mode))))
   (isend-send))
 
+(use-package numpydoc
+  :config
+  (setq numpydoc-insert-parameter-types t
+	numpydoc-insert-return-without-typehint t))
+
 (use-package code-cells
   :hook (python-mode . code-cells-mode-maybe)
   :bind (:map code-cells-mode
 	      ("C-c <return>" . highlight-and-send)
 	      ("C-<left>" . code-cells-backward-cell)
 	      ("C-<right>" . code-cells-forward-cell)))
+
+(use-package eglot)
+(use-package csv-mode)
+(use-package auctex)
+(use-package yaml-mode)
+(use-package markdown-mode)
 
 (defun string-replace (fromstring tostring instring)
   (replace-regexp-in-string (regexp-quote fromstring) tostring instring nil 'literal))
@@ -291,11 +333,6 @@
 (use-package highlight-indent-guides
   :hook ((prog-mode . highlight-indent-guides-mode))
   :config (setq highlight-indent-guides-method 'character))
-
-(use-package numpydoc
-  :config
-  (setq numpydoc-insert-parameter-types t
-	numpydoc-insert-return-without-typehint t))
 
 (use-package isend-mode
   :config
@@ -314,12 +351,7 @@
   :hook (scheme-mode . paredit-mode))
 
 (use-package geiser-chez)
-
-(use-package racket-mode
-  :hook (racket-mode . paredit-mode)
-  :init
-  (use-package quack)
-  (use-package geiser-racket))
+(use-package geiser-guile)
 
 (use-package lisp-mode
   :straight nil
@@ -356,7 +388,22 @@
     (setq plantuml-jar-path filepath
           plantuml-default-exec-mode 'jar
           org-plantuml-jar-path plantuml-jar-path)))
+#+end_src
 
+** Cohesive Programming System :noexport:
+
+As I am not currently using =lsp-mode=, but instead using focused packages, the
+keybindings between these packages differ. To make it easier to remember the
+keybindings, I am creating a system that collects the code actions that then can be
+mapped to a keybinding later on. This means that no matter the programming language
+(and thus the different package) the keybindings should be consistent (as long as
+I've added them to this system of course!).
+
+The first step is to define the mapping for each of the different languages to the
+code actions and functions that perform said code action. To do this I am creating an
+alist:
+
+#+begin_src emacs-lisp
 (setq language-mode->functions
       '((python-mode . ((:format . lsp-format-buffer)
 			(:refacor . lsp-rename)
@@ -370,7 +417,15 @@
 (defun get-registered-languages ()
   "Get a list of languages defined in programming system"
   (mapcar 'car language-mode->functions))
+#+end_src
 
+Next, I define a macro that builds a function definition. This function is the entry
+point for a keybinding. For example, this function can create a formatting function
+that can be bound to say =SPC c f= if you're using =evil-mode=. When this generated
+function is called, it will detect the current major-mode and call the format
+function specified in =language-mode->function=.
+
+#+begin_src emacs-lisp
 (defmacro register-source-code-fun (fun-name fun-type)
   `(defun ,fun-name ()
      (interactive)
@@ -384,7 +439,23 @@
 (register-source-code-fun source-code-format :format)
 (register-source-code-fun source-code-refactor :refactor)
 (register-source-code-fun source-code-goto-definition :goto-definition)
+#+end_src
 
+** Project management
+
+I code locally, and push changes to a remote server for computation. Instead of using
+tramp, which at times, can be quite slow (especially with magit), I've written some
+functions to interact and upload the files with =rsync=.
+
+In each =projectile= project, I define the =rsync-source= (i.e. the projectile root), and
+the =rsync-destination= (where the host and directory the files should be uploaded
+to).
+
+Two other variables control what and how the files are uploaded. =rsync-base-cmd= is
+the command and flags to execute, while the =rsync-exclude-list= is a list of paths to
+exclude from uploading.
+
+#+begin_src emacs-lisp
 ;; Projectile level syncing between local and remote hosts
 ;; set the initial variables to nil
 ;; .dir-local.el should set these at a project level
@@ -394,22 +465,44 @@
       rsync-exclude-list '("data" ".git" "container-dev" "container"
 			   "__pycache__" "*.pyc" "renv/library" "renv/local"
 			   "renv/python" "renv/staging" "build" "dist"))
+#+end_src
 
+Next, I create the functions. For every element in =rsync-exclude-list= we need to add
+a =--exclude= flag for rsync. Maybe these could be combined, but this seems to work fine.
+
+#+begin_src emacs-lisp
 (defun rsync--build-exclude-list (exclude-list)
   (mapconcat
    (lambda (s) (concat " --exclude=" s " "))
    exclude-list " "))
+#+end_src
 
+The rsync command builds the find command, and adds the =--progress= flag if a
+verbose/display mode is set.
+
+#+begin_src emacs-lisp
 (defun rsync--cmd (&optional display)
   (let ((exclude-list (rsync--build-exclude-list rsync-exclude-list)))
     (if display
 	(concat rsync-base-cmd " --progress " exclude-list)
       (concat rsync-base-cmd exclude-list))))
+#+end_src
 
+If there are many destinations, I will want a method to select one these to sync to.
+
+#+begin_src emacs-lisp
 (defun select-rsync-destination (dest)
   (interactive (list (completing-read "Destination: " *available-destinations*)))
   (setq rsync-destination dest))
+#+end_src
 
+Finally, we have the callable =dorsync= command that takes the source destination and
+verbose Boolean as arguments.
+
+Later in this configuration file, I bind this command (both verbose and non-verbose
+version) to some keybindings.
+
+#+begin_src emacs-lisp
 (defun dorsync (src dest is_hidden)
   "Launch an asynchronuous rsync command"
   (interactive)
@@ -421,10 +514,30 @@
       (setq rsync-cmd (rsync--cmd t)))
     (async-shell-command (concat rsync-cmd " " src " " dest))
     (setq async-shell-command-display-buffer async-value)))
+#+end_src
+
+* Org-mode
+
+#+begin_src emacs-lisp
+(straight-use-package '(org-contrib :type git
+                                    :repo "https://git.sr.ht/~bzg/org-contrib";
+                                    :local-repo "org-contrib"))
+
+;; backend aware export preprocess hook
+(defun sa-org-export-preprocess-hook ()
+  "My backend aware export preprocess hook."
+  (save-excursion
+    (when (not (eq org-export-current-backend 'latex))
+      ;; ignoreheading tag for bibliographies and appendices
+      (let* ((tag "ignoreheading"))
+        (org-map-entries (lambda ()
+                           (delete-region (point-at-bol) (point-at-eol)))
+                         (concat ":" tag ":"))))))
+
+(add-hook 'org-export-preprocess-hook 'sa-org-export-preprocess-hook)
 
 (use-package org
   :hook (org-mode . mixed-pitch-mode)
-  :straight (:type built-in)
   ;;:ensure org-plus-contrib
   :config
   (require 'org-ref)
@@ -437,6 +550,8 @@
   (require 'ox-rst)
   (pdf-loader-install)
 
+  (require 'ox-extra)
+  (ox-extras-activate '(ignore-headings))
   (add-to-list 'org-modules 'org-habit)
 
   (use-package org-fragtog
@@ -529,7 +644,11 @@
 	 (text-mode . flyspell-mode))
   :init
   (setq flyspell-default-dictionary "british"))
+#+end_src
 
+Note taking
+
+#+begin_src emacs-lisp
 (use-package denote
   :straight (denote :fetcher git :host nil :repo "https://git.sr.ht/~protesilaos/denote")
   :bind (("C-c n n" . denote-create-note)
@@ -538,41 +657,18 @@
   :init
   (defun denote-go-to-directory ()
     (interactive)
-    (find-file denote-directory))
+    (find-file denote-directory)
+    (denote-dired-mode t))
+  
   (defun denote-search (search-term)
     (interactive "sSearch for: ")
     (ripgrep-regexp search-term denote-directory))
-  (setq denote-directory (from-home "Nextcloud/Notes/library")))
+  
+  (setq denote-directory (from-home "Nextcloud/Notes/library")
+	denote-org-front-matter "#+title: %s
+,#+date: %s
 
-;; (use-package org-roam
-;;   :bind (("C-c n l" . org-roam-buffer-toggle)
-;; 	 ("C-c n f" . org-roam-node-find)
-;; 	 ("C-c n i" . org-roam-node-insert))
-;;   :custom
-;;   (org-roam-directory (from-home "Nextcloud/Notes/BIOSOFT"))
-;;   (org-roam-capture-templates
-;;    `(("d" "default" plain
-;;       "%?"
-;;       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-;;       :unnarrowed t)
-;;      ("m" "meeting" plain
-;;       (file ,(from-home "Nextcloud/Notes/BIOSOFT/Templates/meeting-template.org"))
-;;       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
-;;       :unnarrowed t)
-;;      ("p" "paper" plain
-;;       "%?"
-;;       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+FILETAGS: bibliography\n")
-;;       :unnarrowed t)))
-;;   :init (setq org-roam-v2-ack t)
-;;   :config (org-roam-setup))
-
-;; (use-package deft
-;;   :bind ("C-c n d" . deft)
-;;   :config
-;;   (setq deft-directory (from-home "Nextcloud/Notes/BIOSOFT")
-;; 	deft-recursive t
-;; 	deft-strip-summary-regexp ":PROPERTIES:\n\\(.+\n\\)+:END:\n"
-;; 	deft-use-filename-as-title t))
+"))
 
 (setq org-capture-templates
       `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
@@ -582,19 +678,9 @@
 	("b" "Bug Log" entry (file ,(from-home "Nextcloud/Notes/bugs.org"))
 	 "* %T\n\n- Type: %?\n- Severity:\n- What happened:\n" :unnarrowed nil)))
 (global-set-key (kbd "C-c C-/") 'org-capture)
+#+end_src
 
-;; (use-package org-roam-ui
-;;   :straight (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
-;;   :after org-roam
-;;   :config
-;;   (setq org-roam-ui-sync-theme t
-;; 	org-roam-ui-follow t
-;; 	org-roam-ui-update-on-save t
-;; 	org-roam-open-on-start t))
-
-(setq global-bib-file (from-home "Nextcloud/Notes/references.bib")
-      global-bib-pdf (from-home "Nextcloud/Notes/PDFs"))
-
+#+begin_src emacs-lisp
 ;; Centre the screen when entering the slide show, and put a fancy
 ;; border around it!
 (use-package olivetti
@@ -609,32 +695,27 @@
   (setq auto-revert-interval 0.5
 	pdf-annot-activate-created-annotations t
 	pdf-view-display-size 'fit-page))
+#+end_src
 
-(use-package org-ref
-  :commands (org-ref)
-  :config
-  (setq reftex-default-bibliography global-bib-file
-	bibtex-completion-bibliography (list global-bib-file (from-home "Nextcloud/Notes/zotero.bib"))
-	org-ref-default-bibliography (list global-bib-file (from-home "Nextcloud/Notes/zotero.bib"))))
+Bibliography management:
 
-;; (use-package org-roam-bibtex
-;;   :init
-;;   (org-roam-bibtex-mode t)
-;;   :config
-;;   (require 'org-ref))
-
+#+begin_src emacs-lisp
 (use-package citar
-  :bind (("C-c o b f" . citar-open-library-file)
+  :bind (("C-c o b f" . citar-open)
 	 ("C-c o b i" . citar-insert-citation)
 	 ("C-c o b a" . citar-add-citation)
 	 ("C-c o b n" . citar-open-notes))
   :custom
   (citar-bibliography (list
 		       (from-home "Nextcloud/Notes/zotero.bib")
-		       (from-home "Nextcloud/Notes/references.bib")))
+		       (From-home "Nextcloud/Notes/references.bib")))
   (citar-library-paths (list (from-home "Nextcloud/Notes/PDFs")))
   :config
   (use-package all-the-icons)
+  
+  (use-package denote-citar
+    :defer nil
+    :straight (denote-citar :fetcher git :host github :repo "pprevos/denote-citar"))
 
   (defun citar-add-citation (citation)
     "Add a new key to the bibliography file"
@@ -665,7 +746,13 @@
 
   (setq citar-open-note-function 'orb-citar-edit-note
 	citar-notes-paths (list (from-home "Nextcloud/Notes/BIOSOFT"))))
+#+end_src
 
+* Do everything in Emacs
+
+** Email
+
+#+begin_src emacs-lisp
 (when (file-exists-p "/usr/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
   (require 'org-mu4e)
@@ -674,7 +761,12 @@
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
       (load mu4e-config))))
+#+end_src
 
+Here we have the HTML formatting of emails using org-mode. This is really only
+necessary for me for discussing source code.
+
+#+begin_src emacs-lisp
 (use-package org-mime
   :init
   (setq org-mime-export-options
@@ -682,17 +774,43 @@
 	  :section-numbers nil ; don't display numbered headings and toc and author
 	  :with-toc nil
 	  :with-author nil)))
+#+end_src
 
+** IRC
+
+#+begin_src emacs-lisp
+(use-package erc
+  :init
+  (when (file-exists-p (locate-user-emacs-file "erc-init.el"))
+    (load (locate-user-emacs-file "erc-init.el"))))
+#+end_src
+
+** Ebooks
+
+#+begin_src emacs-lisp
 (use-package nov
   :init
   (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
   (setq nov-text-width 80))
+#+end_src
 
+** Accounting
+
+#+begin_src emacs-lisp
 (use-package ledger-mode
   :init
   (add-to-exec-path "~/Applications/ledger/")
   (setq ledger-reconcile-default-commodity "£"))
+#+end_src
 
+** Tasks
+
+There is not so much that I need to configure -- the defaults org-mode TODO entries
+and org-agenda works fine. Now that being said, I do like the [[https://en.wikipedia.org/wiki/Time_management#The_Eisenhower_Method][Eisenhower matrix]] for
+evaluating what tasks should be worked on. To create this 'matrix', we can create a
+custom agenda view using the suggestions made in a [[https://stackoverflow.com/questions/66567445/how-to-use-a-organized-schedule-in-4-agendas-inside-org-emacs][Stackoverflow post]].
+
+#+begin_src emacs-lisp
 (add-to-list 'org-agenda-custom-commands
 	     '("u" "Urgency view using Eisenhower Method"
 	       ((tags-todo
@@ -708,7 +826,11 @@
 		 "-PRIORITY=\"A\"+DEADLINE>\"<+2d>\"|-PRIORITY=\"A\"-DEADLINE={.}"
 		 ((org-agenda-overriding-header "Not urgent or important"))))
 	       nil))
+#+end_src
 
+** Calendar
+
+#+begin_src emacs-lisp
 (use-package calendar
   :hook (diary-list-entries . diary-sort-entries)
   :bind (:map calendar-mode-map ("C-x i" . diary-insert-entry))
@@ -725,8 +847,14 @@
   (let ((gcal-config (concat user-emacs-directory "gcal.el")))
     (when (file-exists-p gcal-config)
       (load gcal-config))))
+#+end_src
 
+** RSS Feed & Podcasts
+
+#+begin_src emacs-lisp
 (use-package elfeed
+  :bind (:map elfeed-search-mode-map
+	      ("U" . elfeed-update))  ;; similar to mu4e
   :init
   ;; https://www.theinsaneapp.com/2021/04/top-machine-learning-blogs-to-follow-in-2021.html
   (setq elfeed-db-directory "~/.cache/elfeed/"  ;; keep the home directory clean
@@ -737,8 +865,14 @@
           ("https://machinelearningmastery.com/feed/" machine-learning)
           ("http://blog.shakirm.com/feed/" machine-learning)
 	  ("http://planet.lisp.org/rss20.xml" lisp programming)
-	  ("https://protesilaos.com/books.xml" misc))))
+	  ("https://protesilaos.com/books.xml" misc)
+	  ("https://waitbutwhy.com/feed" misc)
+	  ("http://within-parens.blogspot.com/feeds/posts/default" lisp programming))))
+#+end_src
 
+* Keybindings
+
+#+begin_src emacs-lisp
 (global-set-key (kbd "C-]") #'join-line)
 (global-set-key (kbd "C-x x g") #'revert-buffer)
 (global-set-key (kbd "C-;") #'comment-line)
@@ -790,7 +924,7 @@
  "o s" #'morg-term-vterm-below
  "o v" #'morg-term-start-at-location
  "o S" #'(lambda () (interactive) (vterm t))
- "o c" #'(lambda () (interactive) (find-file (concat user-emacs-directory "config.org")))
+ "o c" #'(lambda () (interactive) (find-file "~/workspace/dotfiles/emacs/config.org"))
  "o r" 'my/recentf
  "o g" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/google-calendar.org")))
  "o e" #'elfeed
@@ -810,7 +944,16 @@
  "o C" #'calendar
  "o m s" #'slack-im-select
  "o m m" #'mu4e)
+#+end_src
 
+* Look and feel
+
+Enable highlight line mode in =dired= to help the visual feed back when selecting files
+and directories.
+
+** Dired
+
+#+begin_src emacs-lisp
 (use-package dired
   :ensure nil
   :straight nil
@@ -820,21 +963,11 @@
   (setq dired-listing-switches "-alhgo --group-directories-first"
 	dired-auto-revert-buffer t
 	dired-dwim-target t))
+#+end_src
 
-;(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-10"))
+** theme
 
-;; (use-package modus-themes
-;;   ;; this is some text
-;;   :defer nil
-;;   :init
-;;   (setq modus-themes-italic-constructs t
-;; 	modus-themes-subtle-line-numbers t
-;; 	modus-themes-syntax '(yellow-comments)
-;; 	modus-themes-region '(accented bg-only no-extend)
-;; 	modus-themes-mode-line '(borderless padding)
-;; 	modus-themes-org-blocks 'gray-background)
-;;   (load-theme 'modus-operandi t))
-
+#+begin_src emacs-lisp
 (use-package atom-one-dark-theme
   :init
   (load-theme 'atom-one-dark t))
@@ -850,9 +983,22 @@
 		    (color-darken-name (face-attribute 'default :background) 3))
 (set-face-attribute 'org-block-end-line nil :background
 		    (color-darken-name (face-attribute 'default :background) 3))
+#+end_src
 
+** Buffer
 
+#+begin_src emacs-lisp
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+(use-package display-fill-column-indicator
+  :defer nil
+  :straight nil
+  :init
+  (setq display-fill-column-indicator-column 99))
+#+end_src
+
+#+begin_src emacs-lisp
 (use-package ligature
+  :defer nil
   :straight (ligature.el :repo "mickeynp/ligature.el" :fetcher git :host github)
   :config
   (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
@@ -869,28 +1015,24 @@
                                        "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
                                        "\\\\" "://"))
   (global-ligature-mode t))
+#+end_src
 
+** Window
+
+Finally, let's remove the GUI toolkit elements. These include the scroll bars, the
+tool-bar icons and the text menus.
+
+#+begin_src emacs-lisp
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
 (add-hook 'prog-mode-hook 'linum-mode)
+#+end_src
 
-(set-frame-parameter (selected-frame) 'alpha '(97 . 97))
-(add-to-list 'default-frame-alist '(alpha . (97 . 97)))
+* Emacs Display Environment
 
-(use-package cern-root-mode
-  :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
-  :bind (:map c++-mode-map
-	      (("C-c C-c" . cern-root-eval-defun-maybe)
-	       ("C-c C-b" . cern-root-eval-buffer)
-	       ("C-c C-l" . cern-root-eval-file)
-	       ("C-c C-r" . cern-root-eval-region)
-	       ("C-c C-z" . run-cern-root-other-window)))
-  :config
-  (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
-	cern-root-terminal-backend 'inferior))
-
+#+begin_src emacs-lisp
 (use-package exwm
   :init
   (require 'exwm)
@@ -956,7 +1098,7 @@
          ([?\s-g]  . launch-program-with-completion)
          ([?\s-w]  . exwm-workspace-switch)
          ([?\s-b]  . exwm-layout-toggle-mode-line)
-         ([?\s-i]  . (lambda () (interactive) (launch-program "firefox")))
+         ([?\s-i]  . (lambda () (interactive) (launch-program "google-chrome")))
          ;; window management
          ([?\s-h]    . windmove-left)
          ([?\s-l]    . windmove-right)
@@ -1005,9 +1147,7 @@
   (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
 
   (setq exwm-randr-workspace-monitor-plist '(2 "HDMI1" 3 "HDMI1")
-	exwm-workspace-warp-cursor t
-	focus-follows-mouse t
-	mouse-autoselect-window t)
+	exwm-workspace-warp-cursor t)
 
   ;; automatically configure the monitor setup based upon the
   ;; previously saved settings with autorandr.
@@ -1019,13 +1159,18 @@
 
   (exwm-enable)
 
+  (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
+  (add-to-list 'default-frame-alist '(alpha . (97 . 97)))
+
   (exwm-randr-enable)
   (call-process "/bin/bash" "/home/jaymorgan/Applications/startup.sh")
   (exwm-randr--init)
 
   (setq exwm-input-simulation-keys
 	'(((kbd "C-s") . [?\C-f]))))
+#+end_src
 
+#+begin_src emacs-lisp
 (use-package morg-monitor
   :straight nil
   :defer nil
@@ -1036,14 +1181,27 @@
 	 ("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
 	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness))
   :init
-  (load "~/workspace/dotfiles/morg-monitor.el")
+  (load (expand-file-name "morg-monitor.el"))
   (setq morg-monitor-step-size 10))
+#+end_src
 
-(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
-(use-package display-fill-column-indicator
-  :defer nil
-  :straight nil
-  :init
-  (setq display-fill-column-indicator-column 99))
+#+begin_src emacs-lisp
+(use-package cern-root-mode
+  :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
+  :bind (:map c++-mode-map
+	      (("C-c C-c" . cern-root-eval-defun-maybe)
+	       ("C-c C-b" . cern-root-eval-buffer)
+	       ("C-c C-l" . cern-root-eval-file)
+	       ("C-c C-r" . cern-root-eval-region)
+	       ("C-c C-z" . run-cern-root-other-window)))
+  :config
+  (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
+	cern-root-terminal-backend 'inferior))
+#+end_src
 
+Reduce GC threshold so garbage collection happens more quickly -- preventing
+noticeable hangups.
+
+#+begin_src emacs-lisp
 (setq gc-cons-threshold (* 2 1000 1000))
+#+end_src
