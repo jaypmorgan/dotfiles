@@ -423,7 +423,7 @@
   :hook (org-mode . mixed-pitch-mode)
   ;;:ensure org-plus-contrib
   :config
-  (require 'org-ref)
+  ;(require 'org-ref)
   ;(require 'citar)
   (require 'pdf-view)
   (require 'ox-latex)
@@ -685,6 +685,10 @@
     (when (file-exists-p gcal-config)
       (load gcal-config))))
 
+(use-package todoist
+  :init
+  (load (expand-file-name "~/.emacs.d/todoist.el")))
+
 (use-package elfeed
   :bind (:map elfeed-search-mode-map
 	      ("U" . elfeed-update))  ;; similar to mu4e
@@ -748,7 +752,7 @@
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
  "l ," #'(lambda () (interactive) (dorsync rsync-source rsync-destination nil))
  ;; open maps
- "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/tasks.org")))
+ "o t" #'(lambda () (interactive) (progn (todoist) (todoist-mode)))
  "o f" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/fleeting.org")))
  "o s" #'morg-term-vterm-below
  "o v" #'morg-term-start-at-location
@@ -833,6 +837,7 @@
 (add-hook 'prog-mode-hook 'linum-mode)
 
 (use-package exwm
+  :if (getenv "EXWM_ENABLE")
   :init
   (require 'exwm)
   (require 'exwm-randr)
@@ -978,7 +983,7 @@
 	 ("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
 	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness))
   :init
-  (load (expand-file-name "morg-monitor.el"))
+  (load (expand-file-name "~/.emacs.d/morg-monitor.el"))
   (setq morg-monitor-step-size 10))
 
 (use-package cern-root-mode
