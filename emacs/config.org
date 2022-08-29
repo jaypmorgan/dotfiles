@@ -857,6 +857,16 @@ custom agenda view using the suggestions made in a [[https://stackoverflow.com/q
   (load (expand-file-name "~/.emacs.d/todoist.el")))
 #+end_src
 
+Pomodoro timer
+
+#+begin_src emacs-lisp
+(use-package morg-pomodoro
+  :commands (morg-pomodoro-start morg-pomodoro-stop morg-pomodoro-pause-unpause)
+  :straight (morg-pomodoro
+	     :type built-in
+	     :files "~/.emacs.d/morg-pomodoro.el"))
+#+end_src
+
 ** RSS Feed & Podcasts
 
 #+begin_src emacs-lisp
@@ -980,7 +990,7 @@ and directories.
   :init
   (load-theme 'atom-one-dark t))
 
-(set-face-attribute 'default nil :family "Iosevka" :height 110 :weight 'normal)
+(set-face-attribute 'default nil :family "Iosevka" :height 120 :weight 'normal)
 (set-face-attribute 'fixed-pitch nil :family "Iosevka")
 (set-face-attribute 'variable-pitch nil :family "Iosevka")
 

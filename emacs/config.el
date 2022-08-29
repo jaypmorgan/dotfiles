@@ -689,6 +689,12 @@
   :init
   (load (expand-file-name "~/.emacs.d/todoist.el")))
 
+(use-package morg-pomodoro
+  :commands (morg-pomodoro-start morg-pomodoro-stop morg-pomodoro-pause-unpause)
+  :straight (morg-pomodoro
+	     :type built-in
+	     :files "~/.emacs.d/morg-pomodoro.el"))
+
 (use-package elfeed
   :bind (:map elfeed-search-mode-map
 	      ("U" . elfeed-update))  ;; similar to mu4e
@@ -792,7 +798,7 @@
   :init
   (load-theme 'atom-one-dark t))
 
-(set-face-attribute 'default nil :family "Iosevka" :height 110 :weight 'normal)
+(set-face-attribute 'default nil :family "Iosevka" :height 120 :weight 'normal)
 (set-face-attribute 'fixed-pitch nil :family "Iosevka")
 (set-face-attribute 'variable-pitch nil :family "Iosevka")
 
