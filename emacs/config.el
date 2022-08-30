@@ -161,6 +161,7 @@
 (winner-mode t)
 
 (use-package company
+  :diminish t
   :bind ("M-/" . company-complete)
   :hook (after-init . global-company-mode)
   :config
@@ -188,6 +189,7 @@
   (setq morg-term-start-locations '("adeline.me" "lesia")))
 
 (use-package projectile
+  :diminish t
   :defer nil
   :bind-keymap ("M-p" . projectile-command-map)
   :bind (:map projectile-mode-map
@@ -206,6 +208,7 @@
   (run-repl-projectile #'run-python))
 
 (use-package undo-tree
+  :diminish t
   :init
   (global-undo-tree-mode)
   :config
@@ -279,6 +282,7 @@
     (pyvenv-workon name)))
 
 (use-package highlight-indent-guides
+  :diminish t
   :hook ((prog-mode . highlight-indent-guides-mode))
   :config (setq highlight-indent-guides-method 'character))
 
@@ -419,7 +423,16 @@
 
 (add-hook 'org-export-preprocess-hook 'sa-org-export-preprocess-hook)
 
+(use-package pdf-tools
+  :defer nil
+  :config
+  (pdf-loader-install)
+  (setq auto-revert-interval 0.5
+	pdf-annot-activate-created-annotations t
+	pdf-view-display-size 'fit-page))
+
 (use-package org
+  :defer nil
   :hook (org-mode . mixed-pitch-mode)
   ;;:ensure org-plus-contrib
   :config
@@ -439,6 +452,41 @@
 
   (use-package org-fragtog
     :hook (org-mode . org-fragtog-mode))
+
+  ;;   There is not so much that I need to configure -- the defaults
+  ;; org-mode TODO entries and org-agenda works fine. Now that being
+  ;; said, I do like the
+  ;; [[https://en.wikipedia.org/wiki/Time_management#The_Eisenhower_Method][Eisenhower
+  ;; matrix]] for evaluating what tasks should be worked on. To create
+  ;; this 'matrix', we can create a custom agenda view using the
+  ;; suggestions made in a
+  ;; [[https://stackoverflow.com/questions/66567445/how-to-use-a-organized-schedule-in-4-agendas-inside-org-emacs][Stackoverflow
+  ;; post]].
+
+  (add-to-list 'org-agenda-custom-commands
+	     '("u" "Urgency view using Eisenhower Method"
+	       ((tags-todo
+		 "+PRIORITY=\"A\"+DEADLINE<=\"<+2d>\""
+		 ((org-agenda-overriding-header "Urgent and important")))
+		(tags-todo
+		 "+PRIORITY=\"A\"+DEADLINE>\"<+2d>\"|+PRIORITY=\"A\"-DEADLINE={.}"
+		 ((org-agenda-overriding-header "Important but not urgent")))
+		(tags-todo
+		 "-PRIORITY=\"A\"+DEADLINE<=\"<+2d>\""
+		 ((org-agenda-overriding-header "Urgent but not important")))
+		(tags-todo
+		 "-PRIORITY=\"A\"+DEADLINE>\"<+2d>\"|-PRIORITY=\"A\"-DEADLINE={.}"
+		 ((org-agenda-overriding-header "Not urgent or important"))))
+	       nil))
+
+
+  (require 'color)
+  (set-face-attribute 'org-block nil :background
+                      (color-darken-name (face-attribute 'default :background) 2))
+  (set-face-attribute 'org-block-begin-line nil :background
+		      (color-darken-name (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-block-end-line nil :background
+		      (color-darken-name (face-attribute 'default :background) 3))
 
   ;; Slide show setup. First we use org-tree slide to provide the
   ;; basic and critical functionality of the slide show and only show
@@ -519,10 +567,11 @@
   (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
-  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
-  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
+  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block))
+(define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block)
 
 (use-package flyspell
+  :diminish t
   :hook ((prog-mode . flyspell-prog-mode)
 	 (text-mode . flyspell-mode))
   :init
@@ -565,13 +614,6 @@
   :init
   (setq olivetti-body-width 90
 	olivetti-style 'fancy))
-
-(use-package pdf-tools
-  :config
-  (pdf-loader-install)
-  (setq auto-revert-interval 0.5
-	pdf-annot-activate-created-annotations t
-	pdf-view-display-size 'fit-page))
 
 (use-package citar
   :bind (("C-c o b f" . citar-open)
@@ -620,8 +662,8 @@
   (setq citar-open-note-function 'orb-citar-edit-note
 	citar-notes-paths (list (from-home "Nextcloud/Notes/BIOSOFT"))))
 
-(when (file-exists-p "/usr/share/emacs/site-lisp/mu4e/mu4e.el")
-  (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+(when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
+  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
   (require 'org-mu4e)
   (setq mail-user-agent 'mu4e-user-agent)
   (setq org-mu4e-convert-to-html t)
@@ -651,22 +693,6 @@
   :init
   (add-to-exec-path "~/Applications/ledger/")
   (setq ledger-reconcile-default-commodity "£"))
-
-(add-to-list 'org-agenda-custom-commands
-	     '("u" "Urgency view using Eisenhower Method"
-	       ((tags-todo
-		 "+PRIORITY=\"A\"+DEADLINE<=\"<+2d>\""
-		 ((org-agenda-overriding-header "Urgent and important")))
-		(tags-todo
-		 "+PRIORITY=\"A\"+DEADLINE>\"<+2d>\"|+PRIORITY=\"A\"-DEADLINE={.}"
-		 ((org-agenda-overriding-header "Important but not urgent")))
-		(tags-todo
-		 "-PRIORITY=\"A\"+DEADLINE<=\"<+2d>\""
-		 ((org-agenda-overriding-header "Urgent but not important")))
-		(tags-todo
-		 "-PRIORITY=\"A\"+DEADLINE>\"<+2d>\"|-PRIORITY=\"A\"-DEADLINE={.}"
-		 ((org-agenda-overriding-header "Not urgent or important"))))
-	       nil))
 
 (use-package calendar
   :hook (diary-list-entries . diary-sort-entries)
@@ -789,6 +815,7 @@
   :straight nil
   :hook (dired-mode . hl-line-mode)
   :init
+  (use-package emacs-async)
   (dired-async-mode t)
   (setq dired-listing-switches "-alhgo --group-directories-first"
 	dired-auto-revert-buffer t
@@ -798,17 +825,9 @@
   :init
   (load-theme 'atom-one-dark t))
 
-(set-face-attribute 'default nil :family "Iosevka" :height 120 :weight 'normal)
-(set-face-attribute 'fixed-pitch nil :family "Iosevka")
-(set-face-attribute 'variable-pitch nil :family "Iosevka")
-
-(require 'color)
-(set-face-attribute 'org-block nil :background
-                    (color-darken-name (face-attribute 'default :background) 2))
-(set-face-attribute 'org-block-begin-line nil :background
-		    (color-darken-name (face-attribute 'default :background) 3))
-(set-face-attribute 'org-block-end-line nil :background
-		    (color-darken-name (face-attribute 'default :background) 3))
+(set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
+(set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
+(set-face-attribute 'variable-pitch nil :family "JetBrains Mono")
 
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 (use-package display-fill-column-indicator
@@ -855,7 +874,7 @@
           ?\C-h
           ?\C-c
           ?\C-w
-          ?\C-\s
+          ?\C-s
           ?\M-x
           ?\M-`
           ?\M-&
@@ -881,7 +900,7 @@
     (interactive)
     (recentf-save-list)
     (save-some-buffers)
-    (start-process-shell-command "logout" nil "lxsession-logout"))
+    (start-process-shell-command "logout" nil "kill -9 -1"))
 
   ;; Make buffer name more meaningful
   (add-hook 'exwm-update-class-hook
@@ -892,8 +911,9 @@
 
   ;; start up applications
   (setq my/exwm-startup-applications
-	'("/home/jaymorgan/Applications/Nextcloud-3.3.6-x86_64.AppImage"
-	  "nm-applet" "blueman-applet" "blueman-tray" "nitrogen --restore"))
+	'("Applications/nextcloud.appimage"
+	  "nm-applet" "blueman-applet" "blueman-tray" "nitrogen --restore"
+	  "compton"))
   (defun my/launch-startup ()
     (interactive)
     (mapc #'launch-program my/exwm-startup-applications))
@@ -970,11 +990,12 @@
   (exwm-enable)
 
   (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
-  (add-to-list 'default-frame-alist '(alpha . (97 . 97)))
+  (add-to-list 'default-frame-alist '(alpha . (95 . 95)))
 
-  (exwm-randr-enable)
-  (call-process "/bin/bash" "/home/jaymorgan/Applications/startup.sh")
-  (exwm-randr--init)
+  ;; (exwm-randr-enable)
+  ;; (when (file-exists-p "~/Applications/startup.sh")
+  ;;   (call-process "/bin/bash" "~/Applications/startup.sh"))
+  ;; (exwm-randr--init)
 
   (setq exwm-input-simulation-keys
 	'(((kbd "C-s") . [?\C-f]))))
@@ -992,16 +1013,17 @@
   (load (expand-file-name "~/.emacs.d/morg-monitor.el"))
   (setq morg-monitor-step-size 10))
 
-(use-package cern-root-mode
-  :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
-  :bind (:map c++-mode-map
-	      (("C-c C-c" . cern-root-eval-defun-maybe)
-	       ("C-c C-b" . cern-root-eval-buffer)
-	       ("C-c C-l" . cern-root-eval-file)
-	       ("C-c C-r" . cern-root-eval-region)
-	       ("C-c C-z" . run-cern-root-other-window)))
-  :config
-  (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
-	cern-root-terminal-backend 'inferior))
+;; (use-package cern-root-mode
+;;   :defer t
+;;   :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
+;;   :bind (:map c++-mode-map
+;; 	      (("C-c C-c" . cern-root-eval-defun-maybe)
+;; 	       ("C-c C-b" . cern-root-eval-buffer)
+;; 	       ("C-c C-l" . cern-root-eval-file)
+;; 	       ("C-c C-r" . cern-root-eval-region)
+;; 	       ("C-c C-z" . run-cern-root-other-window)))
+;;   :config
+;;   (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
+;; 	cern-root-terminal-backend 'inferior))
 
 (setq gc-cons-threshold (* 2 1000 1000))
