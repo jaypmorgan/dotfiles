@@ -424,7 +424,6 @@
 (add-hook 'org-export-preprocess-hook 'sa-org-export-preprocess-hook)
 
 (use-package pdf-tools
-  :defer nil
   :config
   (pdf-loader-install)
   (setq auto-revert-interval 0.5
@@ -432,7 +431,6 @@
 	pdf-view-display-size 'fit-page))
 
 (use-package org
-  :defer nil
   :hook (org-mode . mixed-pitch-mode)
   ;;:ensure org-plus-contrib
   :config
@@ -784,7 +782,7 @@
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
  "l ," #'(lambda () (interactive) (dorsync rsync-source rsync-destination nil))
  ;; open maps
- "o t" #'(lambda () (interactive) (progn (todoist) (todoist-mode)))
+ "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/tasks.org")))
  "o f" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/fleeting.org")))
  "o s" #'morg-term-vterm-below
  "o v" #'morg-term-start-at-location
@@ -879,7 +877,8 @@
           ?\M-`
           ?\M-&
           ?\M-:
-          ?\s-\ ))
+          ?\s-\
+	  ?\M-o))
 
   ;; but if prefixed with C-q then send the next keystroke to window
   (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
