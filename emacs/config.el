@@ -26,6 +26,8 @@
 (setq straight-use-package-by-default t
       use-package-always-defer t)
 
+(use-package diminish)
+
 (straight-override-recipe
  '(org :type git :host github :repo "emacsmirror/org" :no-build t))
 
@@ -161,7 +163,7 @@
 (winner-mode t)
 
 (use-package company
-  :diminish t
+  :diminish company-mode
   :bind ("M-/" . company-complete)
   :hook (after-init . global-company-mode)
   :config
@@ -169,6 +171,7 @@
 	company-idle-delay 0.2))
 
 (use-package company-quickhelp
+  :diminish company-quickhelp-mode
   :after company
   :init
   (setq company-quickhelp-delay 0.001)
@@ -189,7 +192,7 @@
   (setq morg-term-start-locations '("adeline.me" "lesia")))
 
 (use-package projectile
-  :diminish t
+  :diminish projectile-mode
   :defer nil
   :bind-keymap ("M-p" . projectile-command-map)
   :bind (:map projectile-mode-map
@@ -208,13 +211,17 @@
   (run-repl-projectile #'run-python))
 
 (use-package undo-tree
-  :diminish t
+  :diminish undo-tree-mode
   :init
   (global-undo-tree-mode)
   :config
   (setq undo-tree-visualizer-diff t
 	undo-tree-visualizer-timestamps t
 	undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
+
+(use-package eldoc
+  :diminish eldoc-mode
+  :straight nil)
 
 (use-package c-mode
   :straight nil
@@ -282,7 +289,7 @@
     (pyvenv-workon name)))
 
 (use-package highlight-indent-guides
-  :diminish t
+  :diminish highlight-indent-guides-mode
   :hook ((prog-mode . highlight-indent-guides-mode))
   :config (setq highlight-indent-guides-method 'character))
 
@@ -295,6 +302,7 @@
   (setq ess-indent-level 2))
 
 (use-package paredit
+  :diminish paredit-mode
   :hook ((lisp-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
 
@@ -433,7 +441,7 @@
 (use-package org
   :hook (org-mode . mixed-pitch-mode)
   ;;:ensure org-plus-contrib
-  :config
+  :init
   ;(require 'org-ref)
   ;(require 'citar)
   (require 'pdf-view)
@@ -500,6 +508,7 @@
   ;; It's nice to have a mixed pitch (variable-pitch for body text,
   ;; and fixed-pitch for source code) when viewing the slide shows.
   (use-package mixed-pitch
+    :diminish mixed-pitch-mode
     :hook ((org-tree-slide-mode . mixed-pitch-mode)
 	   (org-mode . mixed-pitch-mode)))
 
@@ -569,7 +578,7 @@
 (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block)
 
 (use-package flyspell
-  :diminish t
+  :diminish flyspell-mode
   :hook ((prog-mode . flyspell-prog-mode)
 	 (text-mode . flyspell-mode))
   :init
@@ -821,7 +830,16 @@
 
 (use-package atom-one-dark-theme
   :init
-  (load-theme 'atom-one-dark t))
+  (load-theme 'atom-one-dark t)
+  (require 'color)
+  (require 'ob)
+  (require 'org)
+  (set-face-attribute 'org-block nil :background
+		      (color-darken-name (face-attribute 'default :background) 2))
+  (set-face-attribute 'org-block-begin-line nil :background
+		      (color-darken-name (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-block-end-line nil :background
+		      (color-darken-name (face-attribute 'default :background) 3)))
 
 (set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
 (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
