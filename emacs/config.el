@@ -26,10 +26,30 @@
 (setq straight-use-package-by-default t
       use-package-always-defer t)
 
-(use-package diminish)
-
 (straight-override-recipe
  '(org :type git :host github :repo "emacsmirror/org" :no-build t))
+
+(defun filter-plist (options allowed)
+  (let ((filtered-plist nil))
+    (dolist (key allowed)
+      (when (plist-get options key)
+	(setq filtered-plist
+	      (plist-put filtered-plist key (plist-get options key)))))
+    filtered-plist))
+
+(defmacro pkg (name &rest params)
+  (let ((build-keys (list :ensure-system-package :repo :host :type :pre-build)))
+    (when (cl-member :ensure-system-package params)
+      (let ((executable (plist-get params :ensure-system-package)))
+	(setf params
+	      (plist-put
+	       (plist-put params :ensure-system-package nil)
+	       :pre-build
+	       `(list (unless (locate-file ,executable exec-path exec-suffixes 1)
+			(list "sudo" "apt" "install" ,executable)))))))
+    `(use-package ,name
+      :straight (,name ,@(filter-plist params build-keys))
+      ,@(cl-remove-if (lambda (item) (cl-member item build-keys)) params))))
 
 (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024)
@@ -56,8 +76,7 @@
 (defalias 'isearch-forward 'isearch-forward-regexp)
 (defalias 'isearch-backward 'isearch-backward-regexp)
 
-(use-package swiper
-  :bind (("C-s" . swiper)))
+(use-package swiper :bind (("C-s" . swiper)))
 
 ;; delete trailing whitespace only on programming modes
 (defun delete-whitespace-prog-mode ()
@@ -80,7 +99,6 @@
 (add-hook 'write-file-hooks 'delete-trailing-whitespace nil t)
 
 (use-package vertico
-  :defer nil
   :init
   (vertico-mode t)
   (load "~/.emacs.d/straight/build/vertico/extensions/vertico-flat.el")
@@ -160,6 +178,8 @@
   :init (persp-mode)
   :custom (persp-mode-prefix-key (kbd "C-x x")))
 
+(use-package diminish)
+
 (winner-mode t)
 
 (use-package company
@@ -190,6 +210,11 @@
   :init
   (load "~/workspace/dotfiles/emacs/morg-term.el")
   (setq morg-term-start-locations '("adeline.me" "lesia")))
+
+(use-package morg-packager
+  :straight nil
+  :init
+  (load "~/workspace/dotfiles/emacs/morg-packager.el"))
 
 (use-package projectile
   :diminish projectile-mode
@@ -233,6 +258,18 @@
 
 (use-package julia-mode)
 (use-package julia-repl)
+
+(use-package cern-root-mode
+  :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
+  :bind (:map c++-mode-map
+	      (("C-c C-c" . cern-root-eval-defun-maybe)
+	       ("C-c C-b" . cern-root-eval-buffer)
+	       ("C-c C-l" . cern-root-eval-file)
+	       ("C-c C-r" . cern-root-eval-region)
+	       ("C-c C-z" . run-cern-root-other-window)))
+  :config
+  (setq cern-root-filepath "~/.bin/root/bin"
+	cern-root-terminal-backend 'inferior))
 
 (use-package python-mode
   :hook (python-mode . prettify-symbols-mode)
@@ -311,12 +348,14 @@
   :hook (scheme-mode . paredit-mode))
 
 (use-package geiser-chez)
-(use-package geiser-guile)
 
-(use-package lisp-mode
-  :straight nil
-  :hook ((lisp-mode . show-paren-mode)
-	 (lisp-mode . prettify-symbols-mode)))
+;; (setup
+;;    geiser-guile
+;;    :commands (run-geiser)
+;;    :ensure-system-package "guile"
+;;    :init (setq geiser-default-implementation 'guile))
+(use-package geiser-guile
+  :init (setq geiser-default-implementation 'guile))
 
 (use-package emacs-lisp-mode
   :straight nil
@@ -547,6 +586,7 @@
 		 ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 
   (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)
+							   (scheme . t)
 							   (shell . t)
 							   (julia . t)
 							   (python . t)
@@ -584,32 +624,25 @@
   :init
   (setq flyspell-default-dictionary "british"))
 
-(use-package denote
-  :straight (denote :fetcher git :host nil :repo "https://git.sr.ht/~protesilaos/denote")
-  :bind (("C-c n n" . denote-create-note)
-	 ("C-c n d" . denote-go-to-directory)
-	 ("C-c n f" . denote-search))
-  :init
-  (defun denote-go-to-directory ()
-    (interactive)
-    (find-file denote-directory)
-    (denote-dired-mode t))
-  
-  (defun denote-search (search-term)
-    (interactive "sSearch for: ")
-    (ripgrep-regexp search-term denote-directory))
-  
-  (setq denote-directory (from-home "Nextcloud/Notes/library")
-	denote-org-front-matter "#+title: %s
-#+date: %s
-
-"))
+(use-package org-roam
+  :bind
+  (("C-c n l" . org-roam-buffer-toggle)
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n g" . org-roam-graph)
+   ("C-c n i" . org-roam-node-insert)
+   ("C-c n c" . org-roam-capture)
+   ("C-c n j" . org-roam-dailies-capture-today))
+  :custom
+  (org-roam-directory "~/Nextcloud/Notes/BIOSOFT")
+  :config
+  (org-roam-db-autosync-mode)
+  (require 'org-roam-protocol))
 
 (setq org-capture-templates
       `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
 	 "* %U\n\n%?" :unnarrowed nil)
-	("t" "Todo Entry" entry (file ,(from-home "Nextcloud/Notes/tasks.org"))
-	 "* TODO %?\n:PROPERTIES:\n:CREATED: %T\n:END:" :unnarrowed nil)
+	("t" "Todo Entry" entry (file ,(from-home "Nextcloud/Notes/trello.org"))
+	 "* Todo %?\n:PROPERTIES:\n:CREATED: %T\n:END:" :unnarrowed nil)
 	("b" "Bug Log" entry (file ,(from-home "Nextcloud/Notes/bugs.org"))
 	 "* %T\n\n- Type: %?\n- Severity:\n- What happened:\n" :unnarrowed nil)))
 (global-set-key (kbd "C-c C-/") 'org-capture)
@@ -629,45 +662,16 @@
 	 ("C-c o b n" . citar-open-notes))
   :custom
   (citar-bibliography (list
-		       (from-home "Nextcloud/Notes/zotero.bib")
-		       (From-home "Nextcloud/Notes/references.bib")))
-  (citar-library-paths (list (from-home "Nextcloud/Notes/PDFs")))
+		       "~/Nextcloud/Notes/zotero.bib"
+		       "~/Nextcloud/Notes/references.bib"))
+  (citar-library-paths (list "~/Nextcloud/Notes/PDFs"))
   :config
-  (use-package all-the-icons)
-  
-  (use-package denote-citar
-    :defer nil
-    :straight (denote-citar :fetcher git :host github :repo "pprevos/denote-citar"))
-
-  (defun citar-add-citation (citation)
-    "Add a new key to the bibliography file"
-    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
-    (write-region (concat "\n" citation "\n") nil citar-bibliography 'append)
-    (citar-refresh))
-
-  (defun citar-add-and-insert-citation (citation)
-    "Add a new key to the bibliography and insert citation into buffer"
-    (interactive (list (read-from-minibuffer "Bibtex citation: ")))
-    (citar-add-citation citation)
-    (and (string-match "@.*?{\\(.*\\)?," citation)
-	 (citar-insert-citation (list (match-string 1 citation)))))
-
-  (defun citar-add-pdf-for-citation (citation)
-    (interactive (list (completing-read "Citation key: " (citar--extract-keys (citar--get-candidates)))))
-    (let* ((citation (car (last (split-string citation " "))))
-	   (pdf-link-loc (read-from-minibuffer "PDF location: " ))
-	   (new-loc (concat (car citar-library-paths) "/" citation ".pdf")))
-      (url-copy-file pdf-link-loc new-loc)
-      (citar-refresh)
-      new-loc))
-
-  (defun citar-add-pdf-for-citation-and-open (citation)
-    (interactive (list (completing-read "Citation key: " (citar--extract-keys (citar--get-candidates)))))
-    (let ((loc (citar-add-pdf-for-citation citation)))
-      (find-file loc)))
-
   (setq citar-open-note-function 'orb-citar-edit-note
-	citar-notes-paths (list (from-home "Nextcloud/Notes/BIOSOFT"))))
+	citar-notes-paths (list "~/Nextcloud/Notes/BIOSOFT")))
+
+(use-package citar-org-roam
+  :after citar org-roam
+  :config (citar-org-roam-mode))
 
 (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
@@ -718,9 +722,49 @@
     (when (file-exists-p gcal-config)
       (load gcal-config))))
 
-(use-package todoist
-  :init
-  (load (expand-file-name "~/.emacs.d/todoist.el")))
+(use-package org-trello)
+
+(defun morg-trello-sync-down ()
+  (interactive)
+  (org-trello-sync-buffer nil)
+  (org-trello-mode))
+
+(defun morg-trello-sync-up ()
+  (interactive)
+  (org-trello-sync-buffer "~/Nextcloud/Notes/trello.org")
+  (org-trello-mode t))
+
+;; fix for pagination of requests (necessary for large number of cards
+;; -- even archived cards!!!)
+;; https://github.com/org-trello/org-trello/issues/385
+
+(defun orgtrello-api-get-full-cards-from-page (board-id &optional before-id)
+  "Create a paginated retrieval of 25 cards before BEFORE-ID from BOARD-ID."
+  (orgtrello-api-make-query
+   "GET"
+   (format "/boards/%s/cards" board-id)
+   `(("actions" .  "commentCard")
+     ("checklists" . "all")
+     ("limit" . "250")
+     ("before" . ,(or before-id ""))
+     ("filter" . "open")
+     ("fields" .
+      "closed,desc,due,idBoard,idList,idMembers,labels,name,pos"))))
+
+(defun orgtrello-controller--retrieve-full-cards (data &optional before-id)
+  "Retrieve the full cards from DATA, optionally paginated from before-ID.
+DATA is a list of (archive-cards board-id &rest buffer-name point-start).
+Return the cons of the full cards and the initial list."
+  (-let* (((archive-cards board-id &rest) data)
+          (cards
+           (-> board-id
+              (orgtrello-api-get-full-cards-from-page before-id)
+              (orgtrello-query-http-trello 'sync)))
+          (more-cards
+           (when cards
+             (let ((before-id (car (sort (mapcar 'orgtrello-data-entity-id cards) 'string<))))
+               (car (orgtrello-controller--retrieve-full-cards data before-id))))))
+    (cons (append more-cards cards) data)))
 
 (use-package morg-pomodoro
   :commands (morg-pomodoro-start morg-pomodoro-stop morg-pomodoro-pause-unpause)
@@ -791,7 +835,7 @@
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
  "l ," #'(lambda () (interactive) (dorsync rsync-source rsync-destination nil))
  ;; open maps
- "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/tasks.org")))
+ "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/trello.org")))
  "o f" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/fleeting.org")))
  "o s" #'morg-term-vterm-below
  "o v" #'morg-term-start-at-location
@@ -936,7 +980,9 @@
     (mapc #'launch-program my/exwm-startup-applications))
   (add-hook 'exwm-init-hook #'my/launch-startup)
 
-  (setq window-size-delta 10)
+  (setq window-size-delta 10
+	focus-follows-mouse t
+	mouse-autoselect-window t)
 
   ;; define keys to manage EXWM environment
   (setq exwm-input-global-keys
@@ -1009,10 +1055,10 @@
   (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
   (add-to-list 'default-frame-alist '(alpha . (95 . 95)))
 
-  ;; (exwm-randr-enable)
+  (exwm-randr-enable)
   ;; (when (file-exists-p "~/Applications/startup.sh")
   ;;   (call-process "/bin/bash" "~/Applications/startup.sh"))
-  ;; (exwm-randr--init)
+  (exwm-randr--init)
 
   (setq exwm-input-simulation-keys
 	'(((kbd "C-s") . [?\C-f]))))
