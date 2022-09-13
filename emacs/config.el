@@ -4,7 +4,6 @@
       (setq exec-path (cons fp exec-path)))))
 
 (add-to-exec-path "~/.bin")
-(add-to-exec-path "~/Applications/julia-1.7.3/bin")
 
 (setq package-enable-at-startup nil
       straight-check-for-modifications 'live)
@@ -450,8 +449,14 @@
             (setq async-shell-command-display-buffer nil)
             (setq rsync-cmd (rsync--cmd)))
       (setq rsync-cmd (rsync--cmd t)))
-    (async-shell-command (concat rsync-cmd " " src " " dest))
+    (async-shell-command (concat rsync-cmd " " src " " dest) (format "*Rsync log: %s*" dest))
     (setq async-shell-command-display-buffer async-value)))
+
+(defun dorsync-all-destinations (src is_hidden)
+  "Rsync to all available destinations"
+  (interactive)
+  (dolist (dest *available-destinations*)
+    (dorsync src dest is_hidden)))
 
 (straight-use-package '(org-contrib :type git
                                     :repo "https://git.sr.ht/~bzg/org-contrib";
@@ -587,6 +592,7 @@
 
   (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)
 							   (scheme . t)
+							   (latex . t)
 							   (shell . t)
 							   (julia . t)
 							   (python . t)
@@ -834,6 +840,8 @@ Return the cons of the full cards and the initial list."
  "r l" #'(lambda () (interactive) (find-file "/ssh:lis.me:"))
  "l ;" #'(lambda () (interactive) (dorsync rsync-source rsync-destination t))
  "l ," #'(lambda () (interactive) (dorsync rsync-source rsync-destination nil))
+ "l '" #'(lambda () (interactive) (dorsync-all-destinations rsync-source nil))
+ "l ." #'(lambda () (interactive) (dorsync-all-destinations rsync-source t))
  ;; open maps
  "o t" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/trello.org")))
  "o f" #'(lambda () (interactive) (find-file (from-home "Nextcloud/Notes/fleeting.org")))
@@ -1039,7 +1047,7 @@ Return the cons of the full cards and the initial list."
   (setq exwm-workspace-number 9)
   (add-hook 'exwm-init-hook #'(lambda () (exwm-workspace-switch 1)))
 
-  (setq exwm-randr-workspace-monitor-plist '(2 "HDMI1" 3 "HDMI1")
+  (setq exwm-randr-workspace-monitor-plist '(8 "HDMI1" 9 "HDMI1")
 	exwm-workspace-warp-cursor t)
 
   ;; automatically configure the monitor setup based upon the

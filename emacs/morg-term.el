@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
@@ -53,7 +53,7 @@
   (split-window-below -20)
   (other-window 1)
   (vterm t)
-  (activate-projectile-project-in-terminal))
+  (morg-term-activate-projectile-project-in-terminal))
 
 (defun morg-term-activate-projectile-project-in-terminal ()
   (interactive)
@@ -62,7 +62,8 @@
 (defun morg-term-start-at-location (location)
   (interactive (list (completing-read "Start terminal at: " morg-term-start-locations)))
   (morg-term-vterm-below)
-  (morg-term-send-commands `(,(format "ssh %s" location)) t))
+  (morg-term-send-commands `(,(format "ssh %s" location)) t)
+  (rename-buffer (format "*term at: %s" location)))
 
 (provide 'morg-term)
 ;;; morg-term.el ends here
