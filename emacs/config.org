@@ -261,7 +261,7 @@ Better Emacs window management.
   :straight nil
   :init
   (load "~/workspace/dotfiles/emacs/morg-term.el")
-  (setq morg-term-start-locations '("adeline.me" "lesia")))
+  (setq morg-term-start-locations '("adeline.me" "lesia" "lis.me")))
 
 (use-package morg-packager
   :straight nil
@@ -771,6 +771,8 @@ Note taking
   :config
   (org-roam-db-autosync-mode)
   (require 'org-roam-protocol))
+
+(use-package org-roam-ui)
 
 (setq org-capture-templates
       `(("f" "Fleeting Note" entry (file ,(from-home "Nextcloud/Notes/fleeting.org"))
