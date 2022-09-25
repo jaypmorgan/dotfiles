@@ -97,6 +97,16 @@
 (delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
 (add-hook 'write-file-hooks 'delete-trailing-whitespace nil t)
 
+
+(use-package tramp
+  :straight nil
+  :defer nil
+  :init
+  (setq vc-ignore-dir-regexp (format "\\(%s\\)\\|\\(%s\\)"
+				     vc-ignore-dir-regexp
+				     tramp-file-name-regexp)
+	remote-file-name-inhibit-cache nil))
+
 (use-package vertico
   :init
   (vertico-mode t)
@@ -199,7 +209,6 @@
 (use-package magit)
 
 (use-package diff-hl
-  :hook (dired-mode . diff-hl-dired-mode)
   :init
   (global-diff-hl-mode t)
   (setq diff-hl-disable-on-remote t))
@@ -223,7 +232,8 @@
 	      ("C-c p t p" . run-python-projectile))
   :init
   (projectile-mode t)
-  (setq projectile-project-search-path (list (from-home "workspace/"))))
+  (setq projectile-project-search-path (list (from-home "workspace/"))
+	projectile-mode-line "Projectile"))
 
 (defun run-repl-projectile (cmd)
   (interactive)
@@ -255,9 +265,6 @@
   (setq c-default-style "linux"
 	c-basic-offset 4))
 
-(use-package julia-mode)
-(use-package julia-repl)
-
 (use-package cern-root-mode
   :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
   :bind (:map c++-mode-map
@@ -280,6 +287,9 @@
 	python-shell-interpreter "ipython"
 	python-shell-interpreter-args "--pprint --autoindent --simple-prompt -i --matplotlib"
 	py-default-interpreter "ipython"))
+
+(use-package blacken
+  :after python-mode)
 
 (use-package pyvenv
   :defer nil
@@ -495,6 +505,7 @@
   (use-package ob-async)
   (require 'ox-rst)
   (pdf-loader-install)
+  (use-package htmlize)
 
   (require 'ox-extra)
   (ox-extras-activate '(ignore-headings))
@@ -1074,6 +1085,7 @@ Return the cons of the full cards and the initial list."
 	'(((kbd "C-s") . [?\C-f]))))
 
 (use-package morg-monitor
+  :after exwm
   :straight nil
   :defer nil
   :ensure nil
