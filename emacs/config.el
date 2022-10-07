@@ -3,6 +3,9 @@
     (unless (member fp exec-path)
       (setq exec-path (cons fp exec-path)))))
 
+(defun from-emacs-dir (path)
+  (format "%s%s" user-emacs-directory path))
+
 (add-to-exec-path "~/.bin")
 
 (setq package-enable-at-startup nil
@@ -110,7 +113,7 @@
 (use-package vertico
   :init
   (vertico-mode t)
-  (load "~/.emacs.d/straight/build/vertico/extensions/vertico-flat.el")
+  (load (format "%s%s" user-emacs-directory "straight/build/vertico/extensions/vertico-flat.el"))
   (require 'vertico-flat)
   (vertico-flat-mode t))
 
@@ -216,13 +219,13 @@
 (use-package morg-term
   :straight nil
   :init
-  (load "~/workspace/dotfiles/emacs/morg-term.el")
+  (load (from-emacs-dir "morg-term.el"))
   (setq morg-term-start-locations '("adeline.me" "lesia" "lis.me")))
 
 (use-package morg-packager
   :straight nil
   :init
-  (load "~/workspace/dotfiles/emacs/morg-packager.el"))
+  (load (from-emacs-dir "morg-packager.el")))
 
 (use-package projectile
   :diminish projectile-mode
@@ -251,7 +254,7 @@
   :config
   (setq undo-tree-visualizer-diff t
 	undo-tree-visualizer-timestamps t
-	undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
+	undo-tree-history-directory-alist `(("." . ,(format "%s%s" user-emacs-directory "undo")))))
 
 (use-package eldoc
   :diminish eldoc-mode
@@ -431,7 +434,7 @@
 (setq rsync-source nil
       rsync-destination nil
       rsync-base-cmd "rsync -am"
-      rsync-exclude-list '("data" ".git" "container-dev" "container"
+      rsync-exclude-list '("data" "container-dev" "container"
 			   "__pycache__" "*.pyc" "renv/library" "renv/local"
 			   "renv/python" "renv/staging" "build" "dist"))
 
@@ -567,6 +570,8 @@
     :hook ((org-tree-slide-mode . mixed-pitch-mode)
 	   (org-mode . mixed-pitch-mode)))
 
+  (use-package ob-ipython)
+
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
@@ -601,16 +606,22 @@
 		 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
 		 ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 
-  (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)
-							   (scheme . t)
-							   (latex . t)
-							   (shell . t)
-							   (julia . t)
-							   (python . t)
-							   (R . t)
-							   (gnuplot . t)
-							   (plantuml . t)
-							   (C . t)))
+  (use-package jupyter)
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((lisp . t)
+     (scheme . t)
+     (latex . t)
+     (shell . t)
+     (julia . t)
+     (ipython . t)
+     (jupyter . t)
+     (python . t)
+     (R . t)
+     (gnuplot . t)
+     (plantuml . t)
+     (C . t)))
 
   ;; swap between exported PDF and Org document by pressing F4
   (defun my/toggle-pdf (extension)
@@ -789,7 +800,7 @@ Return the cons of the full cards and the initial list."
   :commands (morg-pomodoro-start morg-pomodoro-stop morg-pomodoro-pause-unpause)
   :straight (morg-pomodoro
 	     :type built-in
-	     :files "~/.emacs.d/morg-pomodoro.el"))
+	     :files (from-emacs-dir "morg-pomodoro.el")))
 
 (use-package elfeed
   :bind (:map elfeed-search-mode-map
@@ -893,9 +904,9 @@ Return the cons of the full cards and the initial list."
 	dired-auto-revert-buffer t
 	dired-dwim-target t))
 
-(use-package atom-one-dark-theme
+(use-package ef-themes
   :init
-  (load-theme 'atom-one-dark t)
+  (load-theme 'ef-bio t)
   (require 'color)
   (require 'ob)
   (require 'org)
@@ -1095,7 +1106,7 @@ Return the cons of the full cards and the initial list."
 	 ("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
 	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness))
   :init
-  (load (expand-file-name "~/.emacs.d/morg-monitor.el"))
+  (load ( "morg-monitor.el"))
   (setq morg-monitor-step-size 10))
 
 ;; (use-package cern-root-mode
