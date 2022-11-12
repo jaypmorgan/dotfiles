@@ -7,6 +7,7 @@
   (format "%s%s" user-emacs-directory path))
 
 (add-to-exec-path "~/.bin")
+(add-to-exec-path "~/.bin/miniconda3/bin")
 
 (setq package-enable-at-startup nil
       straight-check-for-modifications 'live)
@@ -113,9 +114,10 @@
 (use-package vertico
   :init
   (vertico-mode t)
-  (load (format "%s%s" user-emacs-directory "straight/build/vertico/extensions/vertico-flat.el"))
-  (require 'vertico-flat)
-  (vertico-flat-mode t))
+  ;; (load (format "%s%s" user-emacs-directory "straight/build/vertico/extensions/vertico-flat.el"))
+  ;; (require 'vertico-flat)
+  ;; (vertico-flat-mode t))
+  )
 
 (use-package orderless
   :init
@@ -200,14 +202,21 @@
   :hook (after-init . global-company-mode)
   :config
   (setq company-minimum-prefix-length 2
-	company-idle-delay 0.2))
+	company-idle-delay 0.2
+	company-candidates-cache t))
 
 (use-package company-quickhelp
   :diminish company-quickhelp-mode
+  :defer nil
+  :init
+  (setq company-quickhelp-delay 0.5
+	company-quickhelp-max-lines 30)
+  (company-quickhelp-mode t))
+
+(use-package eldoc-box
   :after company
   :init
-  (setq company-quickhelp-delay 0.001)
-  (company-quickhelp-mode t))
+  (eldoc-box-hover-mode t))
 
 (use-package magit)
 
@@ -217,12 +226,15 @@
   (setq diff-hl-disable-on-remote t))
 
 (use-package morg-term
+  :after vterm
+  :commands morg-term-vterm-below
   :straight nil
-  :init
+  :custom
   (load (from-emacs-dir "morg-term.el"))
   (setq morg-term-start-locations '("adeline.me" "lesia" "lis.me")))
 
 (use-package morg-packager
+  :after exwm
   :straight nil
   :init
   (load (from-emacs-dir "morg-packager.el")))
@@ -373,6 +385,9 @@
   :straight nil
   :hook ((emacs-lisp-mode . show-paren-mode)))
 
+(use-package clojure-mode)
+(use-package cider)
+
 (use-package sly
   :init
   (setq inferior-lisp-program "sbcl"))
@@ -472,8 +487,8 @@
     (dorsync src dest is_hidden)))
 
 (straight-use-package '(org-contrib :type git
-                                    :repo "https://git.sr.ht/~bzg/org-contrib";
-                                    :local-repo "org-contrib"))
+				    :repo "https://git.sr.ht/~bzg/org-contrib";
+				    :local-repo "org-contrib"))
 
 ;; backend aware export preprocess hook
 (defun sa-org-export-preprocess-hook ()
@@ -482,9 +497,9 @@
     (when (not (eq org-export-current-backend 'latex))
       ;; ignoreheading tag for bibliographies and appendices
       (let* ((tag "ignoreheading"))
-        (org-map-entries (lambda ()
-                           (delete-region (point-at-bol) (point-at-eol)))
-                         (concat ":" tag ":"))))))
+	(org-map-entries (lambda ()
+			   (delete-region (point-at-bol) (point-at-eol)))
+			 (concat ":" tag ":"))))))
 
 (add-hook 'org-export-preprocess-hook 'sa-org-export-preprocess-hook)
 
@@ -494,6 +509,13 @@
   (setq auto-revert-interval 0.5
 	pdf-annot-activate-created-annotations t
 	pdf-view-display-size 'fit-page))
+
+;; It's nice to have a mixed pitch (variable-pitch for body text,
+;; and fixed-pitch for source code) when viewing the slide shows.
+(use-package mixed-pitch
+  :diminish mixed-pitch-mode
+  :hook ((org-tree-slide-mode . mixed-pitch-mode)
+	 (org-mode . mixed-pitch-mode)))
 
 (use-package org
   :hook (org-mode . mixed-pitch-mode)
@@ -514,8 +536,8 @@
   (ox-extras-activate '(ignore-headings))
   (add-to-list 'org-modules 'org-habit)
 
-  (use-package org-fragtog
-    :hook (org-mode . org-fragtog-mode))
+  ;; (use-package org-fragtog
+  ;;   :hook (org-mode . org-fragtog-mode))
 
   ;;   There is not so much that I need to configure -- the defaults
   ;; org-mode TODO entries and org-agenda works fine. Now that being
@@ -546,7 +568,7 @@
 
   (require 'color)
   (set-face-attribute 'org-block nil :background
-                      (color-darken-name (face-attribute 'default :background) 2))
+		      (color-darken-name (face-attribute 'default :background) 2))
   (set-face-attribute 'org-block-begin-line nil :background
 		      (color-darken-name (face-attribute 'default :background) 3))
   (set-face-attribute 'org-block-end-line nil :background
@@ -563,15 +585,6 @@
     (setq org-tree-slide-modeline-display nil
 	  org-tree-slide-header t))
 
-  ;; It's nice to have a mixed pitch (variable-pitch for body text,
-  ;; and fixed-pitch for source code) when viewing the slide shows.
-  (use-package mixed-pitch
-    :diminish mixed-pitch-mode
-    :hook ((org-tree-slide-mode . mixed-pitch-mode)
-	   (org-mode . mixed-pitch-mode)))
-
-  (use-package ob-ipython)
-
   (setq	org-hide-emphasis-markers t
 	org-edit-src-content-indentation 0
 	org-footnote-auto-adjust t
@@ -586,7 +599,7 @@
 	org-image-actual-width '(800))
 
   (add-hook 'org-mode-hook #'(lambda ()
-			       (set-fill-column 85)
+			       ;(set-fill-column 85)
 			       (visual-line-mode 1)
 			       (auto-fill-mode 1)))
 
@@ -606,8 +619,6 @@
 		 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
 		 ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 
-  (use-package jupyter)
-
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((lisp . t)
@@ -615,8 +626,6 @@
      (latex . t)
      (shell . t)
      (julia . t)
-     (ipython . t)
-     (jupyter . t)
      (python . t)
      (R . t)
      (gnuplot . t)
@@ -703,6 +712,11 @@
   :after citar org-roam
   :config (citar-org-roam-mode))
 
+(use-package toc-org
+  :init
+  (add-hook 'markdown-mode-hook 'toc-org-mode)
+  (add-hook 'org-mode-hook 'toc-org-mode))
+
 (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
   (require 'org-mu4e)
@@ -721,7 +735,7 @@
 	  :with-author nil)))
 
 (use-package erc
-  :init
+  :custom
   (when (file-exists-p (locate-user-emacs-file "erc-init.el"))
     (load (locate-user-emacs-file "erc-init.el"))))
 
@@ -904,18 +918,18 @@ Return the cons of the full cards and the initial list."
 	dired-auto-revert-buffer t
 	dired-dwim-target t))
 
-(use-package ef-themes
-  :init
-  (load-theme 'ef-bio t)
-  (require 'color)
-  (require 'ob)
-  (require 'org)
-  (set-face-attribute 'org-block nil :background
-		      (color-darken-name (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background
-		      (color-darken-name (face-attribute 'default :background) 3))
-  (set-face-attribute 'org-block-end-line nil :background
-		      (color-darken-name (face-attribute 'default :background) 3)))
+;; (use-package ef-themes
+;;   :init
+;;   (load-theme 'ef-bio t)
+;;   (require 'color)
+;;   (require 'ob)
+;;   (require 'org)
+;;   (set-face-attribute 'org-block nil :background
+;; 		      (color-darken-name (face-attribute 'default :background) 2))
+;;   (set-face-attribute 'org-block-begin-line nil :background
+;; 		      (color-darken-name (face-attribute 'default :background) 3))
+;;   (set-face-attribute 'org-block-end-line nil :background
+;; 		      (color-darken-name (face-attribute 'default :background) 3)))
 
 (set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
 (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
@@ -958,7 +972,7 @@ Return the cons of the full cards and the initial list."
   :init
   (require 'exwm)
   (require 'exwm-randr)
-  
+
   ;; send keys chords directly to emacs instead of underlying window
   (setq exwm-input-prefix-keys
         '(?\C-x
@@ -1106,7 +1120,7 @@ Return the cons of the full cards and the initial list."
 	 ("<XF86MonBrightnessUp>" . morg-monitor-increase-brightness)
 	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness))
   :init
-  (load ( "morg-monitor.el"))
+  (load (from-emacs-dir "morg-monitor.el"))
   (setq morg-monitor-step-size 10))
 
 ;; (use-package cern-root-mode
@@ -1123,3 +1137,14 @@ Return the cons of the full cards and the initial list."
 ;; 	cern-root-terminal-backend 'inferior))
 
 (setq gc-cons-threshold (* 2 1000 1000))
+
+(use-package dired-sidebar
+  :custom
+  (setq dired-sidebar-theme 'vscode))
+
+(use-package vscode-icon
+  :after dired-sidebar
+  :custom
+  (setq vscode-icon-size 18))
+
+(use-package imenu-list)

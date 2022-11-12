@@ -47,6 +47,7 @@
   (when clear
     (vterm-clear)))
 
+;;;###autoload
 (defun morg-term-vterm-below ()
   "Open a vterm window below"
   (interactive)
