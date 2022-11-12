@@ -1360,12 +1360,12 @@ noticeable hangups.
 #+begin_src emacs-lisp
 (use-package dired-sidebar
   :custom
-  (setq dired-sidebar-theme 'vscode))
+  (dired-sidebar-theme 'vscode))
 
 (use-package vscode-icon
   :after dired-sidebar
   :custom
-  (setq vscode-icon-size 18))
+  (vscode-icon-size 16))
 
 (use-package imenu-list)
 #+end_src
