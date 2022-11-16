@@ -226,10 +226,10 @@
   (setq diff-hl-disable-on-remote t))
 
 (use-package morg-term
-  :after vterm
+  :defer nil
   :commands morg-term-vterm-below
   :straight nil
-  :custom
+  :init
   (load (from-emacs-dir "morg-term.el"))
   (setq morg-term-start-locations '("adeline.me" "lesia" "lis.me")))
 
@@ -513,16 +513,15 @@
 ;; It's nice to have a mixed pitch (variable-pitch for body text,
 ;; and fixed-pitch for source code) when viewing the slide shows.
 (use-package mixed-pitch
+  :defer nil
   :diminish mixed-pitch-mode
   :hook ((org-tree-slide-mode . mixed-pitch-mode)
 	 (org-mode . mixed-pitch-mode)))
 
 (use-package org
+  :defer nil
   :hook (org-mode . mixed-pitch-mode)
-  ;;:ensure org-plus-contrib
   :init
-  ;(require 'org-ref)
-  ;(require 'citar)
   (require 'pdf-view)
   (require 'ox-latex)
   (use-package gnuplot)
@@ -536,8 +535,14 @@
   (ox-extras-activate '(ignore-headings))
   (add-to-list 'org-modules 'org-habit)
 
-  ;; (use-package org-fragtog
-  ;;   :hook (org-mode . org-fragtog-mode))
+  (use-package org-fragtog
+    :hook (org-mode . org-fragtog-mode))
+
+  ;; replace - with centre dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
 
   ;;   There is not so much that I need to configure -- the defaults
   ;; org-mode TODO entries and org-agenda works fine. Now that being
@@ -566,13 +571,13 @@
 	       nil))
 
 
-  (require 'color)
-  (set-face-attribute 'org-block nil :background
-		      (color-darken-name (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background
-		      (color-darken-name (face-attribute 'default :background) 3))
-  (set-face-attribute 'org-block-end-line nil :background
-		      (color-darken-name (face-attribute 'default :background) 3))
+  ;; (require 'color)
+  ;; (set-face-attribute 'org-block nil :background
+  ;;       	      (color-darken-name (face-attribute 'default :background) 2))
+  ;; (set-face-attribute 'org-block-begin-line nil :background
+  ;;       	      (color-darken-name (face-attribute 'default :background) 3))
+  ;; (set-face-attribute 'org-block-end-line nil :background
+  ;;       	      (color-darken-name (face-attribute 'default :background) 3))
 
   ;; Slide show setup. First we use org-tree slide to provide the
   ;; basic and critical functionality of the slide show and only show
@@ -599,7 +604,7 @@
 	org-image-actual-width '(800))
 
   (add-hook 'org-mode-hook #'(lambda ()
-			       ;(set-fill-column 85)
+			       (set-fill-column 85)
 			       (visual-line-mode 1)
 			       (auto-fill-mode 1)))
 
@@ -651,8 +656,8 @@
   (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
-  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block))
-(define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block)
+  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
 
 (use-package flyspell
   :diminish flyspell-mode
@@ -685,6 +690,13 @@
 	("b" "Bug Log" entry (file ,(from-home "Nextcloud/Notes/bugs.org"))
 	 "* %T\n\n- Type: %?\n- Severity:\n- What happened:\n" :unnarrowed nil)))
 (global-set-key (kbd "C-c C-/") 'org-capture)
+
+(use-package deft
+  :init
+  (setq deft-directory (from-home "Nextcloud/Notes/BIOSOFT")
+	deft-recursive t
+	deft-strip-summary-regexp ":PROPERTIES:\n\\(.+\n\\)+:END:\n"
+	deft-use-filename-as-title t))
 
 ;; Centre the screen when entering the slide show, and put a fancy
 ;; border around it!
@@ -933,7 +945,7 @@ Return the cons of the full cards and the initial list."
 
 (set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
 (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
-(set-face-attribute 'variable-pitch nil :family "JetBrains Mono")
+(set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 150)
 
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 (use-package display-fill-column-indicator
@@ -1140,11 +1152,11 @@ Return the cons of the full cards and the initial list."
 
 (use-package dired-sidebar
   :custom
-  (setq dired-sidebar-theme 'vscode))
+  (dired-sidebar-theme 'vscode))
 
 (use-package vscode-icon
   :after dired-sidebar
   :custom
-  (setq vscode-icon-size 18))
+  (vscode-icon-size 16))
 
 (use-package imenu-list)

@@ -249,81 +249,81 @@ Better Emacs window management.
 ** Environment
 
 #+begin_src emacs-lisp
-(use-package company
-  :diminish company-mode
-  :bind ("M-/" . company-complete)
-  :hook (after-init . global-company-mode)
-  :config
-  (setq company-minimum-prefix-length 2
-	company-idle-delay 0.2
-	company-candidates-cache t))
+  (use-package company
+    :diminish company-mode
+    :bind ("M-/" . company-complete)
+    :hook (after-init . global-company-mode)
+    :config
+    (setq company-minimum-prefix-length 2
+	  company-idle-delay 0.2
+	  company-candidates-cache t))
 
-(use-package company-quickhelp
-  :diminish company-quickhelp-mode
-  :defer nil
-  :init
-  (setq company-quickhelp-delay 0.5
-	company-quickhelp-max-lines 30)
-  (company-quickhelp-mode t))
+  (use-package company-quickhelp
+    :diminish company-quickhelp-mode
+    :defer nil
+    :init
+    (setq company-quickhelp-delay 0.5
+	  company-quickhelp-max-lines 30)
+    (company-quickhelp-mode t))
 
-(use-package eldoc-box
-  :after company
-  :init
-  (eldoc-box-hover-mode t))
+  (use-package eldoc-box
+    :after company
+    :init
+    (eldoc-box-hover-mode t))
 
-(use-package magit)
+  (use-package magit)
 
-(use-package diff-hl
-  :init
-  (global-diff-hl-mode t)
-  (setq diff-hl-disable-on-remote t))
+  (use-package diff-hl
+    :init
+    (global-diff-hl-mode t)
+    (setq diff-hl-disable-on-remote t))
 
-(use-package morg-term
-  :after vterm
-  :commands morg-term-vterm-below
-  :straight nil
-  :custom
-  (load (from-emacs-dir "morg-term.el"))
-  (setq morg-term-start-locations '("adeline.me" "lesia" "lis.me")))
+  (use-package morg-term
+    :defer nil
+    :commands morg-term-vterm-below
+    :straight nil
+    :init
+    (load (from-emacs-dir "morg-term.el"))
+    (setq morg-term-start-locations '("adeline.me" "lesia" "lis.me")))
 
-(use-package morg-packager
-  :after exwm
-  :straight nil
-  :init
-  (load (from-emacs-dir "morg-packager.el")))
+  (use-package morg-packager
+    :after exwm
+    :straight nil
+    :init
+    (load (from-emacs-dir "morg-packager.el")))
 
-(use-package projectile
-  :diminish projectile-mode
-  :defer nil
-  :bind-keymap ("M-p" . projectile-command-map)
-  :bind (:map projectile-mode-map
-	      ("C-c p t p" . run-python-projectile))
-  :init
-  (projectile-mode t)
-  (setq projectile-project-search-path (list (from-home "workspace/"))
-	projectile-mode-line "Projectile"))
+  (use-package projectile
+    :diminish projectile-mode
+    :defer nil
+    :bind-keymap ("M-p" . projectile-command-map)
+    :bind (:map projectile-mode-map
+		("C-c p t p" . run-python-projectile))
+    :init
+    (projectile-mode t)
+    (setq projectile-project-search-path (list (from-home "workspace/"))
+	  projectile-mode-line "Projectile"))
 
-(defun run-repl-projectile (cmd)
-  (interactive)
-  (let ((default-directory (projectile-project-root)))
-    (funcall cmd)))
+  (defun run-repl-projectile (cmd)
+    (interactive)
+    (let ((default-directory (projectile-project-root)))
+      (funcall cmd)))
 
-(defun run-python-projectile ()
-  (interactive)
-  (run-repl-projectile #'run-python))
+  (defun run-python-projectile ()
+    (interactive)
+    (run-repl-projectile #'run-python))
 
-(use-package undo-tree
-  :diminish undo-tree-mode
-  :init
-  (global-undo-tree-mode)
-  :config
-  (setq undo-tree-visualizer-diff t
-	undo-tree-visualizer-timestamps t
-	undo-tree-history-directory-alist `(("." . ,(format "%s%s" user-emacs-directory "undo")))))
+  (use-package undo-tree
+    :diminish undo-tree-mode
+    :init
+    (global-undo-tree-mode)
+    :config
+    (setq undo-tree-visualizer-diff t
+	  undo-tree-visualizer-timestamps t
+	  undo-tree-history-directory-alist `(("." . ,(format "%s%s" user-emacs-directory "undo")))))
 
-(use-package eldoc
-  :diminish eldoc-mode
-  :straight nil)
+  (use-package eldoc
+    :diminish eldoc-mode
+    :straight nil)
 #+end_src
 
 ** Languages
@@ -637,11 +637,13 @@ version) to some keybindings.
 ;; It's nice to have a mixed pitch (variable-pitch for body text,
 ;; and fixed-pitch for source code) when viewing the slide shows.
 (use-package mixed-pitch
+  :defer nil
   :diminish mixed-pitch-mode
   :hook ((org-tree-slide-mode . mixed-pitch-mode)
 	 (org-mode . mixed-pitch-mode)))
 
 (use-package org
+  :defer nil
   :hook (org-mode . mixed-pitch-mode)
   ;;:ensure org-plus-contrib
   :init
@@ -660,8 +662,14 @@ version) to some keybindings.
   (ox-extras-activate '(ignore-headings))
   (add-to-list 'org-modules 'org-habit)
 
-  ;; (use-package org-fragtog
-  ;;   :hook (org-mode . org-fragtog-mode))
+  (use-package org-fragtog
+    :hook (org-mode . org-fragtog-mode))
+
+  ;; replace - with centre dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
 
   ;;   There is not so much that I need to configure -- the defaults
   ;; org-mode TODO entries and org-agenda works fine. Now that being
@@ -689,14 +697,13 @@ version) to some keybindings.
 		 ((org-agenda-overriding-header "Not urgent or important"))))
 	       nil))
 
-
-  (require 'color)
-  (set-face-attribute 'org-block nil :background
-		      (color-darken-name (face-attribute 'default :background) 2))
-  (set-face-attribute 'org-block-begin-line nil :background
-		      (color-darken-name (face-attribute 'default :background) 3))
-  (set-face-attribute 'org-block-end-line nil :background
-		      (color-darken-name (face-attribute 'default :background) 3))
+  ;; (require 'color)
+  ;; (set-face-attribute 'org-block nil :background
+  ;; 		      (color-darken-name (face-attribute 'default :background) 2))
+  ;; (set-face-attribute 'org-block-begin-line nil :background
+  ;; 		      (color-darken-name (face-attribute 'default :background) 3))
+  ;; (set-face-attribute 'org-block-end-line nil :background
+  ;; 		      (color-darken-name (face-attribute 'default :background) 3))
 
   ;; Slide show setup. First we use org-tree slide to provide the
   ;; basic and critical functionality of the slide show and only show
@@ -723,7 +730,7 @@ version) to some keybindings.
 	org-image-actual-width '(800))
 
   (add-hook 'org-mode-hook #'(lambda ()
-			       ;(set-fill-column 85)
+			       (set-fill-column 85)
 			       (visual-line-mode 1)
 			       (auto-fill-mode 1)))
 
@@ -775,8 +782,8 @@ version) to some keybindings.
   (define-key org-mode-map (kbd "<f4>") #'my/swap-to-pdf)
   (define-key org-mode-map (kbd "<f5>") #'org-latex-export-to-pdf)
   (define-key org-mode-map (kbd "<f3>") #'my/open-to-odf-other-window)
-  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block))
-(define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block)
+  (define-key org-mode-map (kbd "C-<right>") #'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-<left>") #'org-babel-previous-src-block))
 
 (use-package flyspell
   :diminish flyspell-mode
@@ -813,6 +820,13 @@ Note taking
 	("b" "Bug Log" entry (file ,(from-home "Nextcloud/Notes/bugs.org"))
 	 "* %T\n\n- Type: %?\n- Severity:\n- What happened:\n" :unnarrowed nil)))
 (global-set-key (kbd "C-c C-/") 'org-capture)
+
+(use-package deft
+  :init
+  (setq deft-directory (from-home "Nextcloud/Notes/BIOSOFT")
+	deft-recursive t
+	deft-strip-summary-regexp ":PROPERTIES:\n\\(.+\n\\)+:END:\n"
+	deft-use-filename-as-title t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1125,7 +1139,7 @@ and directories.
 
 (set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
 (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
-(set-face-attribute 'variable-pitch nil :family "JetBrains Mono")
+(set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 150)
 #+end_src
 
 ** Buffer
