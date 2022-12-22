@@ -111,13 +111,16 @@
 				     tramp-file-name-regexp)
 	remote-file-name-inhibit-cache nil))
 
-(use-package vertico
-  :init
-  (vertico-mode t)
-  ;; (load (format "%s%s" user-emacs-directory "straight/build/vertico/extensions/vertico-flat.el"))
-  ;; (require 'vertico-flat)
-  ;; (vertico-flat-mode t))
-  )
+;; (use-package vertico
+;;   :init
+;;   (vertico-mode t)
+;;   ;; (load (format "%s%s" user-emacs-directory "straight/build/vertico/extensions/vertico-flat.el"))
+;;   ;; (require 'vertico-flat)
+;;   ;; (vertico-flat-mode t))
+;;   )
+
+(setq icomplete-prospects-height 1)
+(fido-mode t)
 
 (use-package orderless
   :init
@@ -194,15 +197,13 @@
 
 (use-package diminish)
 
-(winner-mode t)
-
 (use-package company
   :diminish company-mode
   :bind ("M-/" . company-complete)
   :hook (after-init . global-company-mode)
   :config
-  (setq company-minimum-prefix-length 2
-	company-idle-delay 0.2
+  (setq company-minimum-prefix-length 3
+	company-idle-delay nil
 	company-candidates-cache t))
 
 (use-package company-quickhelp
@@ -239,16 +240,16 @@
   :init
   (load (from-emacs-dir "morg-packager.el")))
 
-(use-package projectile
-  :diminish projectile-mode
-  :defer nil
-  :bind-keymap ("M-p" . projectile-command-map)
-  :bind (:map projectile-mode-map
-	      ("C-c p t p" . run-python-projectile))
-  :init
-  (projectile-mode t)
-  (setq projectile-project-search-path (list (from-home "workspace/"))
-	projectile-mode-line "Projectile"))
+;; (use-package projectile
+;;   :diminish projectile-mode
+;;   :defer nil
+;;   :bind-keymap ("M-p" . projectile-command-map)
+;;   :bind (:map projectile-mode-map
+;; 	      ("C-c p t p" . run-python-projectile))
+;;   :init
+;;   (projectile-mode t)
+;;   (setq projectile-project-search-path (list (from-home "workspace/"))
+;; 	projectile-mode-line "Projectile"))
 
 (defun run-repl-projectile (cmd)
   (interactive)
@@ -271,6 +272,12 @@
 (use-package eldoc
   :diminish eldoc-mode
   :straight nil)
+
+(defun eshell/ee (&rest args)
+  (apply #'find-file-other-window args))
+
+(defun eshell/ff (&rest args)
+  (apply #'find-file args))
 
 (use-package c-mode
   :straight nil
@@ -296,8 +303,14 @@
   :hook (python-mode . prettify-symbols-mode)
   :bind (:map python-mode-map
 	      ("C-c C-c" . python-shell-send-buffer)
-	      ("C-c C-r" . python-shell-send-region))
+	      ("C-c C-r" . python-shell-send-region)
+	      ("C-c C-b" . python-add-trace-above))
   :init
+  (defun python-add-trace-above ()
+    "Add a pdb.set_trace to the line above"
+    (interactive)
+    (insert-line-above)
+    (insert "import pdb; pdb.set_trace()"))
   (setq python-indent-offset 4
 	python-shell-interpreter "ipython"
 	python-shell-interpreter-args "--pprint --autoindent --simple-prompt -i --matplotlib"
@@ -334,7 +347,8 @@
 	      ("C-<left>" . code-cells-backward-cell)
 	      ("C-<right>" . code-cells-forward-cell)))
 
-(use-package eglot)
+(use-package eglot
+  :hook (python-mode . eglot-ensure))
 (use-package csv-mode)
 (use-package auctex)
 (use-package yaml-mode)
@@ -346,7 +360,7 @@
 (defun conda-activate-once (name)
   "Activate a conda environment only if it is not already set"
   (interactive)
-  (unless (string= pyvenv-virtual-env-name name)
+  (unless (or (null name) (string= pyvenv-virtual-env-name name))
     (pyvenv-workon name)))
 
 (use-package highlight-indent-guides
@@ -358,28 +372,92 @@
   :config
   (setq isend-send-region-function 'isend--ipython-cpaste))
 
+ ;; Emacs speaks statistics (R)
 (use-package ess
-  :config
-  (setq ess-indent-level 2))
+  :after org-mode
+  :init
+  (require 'ess-r-mode)
+
+  (defun r/open-workspace ()
+    " Open side panel containing r-dired and r console "
+    (interactive)
+    (if (< (window-total-width) 200)
+        (split-window-right)
+        (split-window-right -120))
+    (other-window 1)
+    (switch-to-buffer "*R*")
+    (split-window-below)
+    (switch-to-buffer "*R*")
+    (ess-rdired)
+    (ess-rdired-mode)
+    (other-window -1)
+    (set-window-dedicated-p (nth 1 (window-list)) t)
+    (set-window-dedicated-p (nth 2 (window-list)) t)
+    (imenu-list-smart-toggle))
+
+  (define-key org-mode-map (kbd "<f7>") 'r/open-workspace)
+  (define-key ess-r-mode-map (kbd "<f7>") 'r/open-workspace)
+
+  (defun r/insert (key)
+    " Insert key into buffer "
+    (interactive)
+    (insert key))
+    (defun r/insert-variable () (interactive) (r/insert "<- "))
+    (defun r/insert-pipe () (interactive) (r/insert " %>%\n    "))
+
+  (define-key ess-r-mode-map (kbd "C-,") 'ess-insert-assign)
+  (define-key ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
+  (define-key inferior-ess-r-mode-map (kbd "C-,") 'ess-insert-assign)
+  (define-key inferior-ess-r-mode-map (kbd "C-5") 'r/insert-pipe)
+
+  (require 'ess-rdired)
+  (define-key ess-rdired-mode-map (kbd "C-c p") 'ess-rdired-plot)
+  (define-key ess-rdired-mode-map (kbd "C-c e") 'ess-rdired-edit)
+  (define-key ess-rdired-mode-map (kbd "C-c v") 'ess-rdired-view)
+
+  ;; define variables scroll to the end of R shell automatically when
+  ;; new input is entered.
+  (setq comint-scroll-to-bottom-on-input t
+	comint-scroll-to-bottom-on-output t
+	comint-move-point-for-output t
+	ess-eval-visibly 'nowait)
+
+  ;; setup window management
+  (setq display-buffer-alist
+	`(("\\*R dired\\*"
+	   (display-buffer-reuse-window display-buffer-same-window)
+	   (reusable-frames . nil))
+	  ("\\*R"
+	   (display-buffer-reuse-window display-buffer-in-side-window)
+	   (side . bottom)
+	   (window-width . 0.33)
+	   (reusable-frames . nil))
+          ("\\*help"
+           (display-buffer-reuse-window display-buffer-in-side-window)
+           (side . bottom)
+           (reusable-frames . nil)))))
 
 (use-package paredit
   :diminish paredit-mode
   :hook ((lisp-mode . paredit-mode)
+	 (lisp-data-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
 
 (use-package scheme
   :straight nil
   :hook (scheme-mode . paredit-mode))
 
-(use-package geiser-chez)
+(use-package geiser-chez
+  :init
+  (setq geiser-default-implementation 'chez
+	geiser-chez-binary "chezscheme"))
 
 ;; (setup
 ;;    geiser-guile
 ;;    :commands (run-geiser)
 ;;    :ensure-system-package "guile"
 ;;    :init (setq geiser-default-implementation 'guile))
-(use-package geiser-guile
-  :init (setq geiser-default-implementation 'guile))
+(use-package geiser-guile)
 
 (use-package emacs-lisp-mode
   :straight nil
@@ -570,14 +648,17 @@
 		 ((org-agenda-overriding-header "Not urgent or important"))))
 	       nil))
 
-
   ;; (require 'color)
   ;; (set-face-attribute 'org-block nil :background
-  ;;       	      (color-darken-name (face-attribute 'default :background) 2))
+  ;; 		      (color-darken-name (face-attribute 'default :background) 2))
   ;; (set-face-attribute 'org-block-begin-line nil :background
-  ;;       	      (color-darken-name (face-attribute 'default :background) 3))
+  ;; 		      (color-darken-name (face-attribute 'default :background) 3))
   ;; (set-face-attribute 'org-block-end-line nil :background
-  ;;       	      (color-darken-name (face-attribute 'default :background) 3))
+  ;; 		      (color-darken-name (face-attribute 'default :background) 3))
+
+  ;; increase the size of latex previews (sometimes the latex
+  ;; equations appear far too small to be properly viewed).
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4))
 
   ;; Slide show setup. First we use org-tree slide to provide the
   ;; basic and critical functionality of the slide show and only show
@@ -632,6 +713,7 @@
      (shell . t)
      (julia . t)
      (python . t)
+     (dot . t)
      (R . t)
      (gnuplot . t)
      (plantuml . t)
@@ -665,6 +747,22 @@
 	 (text-mode . flyspell-mode))
   :init
   (setq flyspell-default-dictionary "british"))
+
+(use-package ripgrep)
+
+(use-package denote
+  :bind (("C-c n n" . denote)
+	 ("C-c n d" . (lambda () (interactive) (find-file (denote-directory)) (denote-dired-mode t)))
+	 ("C-c n s" . (lambda (regex) (interactive (list (read-from-minibuffer "Regex> "))) (ripgrep-regexp regex (denote-directory)))))
+  :init
+  (setq denote-directory (from-home "Nextcloud/Notes/Denote")
+	denote-type "org"))
+
+(use-package citar-denote
+  :straight (citar-denote :fetcher git :host github :repo "pprevos/citar-denote")
+  :after (denote citar)
+  :init
+  (citar-denote-mode))
 
 (use-package org-roam
   :bind
@@ -707,10 +805,10 @@
 	olivetti-style 'fancy))
 
 (use-package citar
-  :bind (("C-c o b f" . citar-open)
-	 ("C-c o b i" . citar-insert-citation)
-	 ("C-c o b a" . citar-add-citation)
-	 ("C-c o b n" . citar-open-notes))
+  :bind (("C-c b f" . citar-open)
+	 ("C-c b i" . citar-insert-citation)
+	 ("C-c b a" . citar-add-citation)
+	 ("C-c b n" . citar-open-notes))
   :custom
   (citar-bibliography (list
 		       "~/Nextcloud/Notes/zotero.bib"
@@ -778,49 +876,10 @@
     (when (file-exists-p gcal-config)
       (load gcal-config))))
 
-(use-package org-trello)
-
-(defun morg-trello-sync-down ()
-  (interactive)
-  (org-trello-sync-buffer nil)
-  (org-trello-mode))
-
-(defun morg-trello-sync-up ()
-  (interactive)
-  (org-trello-sync-buffer "~/Nextcloud/Notes/trello.org")
-  (org-trello-mode t))
-
-;; fix for pagination of requests (necessary for large number of cards
-;; -- even archived cards!!!)
-;; https://github.com/org-trello/org-trello/issues/385
-
-(defun orgtrello-api-get-full-cards-from-page (board-id &optional before-id)
-  "Create a paginated retrieval of 25 cards before BEFORE-ID from BOARD-ID."
-  (orgtrello-api-make-query
-   "GET"
-   (format "/boards/%s/cards" board-id)
-   `(("actions" .  "commentCard")
-     ("checklists" . "all")
-     ("limit" . "250")
-     ("before" . ,(or before-id ""))
-     ("filter" . "open")
-     ("fields" .
-      "closed,desc,due,idBoard,idList,idMembers,labels,name,pos"))))
-
-(defun orgtrello-controller--retrieve-full-cards (data &optional before-id)
-  "Retrieve the full cards from DATA, optionally paginated from before-ID.
-DATA is a list of (archive-cards board-id &rest buffer-name point-start).
-Return the cons of the full cards and the initial list."
-  (-let* (((archive-cards board-id &rest) data)
-          (cards
-           (-> board-id
-              (orgtrello-api-get-full-cards-from-page before-id)
-              (orgtrello-query-http-trello 'sync)))
-          (more-cards
-           (when cards
-             (let ((before-id (car (sort (mapcar 'orgtrello-data-entity-id cards) 'string<))))
-               (car (orgtrello-controller--retrieve-full-cards data before-id))))))
-    (cons (append more-cards cards) data)))
+(use-package mastodon
+  :init
+  (setq mastodon-instance-url "https://emacs.ch"
+	mastodon-active-user "jaymorgan"))
 
 (use-package morg-pomodoro
   :commands (morg-pomodoro-start morg-pomodoro-stop morg-pomodoro-pause-unpause)
@@ -943,9 +1002,12 @@ Return the cons of the full cards and the initial list."
 ;;   (set-face-attribute 'org-block-end-line nil :background
 ;; 		      (color-darken-name (face-attribute 'default :background) 3)))
 
-(set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
-(set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
-(set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 150)
+;; (set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
+;; (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
+;; (set-face-attribute 'variable-pitch nil :family "Noto Sans")
+
+(set-face-attribute 'default nil :family "Courier 10 Pitch" :height 90 :weight 'normal)
+(set-face-attribute 'variable-pitch nil :family "Noto Sans")
 
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 (use-package display-fill-column-indicator
@@ -954,30 +1016,11 @@ Return the cons of the full cards and the initial list."
   :init
   (setq display-fill-column-indicator-column 99))
 
-(use-package ligature
-  :defer nil
-  :straight (ligature.el :repo "mickeynp/ligature.el" :fetcher git :host github)
-  :config
-  (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
-                                       ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
-                                       "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
-                                       "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
-                                       "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
-                                       "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
-                                       "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
-                                       "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
-                                       ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
-                                       "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
-                                       "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
-                                       "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
-                                       "\\\\" "://"))
-  (global-ligature-mode t))
-
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
-(add-hook 'prog-mode-hook 'linum-mode)
+;(add-hook 'prog-mode-hook 'linum-mode)
 
 (use-package exwm
   :if (getenv "EXWM_ENABLE")
@@ -1055,6 +1098,7 @@ Return the cons of the full cards and the initial list."
          ([?\s-l]    . windmove-right)
          ([?\s-k]    . windmove-up)
          ([?\s-j]    . windmove-down)
+	 ([?\C-\M-i]  . previous-buffer)
          (,(kbd "S-H") . #'(lambda () (exwm-layout-enlarge-window-horizontally window-size-delta)))
          (,(kbd "S-L") . #'(lambda () (exwm-layout-shrink-window-horizontally window-size-delta)))
          (,(kbd "S-J") . #'(lambda () (exwm-layout-shrink-window window-size-delta)))
@@ -1133,20 +1177,8 @@ Return the cons of the full cards and the initial list."
 	 ("<XF86MonBrightnessDown>" . morg-monitor-decrease-brightness))
   :init
   (load (from-emacs-dir "morg-monitor.el"))
-  (setq morg-monitor-step-size 10))
-
-;; (use-package cern-root-mode
-;;   :defer t
-;;   :straight (cern-root-mode :repo "jaypmorgan/cern-root-mode" :fetcher git :host github)
-;;   :bind (:map c++-mode-map
-;; 	      (("C-c C-c" . cern-root-eval-defun-maybe)
-;; 	       ("C-c C-b" . cern-root-eval-buffer)
-;; 	       ("C-c C-l" . cern-root-eval-file)
-;; 	       ("C-c C-r" . cern-root-eval-region)
-;; 	       ("C-c C-z" . run-cern-root-other-window)))
-;;   :config
-;;   (setq cern-root-filepath "~/Téléchargements/root-6.26.00/root_install/bin/root"
-;; 	cern-root-terminal-backend 'inferior))
+  (setq morg-monitor-step-size 10
+	morg-monitor-message-fn 'morg-monitor--print-message))
 
 (setq gc-cons-threshold (* 2 1000 1000))
 
@@ -1157,6 +1189,6 @@ Return the cons of the full cards and the initial list."
 (use-package vscode-icon
   :after dired-sidebar
   :custom
-  (vscode-icon-size 16))
+  (vscode-icon-size 14))
 
 (use-package imenu-list)
