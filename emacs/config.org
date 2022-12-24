@@ -149,22 +149,48 @@ Macro to reduce amount of typing and help with installing external packages via
 ** Command invocation
 
 #+begin_src emacs-lisp
-;; (use-package vertico
-;;   :init
-;;   (vertico-mode t)
-;;   ;; (load (format "%s%s" user-emacs-directory "straight/build/vertico/extensions/vertico-flat.el"))
-;;   ;; (require 'vertico-flat)
-;;   ;; (vertico-flat-mode t))
-;;   )
-
-(setq icomplete-prospects-height 1)
-(fido-mode t)
+(use-package vertico
+  :init
+  (vertico-mode t)
+  (load (format "%s%s" user-emacs-directory "straight/build/vertico/extensions/vertico-flat.el"))
+  (require 'vertico-flat)
+  (vertico-flat-mode t))
 
 (use-package orderless
   :init
   (setq completion-styles '(orderless)
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles basic partial-completion)))))
+
+(defun orderless-fast-dispatch (word index total)
+  (and (= index 0) (= total 1) (length< word 4)
+       `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+
+(require 'orderless)
+(orderless-define-completion-style orderless-fast
+  (orderless-style-dispatchers '(orderless-fast-dispatch))
+  (orderless-matching-styles '(orderless-literal orderless-regexp)))
+
+(use-package corfu
+  :straight (corfu :fetcher git :host github :repo "minad/corfu")
+  :hook (prog-mode . corfu-mode)
+  :custom
+  (corfu-auto t)
+  (corfu-auto-delay 0)
+  (corfu-auto-prefix 2)
+  (corfu-separator ?\s)
+  (corfu-quit-no-match t)
+  (completion-styles '(orderless-fast))
+  ;; enable completion at point for filepaths
+  (setq completion-at-point-functions '(elisp-completion-at-point comint--complete-file-name-data)
+	comint-completion-addsuffix nil)
+  :init
+  (load (format "%s%s" user-emacs-directory "straight/build/corfu/extensions/corfu-popupinfo.el"))
+  (require 'corfu-popupinfo)
+  (corfu-popupinfo-mode t)
+  (setq corfu-popupinfo-delay 1.0
+	corfu-popupinfo-max-height 30))
+
 #+end_src
 
 ** Buffer movement
@@ -251,6 +277,7 @@ Better Emacs window management.
 
 #+begin_src emacs-lisp
 (use-package company
+  :disabled t
   :diminish company-mode
   :bind ("M-/" . company-complete)
   :hook (after-init . global-company-mode)
@@ -411,7 +438,17 @@ The shell and emacs commands together?
 	      ("C-<right>" . code-cells-forward-cell)))
 
 (use-package eglot
-  :hook (python-mode . eglot-ensure))
+  :bind (("M-'" . xref-find-references)
+	 ("<f6>" . eglot-rename))
+  :hook (python-mode . eglot-ensure)
+  :init
+  ;; my laptop isn't that quick so taking the suggest by thread:
+  ;; https://github.com/joaotavora/eglot/discussions/993
+  (setq eglot-events-buffer-size 0
+        eglot-ignored-server-capabilities '(:hoverProvider :documentHighlightProvider)
+        eglot-autoshutdown t
+	flymake-no-changes-timeout 0.5))
+
 (use-package csv-mode)
 (use-package auctex)
 (use-package yaml-mode)
