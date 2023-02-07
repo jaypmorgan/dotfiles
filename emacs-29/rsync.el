@@ -40,3 +40,6 @@
   (interactive)
   (dolist (dest *available-destinations*)
     (dorsync src dest is_hidden)))
+
+(defalias rsync-upload-current-project
+  #'(lambda () (interactive) (dorsync rsync-source rsync-destination t)))

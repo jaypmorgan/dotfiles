@@ -1,5 +1,10 @@
-(global-set-key (kbd "C-]") #'join-line)
-(global-set-key (kbd "C-o") #'insert-line-below)
-(global-set-key (kbd "C-S-o") #'insert-line-above)
-(global-set-key (kbd "M-o") #'other-window)
-(global-set-key (kbd "C-c l ;") #'(lambda () (interactive) (dorsync rsync-source rsync-destination t)))
+(cl-defmacro morg-keysbinding (&body body)
+  (dolist (k body)
+    (eval `(global-set-key (kbd ,(car k)) ',(cadr k)))))
+
+(morg-keysbinding
+ ("C-]" join-line)
+ ("C-o" insert-line-below)
+ ("C-S-o" insert-line-above)
+ ("M-o" other-window)
+ ("C-c l ;" rsync-upload-current-project))
