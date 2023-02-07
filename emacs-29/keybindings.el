@@ -1,0 +1,5 @@
+(global-set-key (kbd "C-]") #'join-line)
+(global-set-key (kbd "C-o") #'insert-line-below)
+(global-set-key (kbd "C-S-o") #'insert-line-above)
+(global-set-key (kbd "M-o") #'other-window)
+(global-set-key (kbd "C-c l ;") #'(lambda () (interactive) (dorsync rsync-source rsync-destination t)))

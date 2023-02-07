@@ -1,4 +1,7 @@
-(setq custom-file (concat user-emacs-directory "custom.el"))
+(setq custom-file (concat user-emacs-directory "custom.el")
+      make-backup-files nil
+      backup-directory-alist `(("." . "~/.cache/saves"))
+      use-package-always-defer t)
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
@@ -8,27 +11,10 @@
 (defalias 'yes-or-no-p 'y-or-n-p)	; easier to type a single letter
 (set-face-attribute 'default nil :height 90) ; make font slightly smaller
 
-;; need to add:
-;; - rsync directory to host
-;; - vterm (trying out term/eshell to see if it works as a replacement)
-
-(use-package treesit
-  :hook ((python-mode . python-ts-mode)))
-
-(use-package eglot
-  :hook ((python-mode . eglot)))
-
-(use-package conda
-  :ensure t
+(use-package dired
   :init
-  (defun conda-activate-once (env)
-    "Activate an environment if not already activated"
-    (interactive)
-    (unless (string= env conda-env-current-name)
-      (conda-env-activate env))))
-
-(use-package sly
-  :ensure t)
+  (setq dired-dwim-target t
+	dired-auto-revert-buffer t))
 
 (use-package swiper
   :ensure t
@@ -38,18 +24,31 @@
   :ensure t
   :init
   (setq corfu-auto t
-	tab-always-indent 'complete)
+	tab-always-indent 'complete
+	corfu-auto-delay 0.75)
   (global-corfu-mode))
 
 (use-package vertico
   :ensure t
   :init
-  (vertico-mode t))
+  (vertico-mode t)
+  (use-package orderless
+    :ensure t
+    :init
+    (setq completion-styles '(orderless basic)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles partial-completion))))))
 
-(use-package paredit
+(use-package avy
   :ensure t
-  :hook ((lisp-mode . paredit-mode)
-	 (emacs-lisp-mode . paredit-mode)))
+  :bind (("M-n" . avy-goto-char-2)))
+
+(use-package vterm
+  :ensure t
+  :init
+  ;; decrease the input delay -- need to test for receiving large
+  ;; outputs though
+  (setq vterm-timer-delay 0.01))
 
 (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e/mu4e.el")
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
@@ -60,3 +59,30 @@
   (let ((mu4e-config (concat user-emacs-directory "mu4e-init.el")))
     (when (file-exists-p mu4e-config)
       (load mu4e-config))))
+
+(use-package org
+  :init
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((R . t))))
+
+(defun insert-line-above ()
+  "Insert and indent to the next line"
+  (interactive)
+  (beginning-of-visual-line)
+  (newline-and-indent)
+  (previous-line)
+  (indent-according-to-mode))
+
+(defun insert-line-below ()
+  "Insert and indent from any point in a line"
+  (interactive)
+  (end-of-visual-line)
+  (newline-and-indent))
+
+(defun load-subsection (filename)
+  (load (concat user-emacs-directory filename)))
+
+(load-subsection "languages.el")
+(load-subsection "keybindings.el")
+(load-subsection "rsync.el")
