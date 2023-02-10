@@ -32,3 +32,4 @@
   :ensure t
   :hook ((lisp-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
+

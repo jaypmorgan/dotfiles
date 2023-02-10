@@ -1,3 +1,13 @@
+(defun add-to-exec-path (path)
+  (let ((fp (expand-file-name path)))
+    (unless (member fp exec-path)
+      (setq exec-path (cons fp exec-path)))))
+
+(add-to-exec-path "~/.bin")
+(add-to-exec-path "~/.bin/miniconda3/bin")
+
+(delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
+
 (setq custom-file (concat user-emacs-directory "custom.el")
       make-backup-files nil
       backup-directory-alist `(("." . "~/.cache/saves"))
@@ -64,7 +74,10 @@
   :init
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((R . t))))
+   '((R . t)
+     (python . t)
+     (emacs-lisp . t)
+     (shell . t))))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"
@@ -83,6 +96,7 @@
 (defun load-subsection (filename)
   (load (concat user-emacs-directory filename)))
 
+(load-subsection "rsync.el")
 (load-subsection "languages.el")
 (load-subsection "keybindings.el")
-(load-subsection "rsync.el")
+(load-subsection "notes.el")
