@@ -10,6 +10,7 @@
 
 (setq custom-file (concat user-emacs-directory "custom.el")
       make-backup-files nil
+      create-lockfiles nil
       backup-directory-alist `(("." . "~/.cache/saves"))
       use-package-always-defer t)
 
@@ -25,6 +26,12 @@
   :init
   (setq dired-dwim-target t
 	dired-auto-revert-buffer t))
+
+(use-package magit
+  :bind (("C-x p v" . magit-project-status))
+  :ensure t
+  :init
+  (require 'magit-extras))
 
 (use-package swiper
   :ensure t
@@ -72,12 +79,16 @@
 
 (use-package org
   :init
+  (use-package ob-async :ensure t)
+  (setq org-babel-lisp-eval-fn #'sly-eval
+	org-src-window-setup 'current-window)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((R . t)
      (python . t)
      (emacs-lisp . t)
-     (shell . t))))
+     (shell . t)
+     (lisp . t))))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"

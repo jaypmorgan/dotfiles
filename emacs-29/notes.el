@@ -14,9 +14,7 @@
 
   (use-package consult-org-roam
     :ensure t
-    :defer t
     :init
-    (require 'consult-org-roam)
     (consult-org-roam-mode t)
     :bind (("C-c f" . consult-org-roam-file-find)
 	   ("C-c s" . consult-org-roam-search)))

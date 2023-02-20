@@ -22,6 +22,12 @@
 
 (use-package csv-mode :ensure t)
 (use-package sly :ensure t)  ;; common-lisp
+(use-package cider :ensure t) ;; clojure
+(use-package geiser-chez :ensure t) ;; chez-scheme
+(use-package geiser-guile :ensure t)
+(use-package geiser-racket :ensure t
+  :init
+  (setq geiser-racket-binary "/usr/local/racket/bin/racket"))
 
 (use-package ess
   :ensure t
@@ -31,5 +37,6 @@
 (use-package paredit
   :ensure t
   :hook ((lisp-mode . paredit-mode)
+	 (scheme-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
 

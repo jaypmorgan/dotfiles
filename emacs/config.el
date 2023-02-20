@@ -134,8 +134,10 @@
   (orderless-matching-styles '(orderless-literal orderless-regexp)))
 
 (use-package corfu
+  :disabled t
   :straight (corfu :fetcher git :host github :repo "minad/corfu")
-  :hook (prog-mode . corfu-mode)
+  :hook ((prog-mode . corfu-mode)
+	 (sly-mrepl-mode . corfu-mode))
   :custom
   (corfu-auto t)
   (corfu-auto-delay 0)
@@ -152,6 +154,10 @@
   (corfu-popupinfo-mode t)
   (setq corfu-popupinfo-delay 1.0
 	corfu-popupinfo-max-height 30))
+
+(use-package company
+  :init
+  (global-company-mode t))
 
 (use-package avy)
 
@@ -784,22 +790,6 @@
   :init
   (setq flyspell-default-dictionary "british"))
 
-(use-package ripgrep)
-
-(use-package denote
-  :bind (("C-c n n" . denote)
-	 ("C-c n d" . (lambda () (interactive) (find-file (denote-directory)) (denote-dired-mode t)))
-	 ("C-c n s" . (lambda (regex) (interactive (list (read-from-minibuffer "Regex> "))) (ripgrep-regexp regex (denote-directory)))))
-  :init
-  (setq denote-directory (from-home "Nextcloud/Notes/Denote")
-	denote-type "org"))
-
-(use-package citar-denote
-  :straight (citar-denote :fetcher git :host github :repo "pprevos/citar-denote")
-  :after (denote citar)
-  :init
-  (citar-denote-mode))
-
 (use-package org-roam
   :bind
   (("C-c n l" . org-roam-buffer-toggle)
@@ -1038,11 +1028,8 @@
 ;;   (set-face-attribute 'org-block-end-line nil :background
 ;; 		      (color-darken-name (face-attribute 'default :background) 3)))
 
-;; (set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
-;; (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
-;; (set-face-attribute 'variable-pitch nil :family "Noto Sans")
-
-(set-face-attribute 'default nil :family "Courier 10 Pitch" :height 90 :weight 'normal)
+(set-face-attribute 'default nil :family "JetBrains Mono" :height 90 :weight 'normal)
+(set-face-attribute 'fixed-pitch nil :family "JetBrains Mono")
 (set-face-attribute 'variable-pitch nil :family "Noto Sans")
 
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
