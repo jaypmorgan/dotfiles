@@ -5,6 +5,10 @@
 
 (use-package python
   :init
+
+  ;; use anaconda/miniconda to manage the virtual
+  ;; environments. conda.el does very well here to just swap between
+  ;; these existing environments. I don't need much more than that.
   (use-package conda
     :ensure t
     :init
@@ -14,11 +18,24 @@
       (interactive)
       (unless (string= env conda-env-current-name)
 	(conda-env-activate env))))
+
+  ;; When creating a script, it is very useful to be able to send code
+  ;; to a vterm window. The combination of the code cells using # %%
+  ;; and isend-mode makes this possible.
   (use-package isend-mode
     :ensure t
     :init
     (setq isend-send-region-function 'isend--ipython-cpaste))
-  (use-package code-cells :ensure t))
+  (use-package code-cells :ensure t)
+
+  (defun morg/run-python ()
+    (interactive)
+    (when (executable-find "ipython")
+      (let ((python-shell-interpreter "ipython")
+	    (python-shell-completion-native-enable nil))
+	(run-python "~/.bin/miniconda3/envs/presage/bin/ipython"))))
+  (add-to-list 'python-shell-completion-native-disabled-interpreters "ipython")
+  (defalias 'run-python 'morg/run-python))
 
 (use-package csv-mode :ensure t)
 (use-package sly :ensure t)  ;; common-lisp
