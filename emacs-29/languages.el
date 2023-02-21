@@ -27,16 +27,12 @@
     :init
     (setq isend-send-region-function 'isend--ipython-cpaste))
   (use-package code-cells :ensure t)
+  
+  (setq python-shell-interpreter "ipython"
+	python-shell-completion-native-enable nil)
+  (add-to-list 'python-shell-completion-native-disabled-interpreters "ipython"))
 
-  (defun morg/run-python ()
-    (interactive)
-    (when (executable-find "ipython")
-      (let ((python-shell-interpreter "ipython")
-	    (python-shell-completion-native-enable nil))
-	(run-python "~/.bin/miniconda3/envs/presage/bin/ipython"))))
-  (add-to-list 'python-shell-completion-native-disabled-interpreters "ipython")
-  (defalias 'run-python 'morg/run-python))
-
+(use-package markdown-mode :ensure t)
 (use-package csv-mode :ensure t)
 (use-package sly :ensure t)  ;; common-lisp
 (use-package cider :ensure t) ;; clojure

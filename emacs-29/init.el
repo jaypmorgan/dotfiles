@@ -88,7 +88,8 @@
      (python . t)
      (emacs-lisp . t)
      (shell . t)
-     (lisp . t))))
+     (lisp . t)
+     (ipython . t))))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"
