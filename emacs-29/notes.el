@@ -6,27 +6,6 @@
   (defun note-path (name)
     (concat notes-dir "/" name))
 
-  (use-package org-roam
-    :ensure t
-    :init
-    (setq org-roam-directory (note-path "BIOSOFT"))
-    (org-roam-db-autosync-mode))
-
-  (use-package consult-org-roam
-    :ensure t
-    :init
-    (consult-org-roam-mode t)
-    :bind (("C-c f" . consult-org-roam-file-find)
-	   ("C-c s" . consult-org-roam-search)))
-
-  (use-package org-roam-ui
-    :ensure t
-    :after org-roam
-    :config
-    (setq org-roam-ui-sync-theme t
-	  org-roam-ui-follow t
-	  org-roam-ui-update-on-save nil))
-
   (use-package citar
     :ensure t
     :bind (("C-c b" . citar-open))
@@ -34,7 +13,17 @@
     (setq citar-bibliography (list (note-path "references.bib"))
 	  citar-notes-paths (list (note-path "references"))))
 
- (use-package citar-org-roam
-   :ensure t
-   :after citar
-   :init (citar-org-roam-mode t)))
+  (use-package denote
+    :ensure t
+    :bind (("C-c n c" . denote))
+    :init
+    (setq denote-directory (note-path "Denote")))
+
+  (use-package citar-denote
+    :ensure t
+    :bind (("C-c n o" . citar-denote-open-note)
+	   ("C-c n n" . citar-create-note))
+    :after citar denote
+    :init
+    (citar-denote-mode)
+    (setq citar-open-always-creates-note t)))

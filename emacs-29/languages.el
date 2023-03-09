@@ -1,7 +1,12 @@
 (use-package treesit
   :hook ((python-mode . python-ts-mode)))
 
-(use-package eglot)
+(use-package eldoc
+  :init
+  (setq eldoc-echo-area-use-multiline-p nil))
+
+(use-package eglot
+  :hook (eglot-managed-mode-hook . eglot-inlay-hints-mode))
 
 (use-package python
   :init
@@ -27,9 +32,11 @@
     :init
     (setq isend-send-region-function 'isend--ipython-cpaste))
   (use-package code-cells :ensure t)
+  (use-package ein :ensure t)
   
-  (setq python-shell-interpreter "ipython"
+  (setq python-shell-interpreter "python"
 	python-shell-completion-native-enable nil)
+  
   (add-to-list 'python-shell-completion-native-disabled-interpreters "ipython"))
 
 (use-package markdown-mode :ensure t)

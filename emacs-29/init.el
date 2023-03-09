@@ -6,7 +6,7 @@
 (add-to-exec-path "~/.bin")
 (add-to-exec-path "~/.bin/miniconda3/bin")
 
-(delete-selection-mode)  ;; delete whats highlighted if user types/pastes something
+(delete-selection-mode)	; delete whats highlighted if user types/pastes something
 
 (setq custom-file (concat user-emacs-directory "custom.el")
       make-backup-files nil
@@ -19,16 +19,17 @@
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
 (package-initialize)
 
-(defalias 'yes-or-no-p 'y-or-n-p)	; easier to type a single letter
+(defalias 'yes-or-no-p 'y-or-n-p)            ; easier to type a single letter
 (set-face-attribute 'default nil :height 90) ; make font slightly smaller
 
 (use-package dired
   :init
   (setq dired-dwim-target t
+	dired-listing-switches "-alh"	     ; add human-readable sizes
 	dired-auto-revert-buffer t))
 
 (use-package magit
-  :bind (("C-x p v" . magit-project-status))
+  :bind (("C-x p v" . magit-project-status)) ; replace built-in vc
   :ensure t
   :init
   (require 'magit-extras))
@@ -89,7 +90,7 @@
      (emacs-lisp . t)
      (shell . t)
      (lisp . t)
-     (ipython . t))))
+     (ein . t))))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"
@@ -105,10 +106,18 @@
   (end-of-visual-line)
   (newline-and-indent))
 
-(defun load-subsection (filename)
-  (load (concat user-emacs-directory filename)))
+(defun morg/list-jobs ()
+  (interactive)
+  (async-shell-command
+   "ssh lis.me squeue -u jay.morgan"
+   "*SLURM jobs*"))
 
-(load-subsection "rsync.el")
-(load-subsection "languages.el")
-(load-subsection "keybindings.el")
-(load-subsection "notes.el")
+;; load the external files from the emacs directory.
+(cl-flet ((load-subsection
+	    (filename)
+	    (load (concat user-emacs-directory filename))))
+  (load-subsection "rsync.el")
+  (load-subsection "languages.el")
+  (load-subsection "keybindings.el")
+  (load-subsection "notes.el")
+  (load-subsection "theme.el"))
