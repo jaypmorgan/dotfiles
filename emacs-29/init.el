@@ -81,6 +81,9 @@
 (use-package org
   :init
   (use-package ob-async :ensure t)
+  (use-package mixed-pitch
+    :ensure t
+    :hook (org-mode . mixed-pitch-mode))
   (setq org-babel-lisp-eval-fn #'sly-eval
 	org-src-window-setup 'current-window)
   (org-babel-do-load-languages
@@ -107,6 +110,7 @@
   (newline-and-indent))
 
 (defun morg/list-jobs ()
+  "List the SLURM jobs in queue on supercomputer."
   (interactive)
   (async-shell-command
    "ssh lis.me squeue -u jay.morgan"
