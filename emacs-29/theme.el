@@ -1,3 +1,5 @@
+(load-theme 'leuven t)
+
 ;; set the font -- only if the font is available though.
 (defun morg/configure-font-hook ()
   (let (;(font-name "IBM Plex Mono")

@@ -79,11 +79,16 @@
       (load mu4e-config))))
 
 (use-package org
+  :hook ((org-mode . auto-fill-mode))
   :init
   (use-package ob-async :ensure t)
   (use-package mixed-pitch
     :ensure t
     :hook (org-mode . mixed-pitch-mode))
+  (use-package pdf-tools ;; better PDF viewing
+    :ensure t
+    :init
+    (pdf-tools-install))
   (setq org-babel-lisp-eval-fn #'sly-eval
 	org-src-window-setup 'current-window)
   (org-babel-do-load-languages
@@ -93,7 +98,8 @@
      (emacs-lisp . t)
      (shell . t)
      (lisp . t)
-     (ein . t))))
+     (ein . t)
+     (scheme . t))))
 
 (defun insert-line-above ()
   "Insert and indent to the next line"

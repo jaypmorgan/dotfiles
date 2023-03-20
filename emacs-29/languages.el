@@ -32,22 +32,27 @@
     :init
     (setq isend-send-region-function 'isend--ipython-cpaste))
   (use-package code-cells :ensure t)
-  (use-package ein :ensure t)
-  
-  (setq python-shell-interpreter "python"
-	python-shell-completion-native-enable nil)
-  
-  (add-to-list 'python-shell-completion-native-disabled-interpreters "ipython"))
+  (use-package ein :ensure t))
 
 (use-package markdown-mode :ensure t)
 (use-package csv-mode :ensure t)
 (use-package sly :ensure t)  ;; common-lisp
 (use-package cider :ensure t) ;; clojure
+
 (use-package geiser-chez :ensure t) ;; chez-scheme
 (use-package geiser-guile :ensure t)
+(use-package geiser-mit :ensure t)
+
+(use-package racket-mode
+  :hook ((racket-mode . racket-xp-mode)
+	 (racket-mode . paredit-mode))
+  :ensure t
+  :init
+  (setq racket-program "/usr/local/racket/bin/racket"))
 (use-package geiser-racket :ensure t
   :init
-  (setq geiser-racket-binary "/usr/local/racket/bin/racket"))
+  (setq geiser-racket-binary "/usr/local/racket/bin/racket"
+	geiser-default-implementation 'racket))
 
 (use-package ess
   :ensure t
