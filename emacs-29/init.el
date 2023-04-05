@@ -3,8 +3,11 @@
     (unless (member fp exec-path)
       (setq exec-path (cons fp exec-path)))))
 
+(setq-default indent-tabs-mode nil)
+
 (add-to-exec-path "~/.bin")
 (add-to-exec-path "~/.bin/miniconda3/bin")
+(add-to-exec-path "~/Applications/clangd/bin")
 
 (delete-selection-mode)	; delete whats highlighted if user types/pastes something
 
@@ -80,15 +83,27 @@
 
 (use-package org
   :hook ((org-mode . auto-fill-mode))
+  :bind (("M-p" . org-babel-previous-src-block)
+	 ("M-n" . org-babel-next-src-block)
+         ("C-c S-<return>" . org-babel-execute-and-next))
   :init
+  (defun org-babel-execute-and-next ()
+    "Execute this current org-babel block and move onto the next one"
+    (interactive)
+    (org-ctrl-c-ctrl-c)
+    (org-babel-next-src-block))
+  
   (use-package ob-async :ensure t)
+  
   (use-package mixed-pitch
     :ensure t
     :hook (org-mode . mixed-pitch-mode))
+  
   (use-package pdf-tools ;; better PDF viewing
     :ensure t
     :init
     (pdf-tools-install))
+  
   (setq org-babel-lisp-eval-fn #'sly-eval
 	org-src-window-setup 'current-window)
   (org-babel-do-load-languages

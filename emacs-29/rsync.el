@@ -6,7 +6,7 @@
       rsync-base-cmd "rsync -am"
       rsync-exclude-list '("data" "container-dev" "container"
 			   "__pycache__" "*.pyc" "renv/library" "renv/local"
-			   "renv/python" "renv/staging" "build" "dist"))
+			   "renv/python" "renv/staging" "build" "dist" "venv"))
 
 (defun rsync--build-exclude-list (exclude-list)
   (mapconcat
