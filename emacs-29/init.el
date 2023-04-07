@@ -1,13 +1,22 @@
+;;--------------------------
+;; EMACS Configuration File
+;; Author: Jay Morgan
+;;--------------------------
+
+;; add paths to executable paths so that certain executables can be
+;; found by Emacs.
 (defun add-to-exec-path (path)
   (let ((fp (expand-file-name path)))
     (unless (member fp exec-path)
       (setq exec-path (cons fp exec-path)))))
 
-(setq-default indent-tabs-mode nil)
-
 (add-to-exec-path "~/.bin")
 (add-to-exec-path "~/.bin/miniconda3/bin")
 (add-to-exec-path "~/Applications/clangd/bin")
+(add-to-exec-path "~/workspace/presage/venv/bin")
+
+;; by default, do not use tabs for indentation.
+(setq-default indent-tabs-mode nil)
 
 (delete-selection-mode)	; delete whats highlighted if user types/pastes something
 
@@ -16,6 +25,8 @@
       create-lockfiles nil
       backup-directory-alist `(("." . "~/.cache/saves"))
       use-package-always-defer t)
+
+(load custom-file)
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
@@ -27,8 +38,10 @@
 
 (use-package dired
   :init
+  (use-package async :ensure t)
+  (dired-async-mode t)
   (setq dired-dwim-target t
-	dired-listing-switches "-alh"	     ; add human-readable sizes
+	dired-listing-switches "-alh"   ; add human-readable sizes
 	dired-auto-revert-buffer t))
 
 (use-package magit
@@ -43,11 +56,16 @@
 
 (use-package corfu
   :ensure t
+  :bind (("C-M-i" . corfu-complete))
   :init
   (setq corfu-auto t
 	tab-always-indent 'complete
-	corfu-auto-delay 0.75)
-  (global-corfu-mode))
+	corfu-auto-delay 0.5
+        corfu-popupinfo-delay '(0.5 . 0.5)
+        corfu-popupinfo-max-height 20
+        corfu-popupinfo-min-height 10)
+  (global-corfu-mode t)
+  (corfu-popupinfo-mode t))
 
 (use-package vertico
   :ensure t

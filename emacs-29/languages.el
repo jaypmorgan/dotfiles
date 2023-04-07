@@ -14,15 +14,16 @@
   ;; use anaconda/miniconda to manage the virtual
   ;; environments. conda.el does very well here to just swap between
   ;; these existing environments. I don't need much more than that.
-  (use-package conda
+  (use-package pyvenv
     :ensure t
     :init
-    (setq conda-env-current-name nil)
+    (setq python-env-current-name nil)
     (defun conda-activate-once (env)
       "Activate an environment if not already activated"
       (interactive)
-      (unless (string= env conda-env-current-name)
-	(conda-env-activate env))))
+      (unless (string= env python-env-current-name)
+	(pyvenv-activate env)
+        (setq python-env-current-name env))))
 
   (defun run-python-remote (remote-path)
     (interactive "sRemote path")
