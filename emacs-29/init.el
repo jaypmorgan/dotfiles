@@ -84,6 +84,8 @@
 
 (use-package vterm
   :ensure t
+  :bind (:map vterm-mode-map
+              ("M-p" . vterm--self-insert))
   :init
   ;; decrease the input delay -- need to test for receiving large
   ;; outputs though
@@ -101,9 +103,10 @@
 
 (use-package org
   :hook ((org-mode . auto-fill-mode))
-  :bind (("M-p" . org-babel-previous-src-block)
-	 ("M-n" . org-babel-next-src-block)
-         ("C-c S-<return>" . org-babel-execute-and-next))
+  :bind (:map org-mode-map
+              ("M-p" . org-babel-previous-src-block)
+	      ("M-n" . org-babel-next-src-block)
+              ("C-c S-<return>" . org-babel-execute-and-next))
   :init
   (defun org-babel-execute-and-next ()
     "Execute this current org-babel block and move onto the next one"
@@ -163,4 +166,5 @@
   (load-subsection "languages.el")
   (load-subsection "keybindings.el")
   (load-subsection "notes.el")
-  (load-subsection "theme.el"))
+  (load-subsection "theme.el")
+  (load-subsection "project-management.el"))
