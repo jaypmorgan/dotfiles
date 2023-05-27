@@ -112,7 +112,8 @@
     "Execute this current org-babel block and move onto the next one"
     (interactive)
     (org-ctrl-c-ctrl-c)
-    (org-babel-next-src-block))
+    (org-babel-next-src-block)
+    (recenter-top-bottom))
   
   (use-package ob-async :ensure t)
   
