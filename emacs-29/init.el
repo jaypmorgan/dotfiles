@@ -3,6 +3,12 @@
 ;; Author: Jay Morgan
 ;;--------------------------
 
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+
+(setq ring-bell-function 'ignore)
+
 ;; add paths to executable paths so that certain executables can be
 ;; found by Emacs.
 (defun add-to-exec-path (path)
@@ -26,12 +32,24 @@
       backup-directory-alist `(("." . "~/.cache/saves"))
       use-package-always-defer t)
 
-(load custom-file)
+(when (file-exists-p custom-file)
+  (load custom-file))
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
 (package-initialize)
+
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
+
+(use-package evil
+  :ensure t
+  :init
+  (evil-set-leader 'normal " ")
+  (evil-define-key 'normal 'global (kbd "<leader>pf") 'project-find-file)
+  (evil-define-key 'normal 'global (kbd "<leader>pv") 'magit-project-status)
+  (evil-mode 1))
 
 (defalias 'yes-or-no-p 'y-or-n-p)            ; easier to type a single letter
 (set-face-attribute 'default nil :height 90) ; make font slightly smaller
@@ -166,6 +184,6 @@
   (load-subsection "rsync.el")
   (load-subsection "languages.el")
   (load-subsection "keybindings.el")
-  (load-subsection "notes.el")
-  (load-subsection "theme.el")
+  ;; (load-subsection "notes.el")
+  ;; (load-subsection "theme.el")
   (load-subsection "project-management.el"))

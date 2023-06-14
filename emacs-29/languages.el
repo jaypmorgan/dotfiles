@@ -1,4 +1,13 @@
+(use-package yasnippet
+  :ensure t
+  :hook (prog-mode . yas-minor-mode)
+  :init
+  (use-package yasnippet-snippets
+    :ensure t)
+  (yas-global-mode))
+
 (use-package treesit
+  :disabled t
   :hook ((python-mode . python-ts-mode)))
 
 (use-package eldoc
@@ -6,10 +15,17 @@
   (setq eldoc-echo-area-use-multiline-p nil))
 
 (use-package eglot
+  :ensure t
   :hook (eglot-managed-mode-hook . eglot-inlay-hints-mode))
 
 (use-package python
   :init
+
+  (use-package blacken
+    :ensure t)
+
+  (use-package numpydoc
+    :ensure t)
 
   ;; use anaconda/miniconda to manage the virtual
   ;; environments. conda.el does very well here to just swap between
