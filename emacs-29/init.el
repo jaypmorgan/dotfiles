@@ -7,6 +7,9 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier nil)
+
 (setq ring-bell-function 'ignore)
 
 ;; add paths to executable paths so that certain executables can be
@@ -16,10 +19,7 @@
     (unless (member fp exec-path)
       (setq exec-path (cons fp exec-path)))))
 
-(add-to-exec-path "~/.bin")
-(add-to-exec-path "~/.bin/miniconda3/bin")
-(add-to-exec-path "~/Applications/clangd/bin")
-(add-to-exec-path "~/workspace/presage/venv/bin")
+(add-to-exec-path "~/miniconda3/bin")
 
 ;; by default, do not use tabs for indentation.
 (setq-default indent-tabs-mode nil)
@@ -27,10 +27,13 @@
 (delete-selection-mode)	; delete whats highlighted if user types/pastes something
 
 (setq custom-file (concat user-emacs-directory "custom.el")
+      backup-directory-alist `(("." . "~/.cache/saves"))
+      auto-save-file-name-transforms `((".*" "~/.cache/saves" t))
       make-backup-files nil
       create-lockfiles nil
-      backup-directory-alist `(("." . "~/.cache/saves"))
       use-package-always-defer t)
+
+(setq-default tab-width 4)
 
 (when (file-exists-p custom-file)
   (load custom-file))
@@ -43,16 +46,7 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
-(use-package evil
-  :ensure t
-  :init
-  (evil-set-leader 'normal " ")
-  (evil-define-key 'normal 'global (kbd "<leader>pf") 'project-find-file)
-  (evil-define-key 'normal 'global (kbd "<leader>pv") 'magit-project-status)
-  (evil-mode 1))
-
 (defalias 'yes-or-no-p 'y-or-n-p)            ; easier to type a single letter
-(set-face-attribute 'default nil :height 90) ; make font slightly smaller
 
 (use-package dired
   :init
@@ -180,10 +174,11 @@
 ;; load the external files from the emacs directory.
 (cl-flet ((load-subsection
 	    (filename)
-	    (load (concat user-emacs-directory filename))))
+	    (load-file (concat user-emacs-directory filename))))
   (load-subsection "rsync.el")
   (load-subsection "languages.el")
   (load-subsection "keybindings.el")
-  ;; (load-subsection "notes.el")
-  ;; (load-subsection "theme.el")
-  (load-subsection "project-management.el"))
+  ;(load-subsection "notes.el")
+  ;(load-subsection "theme.el")
+  ;(load-subsection "project-management.el")
+  )

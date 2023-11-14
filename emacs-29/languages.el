@@ -6,10 +6,6 @@
     :ensure t)
   (yas-global-mode))
 
-(use-package treesit
-  :disabled t
-  :hook ((python-mode . python-ts-mode)))
-
 (use-package eldoc
   :init
   (setq eldoc-echo-area-use-multiline-p nil))
@@ -33,12 +29,15 @@
   (use-package pyvenv
     :ensure t
     :init
+    (let ((workon-home (expand-file-name "~/miniconda3/envs")))
+      (setenv "WORKON_HOME" workon-home)
+      (setenv "VIRTUALENVWRAPPER_HOOK_DIR" workon-home))
     (setq python-env-current-name nil)
     (defun conda-activate-once (env)
       "Activate an environment if not already activated"
       (interactive)
       (unless (string= env python-env-current-name)
-	(pyvenv-activate env)
+	    (pyvenv-activate env)
         (setq python-env-current-name env))))
 
   (defun run-python-remote (remote-path)
@@ -53,28 +52,7 @@
     :ensure t
     :init
     (setq isend-send-region-function 'isend--ipython-cpaste))
-  (use-package code-cells :ensure t)
-  (use-package ein :ensure t))
-
-(defun lisp-insert-header (header)
-  (interactive "sHeader: ")
-  (let ((boundary-size 1)
-	(num-comments  3)
-	(comment-val   ";")
-	(line-val      "-")
-	(size (string-width header))
-	(final-size (/ 70 2)))
-    (dotimes (i num-comments)
-      (insert comment-val))
-    (dotimes (i (- (- final-size (/ size 2)) boundary-size))
-      (insert line-val))
-    (dotimes (i boundary-size)
-      (insert " "))
-    (insert header)
-    (dotimes (i boundary-size)
-      (insert " "))
-    (dotimes (i (+ 1 (- (- final-size (/ size 2)) boundary-size)))
-      (insert line-val))))
+  (use-package code-cells :ensure t))
 
 (use-package markdown-mode :ensure t)
 (use-package csv-mode :ensure t)
@@ -101,7 +79,10 @@
 (use-package ess
   :ensure t
   :init
-  (setq org-babel-R-command "/usr/bin/R --slave --no-save"))
+  (setq org-babel-R-command "/usr/bin/R --slave --no-save")
+  (add-hook 'ess-mode (lambda ()
+                      (make-local-variable 'tab-width)
+                      (setq tab-width 2))))
 
 (use-package paredit
   :ensure t
