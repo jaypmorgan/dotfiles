@@ -7,23 +7,15 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
-(setq mac-command-modifier 'meta)
-(setq mac-option-modifier nil)
+;; set the modifiers for MacOS
+(when (eq system-type 'darwin)
+  (setq mac-command-modifier 'super
+        mac-option-modifier 'meta
+        mac-control-modifier 'control))
 
 (setq ring-bell-function 'ignore)
-
-;; add paths to executable paths so that certain executables can be
-;; found by Emacs.
-(defun add-to-exec-path (path)
-  (let ((fp (expand-file-name path)))
-    (unless (member fp exec-path)
-      (setq exec-path (cons fp exec-path)))))
-
-(add-to-exec-path "~/miniconda3/bin")
-
-;; by default, do not use tabs for indentation.
-(setq-default indent-tabs-mode nil)
-
+(setq use-file-dialog nil)
+(setq-default indent-tabs-mode nil) ; by default, do not use tabs for indentation.
 (delete-selection-mode)	; delete whats highlighted if user types/pastes something
 
 (setq custom-file (concat user-emacs-directory "custom.el")
@@ -38,6 +30,15 @@
 (when (file-exists-p custom-file)
   (load custom-file))
 
+;; add paths to executable paths so that certain executables can be
+;; found by Emacs.
+(defun add-to-exec-path (path)
+  (let ((fp (expand-file-name path)))
+    (unless (member fp exec-path)
+      (setq exec-path (cons fp exec-path)))))
+
+(add-to-exec-path "~/miniconda3/bin")
+
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
@@ -48,13 +49,18 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)            ; easier to type a single letter
 
+(use-package gcmh
+  :ensure t
+  :init
+  (gcmh-mode 1))
+
 (use-package dired
   :init
   (use-package async :ensure t)
   (dired-async-mode t)
   (setq dired-dwim-target t
-	dired-listing-switches "-alh"   ; add human-readable sizes
-	dired-auto-revert-buffer t))
+	    dired-listing-switches "-alh"   ; add human-readable sizes
+	    dired-auto-revert-buffer t))
 
 (use-package magit
   :bind (("C-x p v" . magit-project-status)) ; replace built-in vc
@@ -180,5 +186,4 @@
   (load-subsection "keybindings.el")
   ;(load-subsection "notes.el")
   (load-subsection "theme.el")
-  ;(load-subsection "project-management.el")
-  )
+  (load-subsection "project-management.el"))
