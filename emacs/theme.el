@@ -14,3 +14,18 @@
 ;(add-hook 'after-make-frame-functions (lambda (frame) (morg/configure-font-hook)))
 (morg/configure-font-hook)
 
+;; set the fill column width to 80 which is still readable but better than 72
+(setq-default fill-column 80)
+
+;; especially when writing org-mode documents, it's nice to have the content
+;; front and center of the window.
+(use-package olivetti
+  :ensure t
+  :init
+  (setq olivetti-body-width 80))
+
+;; set the theme to modus-operandi. I especially like the org-mode code blocks
+;; to be slightly darker.
+(use-package modus-themes
+  :init
+  (setq modus-themes-org-blocks 'gray-background))

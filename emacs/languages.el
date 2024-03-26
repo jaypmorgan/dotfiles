@@ -29,7 +29,7 @@
   (use-package pyvenv
     :ensure t
     :init
-    (let ((workon-home (expand-file-name "~/miniconda3/envs")))
+    (let ((workon-home (expand-file-name "~/.bin/miniconda3/envs")))
       (setenv "WORKON_HOME" workon-home)
       (setenv "VIRTUALENVWRAPPER_HOOK_DIR" workon-home))
     (setq python-env-current-name nil)

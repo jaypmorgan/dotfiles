@@ -123,8 +123,9 @@
   :hook ((org-mode . auto-fill-mode))
   :bind (:map org-mode-map
               ("M-p" . org-babel-previous-src-block)
-	      ("M-n" . org-babel-next-src-block)
-              ("C-c S-<return>" . org-babel-execute-and-next))
+	          ("M-n" . org-babel-next-src-block)
+              ("C-c S-<return>" . org-babel-execute-and-next)
+              ("C-c C-c" . (lambda () (interactive) (org-ctrl-c-ctrl-c) (org-display-inline-images))))
   :init
   (defun org-babel-execute-and-next ()
     "Execute this current org-babel block and move onto the next one"
@@ -143,9 +144,9 @@
     :ensure t
     :init
     (pdf-tools-install))
-  
+
   (setq org-babel-lisp-eval-fn #'sly-eval
-	org-src-window-setup 'current-window)
+	    org-src-window-setup 'current-window)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((R . t)
