@@ -7,6 +7,9 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
+;; no splash screen
+(setq inhibit-splash-screen t)
+
 ;; set the modifiers for MacOS
 (when (eq system-type 'darwin)
   (setq mac-command-modifier 'super
@@ -178,13 +181,27 @@
    "ssh lis.me squeue -u jay.morgan"
    "*SLURM jobs*"))
 
+(use-package popper
+  :ensure t
+  :bind (("C-`" . popper-toggle)
+         ("C-¬" . popper-cycle))
+  :init
+  (setq popper-reference-buffers
+        '("\\*R:.*\\*"
+          "\\*R\\*"
+          "\\*Python\\*"
+          "\\*vterm\\*")
+        popper-window-height 30)
+  (popper-mode t)
+  (popper-echo-mode t))
+
 ;; load the external files from the emacs directory.
 (cl-flet ((load-subsection
-	    (filename)
-	    (load-file (concat user-emacs-directory filename))))
+	        (filename)
+	        (load-file (concat user-emacs-directory filename))))
   (load-subsection "rsync.el")
   (load-subsection "languages.el")
   (load-subsection "keybindings.el")
-  ;(load-subsection "notes.el")
+                                        ;(load-subsection "notes.el")
   (load-subsection "theme.el")
   (load-subsection "project-management.el"))

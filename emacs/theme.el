@@ -28,4 +28,5 @@
 ;; to be slightly darker.
 (use-package modus-themes
   :init
-  (setq modus-themes-org-blocks 'gray-background))
+  (setq modus-themes-org-blocks 'gray-background)
+  (load-theme 'modus-operandi t))
