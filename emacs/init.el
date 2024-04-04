@@ -52,6 +52,9 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)            ; easier to type a single letter
 
+;; Automatically pair parentheses
+(electric-pair-mode t)
+
 (use-package gcmh
   :ensure t
   :init
@@ -92,6 +95,7 @@
   :ensure t
   :init
   (vertico-mode t)
+  (vertico-flat-mode t)
   (use-package orderless
     :ensure t
     :init
@@ -194,6 +198,10 @@
         popper-window-height 30)
   (popper-mode t)
   (popper-echo-mode t))
+
+(use-package ace-window
+  :ensure t
+  :bind ("M-o" . ace-window))
 
 ;; load the external files from the emacs directory.
 (cl-flet ((load-subsection
