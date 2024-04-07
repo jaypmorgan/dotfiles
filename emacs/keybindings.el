@@ -8,3 +8,6 @@
  ("C-S-o" insert-line-above)
  ("M-o" other-window)
  ("C-c l ;" rsync-upload-current-project))
+
+(if (eq system-type 'darwin)
+    (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#"))))
