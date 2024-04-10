@@ -29,4 +29,5 @@
 (use-package modus-themes
   :init
   (setq modus-themes-org-blocks 'gray-background)
-  (load-theme 'modus-operandi t))
+  (if (display-graphic-p)
+      (load-theme 'modus-operandi t)))
