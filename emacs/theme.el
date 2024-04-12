@@ -1,7 +1,7 @@
 ;; set the font -- only if the font is available though.
 (defun morg/configure-font-hook ()
   (let ((font-name "IBM Plex Mono")
-        (font-size 12))
+        (font-size 13))
     (when (find-font (font-spec :name font-name))
       (add-to-list 'default-frame-alist `(font . ,(format "%s-%s" font-name font-size)))
       (set-face-attribute 'default nil :font font-name)

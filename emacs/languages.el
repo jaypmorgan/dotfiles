@@ -90,3 +90,13 @@
 	 (scheme-mode . paredit-mode)
 	 (emacs-lisp-mode . paredit-mode)))
 
+
+(use-package cern-root-mode
+  :ensure t
+  :bind (:map c++-mode-map
+	     (("C-c C-c" . cern-root-eval-defun)
+	      ("C-c C-b" . cern-root-eval-buffer)
+	      ("C-c C-l" . cern-root-eval-file)
+	      ("C-c C-r" . cern-root-eval-region)))
+  :init
+  (setq cern-root-filepath "/opt/homebrew/bin/root"))
