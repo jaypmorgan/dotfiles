@@ -97,7 +97,7 @@
   :ensure t
   :init
   (vertico-mode t)
-  (vertico-flat-mode t)
+  ; (vertico-flat-mode t)
   (use-package orderless
     :ensure t
     :init
@@ -180,13 +180,6 @@
   (end-of-visual-line)
   (newline-and-indent))
 
-(defun morg/list-jobs ()
-  "List the SLURM jobs in queue on supercomputer."
-  (interactive)
-  (async-shell-command
-   "ssh lis.me squeue -u jay.morgan"
-   "*SLURM jobs*"))
-
 (use-package popper
   :ensure t
   :bind (("C-`" . popper-toggle)
@@ -215,3 +208,4 @@
                                         ;(load-subsection "notes.el")
   (load-subsection "theme.el")
   (load-subsection "project-management.el"))
+
