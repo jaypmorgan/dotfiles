@@ -154,6 +154,13 @@
     :init
     (pdf-tools-install))
 
+  ;; export nice code blocks
+  (setq org-latex-listings 'minted
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process
+        '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
   (setq org-babel-lisp-eval-fn #'sly-eval
 	    org-src-window-setup 'current-window)
   (org-babel-do-load-languages
