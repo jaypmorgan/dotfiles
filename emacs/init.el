@@ -129,7 +129,8 @@
       (load mu4e-config))))
 
 (use-package org
-  :hook ((org-mode . auto-fill-mode))
+  :hook ((org-mode . auto-fill-mode)
+         (org-mode . flyspell-mode))
   :bind (:map org-mode-map
               ("M-p" . org-babel-previous-src-block)
 	          ("M-n" . org-babel-next-src-block)
@@ -154,12 +155,17 @@
     :init
     (pdf-tools-install))
 
-  ;; export nice code blocks
   (setq org-latex-listings 'minted
-        org-latex-packages-alist '(("" "minted"))
-        org-latex-pdf-process
-        '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-          "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+        org-export-babel-evaluate t
+        org-latex-packages-alist '(("" minted))
+        org-latex-pdf-process '("latexmk -f -pdf -%latex -shell-escape -interaction=nonstopmode -output-directory=%o %f"))
+
+  ;; export nice code blocks
+  ;; (setq org-latex-listings 'minted
+  ;;       org-latex-packages-alist '(("" "minted"))
+  ;;       org-latex-pdf-process
+  ;;       '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+  ;;         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
 
   (setq org-babel-lisp-eval-fn #'sly-eval
 	    org-src-window-setup 'current-window)
