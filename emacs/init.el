@@ -173,6 +173,7 @@
    'org-babel-load-languages
    '((R . t)
      (dot . t)
+     (latex . t)
      (python . t)
      (emacs-lisp . t)
      (shell . t)

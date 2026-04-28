@@ -69,12 +69,8 @@
 (use-package racket-mode
   :hook ((racket-mode . racket-xp-mode)
 	 (racket-mode . paredit-mode))
-  :ensure t
-  :init
-  (setq racket-program "/usr/local/racket/bin/racket"))
-(use-package geiser-racket :ensure t
-  :init
-  (setq geiser-racket-binary "/usr/local/racket/bin/racket"))
+  :ensure t)
+(use-package geiser-racket :ensure t)
 
 (use-package ess
   :ensure t
