@@ -16,4 +16,5 @@
   :ensure t
   :config
   (evil-mode 1)
+  (global-display-line-numbers-mode)
   (setq display-line-numbers 'relative))
