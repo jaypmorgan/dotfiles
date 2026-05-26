@@ -11,3 +11,9 @@
 
 (if (eq system-type 'darwin)
     (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#"))))
+
+(use-package evil
+  :ensure t
+  :config
+  (evil-mode 1)
+  (setq display-line-numbers 'relative))
